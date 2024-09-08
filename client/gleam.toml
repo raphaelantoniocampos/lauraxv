@@ -1,4 +1,4 @@
-name = "frontend"
+name = "client"
 version = "1.0.0"
 target = "javascript"
 
@@ -16,9 +16,9 @@ target = "javascript"
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
 lustre = ">= 4.4.1 and < 5.0.0"
-lustre_dev_tools = ">= 1.5.4 and < 2.0.0"
 modem = ">= 2.0.1 and < 3.0.0"
 lustre_http = ">= 0.5.2 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
+lustre_dev_tools = ">= 1.5.4 and < 2.0.0"

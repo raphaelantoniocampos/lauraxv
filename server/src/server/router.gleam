@@ -1,4 +1,3 @@
-import backend/web
 import cors_builder as cors
 import gleam/dynamic
 import gleam/http.{Get, Post as WispPost}
@@ -6,6 +5,7 @@ import gleam/json
 import gleam/list
 import gleam/result
 import gleam/string_builder
+import server/web
 import simplifile
 import wisp.{type Request, type Response}
 
