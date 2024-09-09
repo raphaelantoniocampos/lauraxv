@@ -87,6 +87,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     // Run the create_post function if the RequestCreatePost message was recieved from the frontend.
     CreateGiftResponded(response) -> #(model, get_gifts())
     // If the create post responded then we want to refetch our posts
+    UserChangedSlide(dir: Int) -> #(model, like_post(post_id))
   }
 }
 
@@ -150,7 +151,7 @@ fn view(model: Model) {
     ],
     [
       header(),
-      case model.route {
+      div([], case model.route {
         // Here we match the current route in the state and return different html based on what route is recieved
         Home -> home_page.body()
         Event -> event_page.body()
@@ -198,9 +199,9 @@ fn view(model: Model) {
         //     text(gift.pic),
         //   ]
         // }
-        NotFound -> text("404 Not Found")
-        _ -> text("Testing first")
-      },
+        NotFound -> [text("not found")]
+        _ -> [text("testing ")]
+      }),
     ],
   )
 }

@@ -232,6 +232,23 @@ function structurallyCompatibleObjects(a2, b) {
     return false;
   return a2.constructor === b.constructor;
 }
+function remainderInt(a2, b) {
+  if (b === 0) {
+    return 0;
+  } else {
+    return a2 % b;
+  }
+}
+function divideInt(a2, b) {
+  return Math.trunc(divideFloat(a2, b));
+}
+function divideFloat(a2, b) {
+  if (b === 0) {
+    return 0;
+  } else {
+    return a2 / b;
+  }
+}
 function makeError(variant, module, line, fn, message, extra) {
   let error = new globalThis.Error(message);
   error.gleam_error = variant;
@@ -314,12 +331,49 @@ function scan(regex, string3) {
   return regex_scan(regex, string3);
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/float.mjs
+function truncate2(x) {
+  return truncate(x);
+}
+
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
 function parse(string3) {
   return parse_int(string3);
 }
 function to_string2(x) {
   return to_string(x);
+}
+function to_float(x) {
+  return identity(x);
+}
+function min(a2, b) {
+  let $ = a2 < b;
+  if ($) {
+    return a2;
+  } else {
+    return b;
+  }
+}
+function max(a2, b) {
+  let $ = a2 > b;
+  if ($) {
+    return a2;
+  } else {
+    return b;
+  }
+}
+function clamp(x, min_bound, max_bound) {
+  let _pipe = x;
+  let _pipe$1 = min(_pipe, max_bound);
+  return max(_pipe$1, min_bound);
+}
+function divide(dividend, divisor) {
+  if (divisor === 0) {
+    return new Error(void 0);
+  } else {
+    let divisor$1 = divisor;
+    return new Ok(divideInt(dividend, divisor$1));
+  }
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/pair.mjs
@@ -1588,6 +1642,9 @@ var unicode_whitespaces = [
 ].join();
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
+function truncate(float2) {
+  return Math.trunc(float2);
+}
 function compile_regex(pattern, options) {
   try {
     let flags = "gu";
@@ -1621,18 +1678,18 @@ function regex_scan(regex, string3) {
 function new_map() {
   return Dict.new();
 }
-function map_to_list(map6) {
-  return List.fromArray(map6.entries());
+function map_to_list(map7) {
+  return List.fromArray(map7.entries());
 }
-function map_get(map6, key) {
-  const value = map6.get(key, NOT_FOUND);
+function map_get(map7, key) {
+  const value = map7.get(key, NOT_FOUND);
   if (value === NOT_FOUND) {
     return new Error(Nil);
   }
   return new Ok(value);
 }
-function map_insert(key, value, map6) {
-  return map6.set(key, value);
+function map_insert(key, value, map7) {
+  return map7.set(key, value);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -2236,6 +2293,13 @@ function to_string6(uri) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
+function to_int(bool2) {
+  if (!bool2) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
 function guard(requirement, consequence, alternative) {
   if (requirement) {
     return consequence;
@@ -2251,11 +2315,11 @@ var Effect = class extends CustomType {
     this.all = all;
   }
 };
-function custom(run) {
+function custom(run3) {
   return new Effect(
     toList([
       (actions) => {
-        return run(actions.dispatch, actions.emit, actions.select);
+        return run3(actions.dispatch, actions.emit, actions.select);
       }
     ])
   );
@@ -2381,8 +2445,17 @@ function attribute(name, value) {
 function class$(name) {
   return attribute("class", name);
 }
+function id(name) {
+  return attribute("id", name);
+}
 function href(uri) {
   return attribute("href", uri);
+}
+function src(uri) {
+  return attribute("src", uri);
+}
+function alt(text3) {
+  return attribute("alt", text3);
 }
 
 // build/dev/javascript/lustre/lustre/element.mjs
@@ -2455,11 +2528,11 @@ var Init = class extends CustomType {
     this[1] = x1;
   }
 };
-function is_empty_element_diff(diff2) {
-  return isEqual(diff2.created, new$()) && isEqual(
-    diff2.removed,
+function is_empty_element_diff(diff3) {
+  return isEqual(diff3.created, new$()) && isEqual(
+    diff3.removed,
     new$3()
-  ) && isEqual(diff2.updated, new$());
+  ) && isEqual(diff3.updated, new$());
 }
 
 // build/dev/javascript/lustre/lustre/internals/runtime.mjs
@@ -3028,15 +3101,15 @@ var LustreServerApplication = class _LustreServerApplication {
     if (!this.#flush(false, effects))
       return;
     const vdom = this.#view(this.#model);
-    const diff2 = elements(this.#html, vdom);
-    if (!is_empty_element_diff(diff2)) {
-      const patch = new Diff(diff2);
+    const diff3 = elements(this.#html, vdom);
+    if (!is_empty_element_diff(diff3)) {
+      const patch = new Diff(diff3);
       for (const [_, renderer] of this.#renderers) {
         renderer(patch);
       }
     }
     this.#html = vdom;
-    this.#handlers = diff2.handlers;
+    this.#handlers = diff3.handlers;
   }
   #flush(didUpdate = false, effects = []) {
     while (this.#queue.length > 0) {
@@ -3105,6 +3178,12 @@ function start2(app, selector, flags) {
 function text2(content) {
   return text(content);
 }
+function h1(attrs, children2) {
+  return element("h1", attrs, children2);
+}
+function h2(attrs, children2) {
+  return element("h2", attrs, children2);
+}
 function nav(attrs, children2) {
   return element("nav", attrs, children2);
 }
@@ -3114,11 +3193,23 @@ function div(attrs, children2) {
 function li(attrs, children2) {
   return element("li", attrs, children2);
 }
+function p(attrs, children2) {
+  return element("p", attrs, children2);
+}
 function ul(attrs, children2) {
   return element("ul", attrs, children2);
 }
 function a(attrs, children2) {
   return element("a", attrs, children2);
+}
+function span(attrs, children2) {
+  return element("span", attrs, children2);
+}
+function img(attrs) {
+  return element("img", attrs, toList([]));
+}
+function button(attrs, children2) {
+  return element("button", attrs, children2);
 }
 
 // build/dev/javascript/gleam_http/gleam/http.mjs
@@ -3424,9 +3515,9 @@ var OtherError = class extends CustomType {
 var Unauthorized = class extends CustomType {
 };
 var ExpectTextResponse = class extends CustomType {
-  constructor(run) {
+  constructor(run3) {
     super();
-    this.run = run;
+    this.run = run3;
   }
 };
 function do_send(req, expect, dispatch) {
@@ -3629,9 +3720,9 @@ function init2(handler) {
 
 // build/dev/javascript/shared/shared.mjs
 var Gift = class extends CustomType {
-  constructor(id, name, pic, link) {
+  constructor(id2, name, pic, link) {
     super();
-    this.id = id;
+    this.id = id2;
     this.name = name;
     this.pic = pic;
     this.link = link;
@@ -3702,17 +3793,518 @@ function header() {
 
 // build/dev/javascript/client/client/pages/event_page.mjs
 function body() {
-  return text("Evento");
+  return toList([div(toList([]), toList([text("Evento")]))]);
+}
+
+// build/dev/javascript/rada/rada_ffi.mjs
+function get_year_month_day() {
+  let date = /* @__PURE__ */ new Date();
+  return [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+}
+
+// build/dev/javascript/rada/rada/date.mjs
+var Jan = class extends CustomType {
+};
+var Feb = class extends CustomType {
+};
+var Mar = class extends CustomType {
+};
+var Apr = class extends CustomType {
+};
+var May = class extends CustomType {
+};
+var Jun = class extends CustomType {
+};
+var Jul = class extends CustomType {
+};
+var Aug = class extends CustomType {
+};
+var Sep = class extends CustomType {
+};
+var Oct = class extends CustomType {
+};
+var Nov = class extends CustomType {
+};
+var Dec = class extends CustomType {
+};
+var RD = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var OrdinalDate = class extends CustomType {
+  constructor(year2, ordinal_day) {
+    super();
+    this.year = year2;
+    this.ordinal_day = ordinal_day;
+  }
+};
+var CalendarDate = class extends CustomType {
+  constructor(year2, month, day) {
+    super();
+    this.year = year2;
+    this.month = month;
+    this.day = day;
+  }
+};
+var Years = class extends CustomType {
+};
+var Months = class extends CustomType {
+};
+var Weeks = class extends CustomType {
+};
+var Days = class extends CustomType {
+};
+function month_to_number(month) {
+  if (month instanceof Jan) {
+    return 1;
+  } else if (month instanceof Feb) {
+    return 2;
+  } else if (month instanceof Mar) {
+    return 3;
+  } else if (month instanceof Apr) {
+    return 4;
+  } else if (month instanceof May) {
+    return 5;
+  } else if (month instanceof Jun) {
+    return 6;
+  } else if (month instanceof Jul) {
+    return 7;
+  } else if (month instanceof Aug) {
+    return 8;
+  } else if (month instanceof Sep) {
+    return 9;
+  } else if (month instanceof Oct) {
+    return 10;
+  } else if (month instanceof Nov) {
+    return 11;
+  } else {
+    return 12;
+  }
+}
+function number_to_month(month_number) {
+  let $ = max(1, month_number);
+  if ($ === 1) {
+    return new Jan();
+  } else if ($ === 2) {
+    return new Feb();
+  } else if ($ === 3) {
+    return new Mar();
+  } else if ($ === 4) {
+    return new Apr();
+  } else if ($ === 5) {
+    return new May();
+  } else if ($ === 6) {
+    return new Jun();
+  } else if ($ === 7) {
+    return new Jul();
+  } else if ($ === 8) {
+    return new Aug();
+  } else if ($ === 9) {
+    return new Sep();
+  } else if ($ === 10) {
+    return new Oct();
+  } else if ($ === 11) {
+    return new Nov();
+  } else {
+    return new Dec();
+  }
+}
+function floor_div(dividend, divisor) {
+  let $ = (dividend > 0 && divisor < 0 || dividend < 0 && divisor > 0) && remainderInt(
+    dividend,
+    divisor
+  ) !== 0;
+  if ($) {
+    return divideInt(dividend, divisor) - 1;
+  } else {
+    return divideInt(dividend, divisor);
+  }
+}
+function days_before_year(year1) {
+  let year$1 = year1 - 1;
+  let leap_years = floor_div(year$1, 4) - floor_div(year$1, 100) + floor_div(
+    year$1,
+    400
+  );
+  return 365 * year$1 + leap_years;
+}
+function modulo_unwrap(dividend, divisor) {
+  let remainder = remainderInt(dividend, divisor);
+  let $ = remainder > 0 && divisor < 0 || remainder < 0 && divisor > 0;
+  if ($) {
+    return remainder + divisor;
+  } else {
+    return remainder;
+  }
+}
+function is_leap_year(year2) {
+  return modulo_unwrap(year2, 4) === 0 && modulo_unwrap(year2, 100) !== 0 || modulo_unwrap(
+    year2,
+    400
+  ) === 0;
+}
+function days_in_month(year2, month) {
+  if (month instanceof Jan) {
+    return 31;
+  } else if (month instanceof Feb) {
+    let $ = is_leap_year(year2);
+    if ($) {
+      return 29;
+    } else {
+      return 28;
+    }
+  } else if (month instanceof Mar) {
+    return 31;
+  } else if (month instanceof Apr) {
+    return 30;
+  } else if (month instanceof May) {
+    return 31;
+  } else if (month instanceof Jun) {
+    return 30;
+  } else if (month instanceof Jul) {
+    return 31;
+  } else if (month instanceof Aug) {
+    return 31;
+  } else if (month instanceof Sep) {
+    return 30;
+  } else if (month instanceof Oct) {
+    return 31;
+  } else if (month instanceof Nov) {
+    return 30;
+  } else {
+    return 31;
+  }
+}
+function to_calendar_date_helper(loop$year, loop$month, loop$ordinal_day) {
+  while (true) {
+    let year2 = loop$year;
+    let month = loop$month;
+    let ordinal_day = loop$ordinal_day;
+    let month_days = days_in_month(year2, month);
+    let month_number$1 = month_to_number(month);
+    let $ = month_number$1 < 12 && ordinal_day > month_days;
+    if ($) {
+      loop$year = year2;
+      loop$month = number_to_month(month_number$1 + 1);
+      loop$ordinal_day = ordinal_day - month_days;
+    } else {
+      return new CalendarDate(year2, month, ordinal_day);
+    }
+  }
+}
+function days_before_month(year2, month) {
+  let leap_days = to_int(is_leap_year(year2));
+  if (month instanceof Jan) {
+    return 0;
+  } else if (month instanceof Feb) {
+    return 31;
+  } else if (month instanceof Mar) {
+    return 59 + leap_days;
+  } else if (month instanceof Apr) {
+    return 90 + leap_days;
+  } else if (month instanceof May) {
+    return 120 + leap_days;
+  } else if (month instanceof Jun) {
+    return 151 + leap_days;
+  } else if (month instanceof Jul) {
+    return 181 + leap_days;
+  } else if (month instanceof Aug) {
+    return 212 + leap_days;
+  } else if (month instanceof Sep) {
+    return 243 + leap_days;
+  } else if (month instanceof Oct) {
+    return 273 + leap_days;
+  } else if (month instanceof Nov) {
+    return 304 + leap_days;
+  } else {
+    return 334 + leap_days;
+  }
+}
+function from_calendar_date(year2, month, day) {
+  return new RD(
+    days_before_year(year2) + days_before_month(year2, month) + clamp(
+      day,
+      1,
+      days_in_month(year2, month)
+    )
+  );
+}
+function today() {
+  let $ = get_year_month_day();
+  let year$1 = $[0];
+  let month_number$1 = $[1];
+  let day$1 = $[2];
+  return from_calendar_date(year$1, number_to_month(month_number$1), day$1);
+}
+function div_with_remainder(a2, b) {
+  return [floor_div(a2, b), modulo_unwrap(a2, b)];
+}
+function year(date) {
+  let rd = date[0];
+  let $ = div_with_remainder(rd, 146097);
+  let n400 = $[0];
+  let r400 = $[1];
+  let $1 = div_with_remainder(r400, 36524);
+  let n100 = $1[0];
+  let r100 = $1[1];
+  let $2 = div_with_remainder(r100, 1461);
+  let n4 = $2[0];
+  let r4 = $2[1];
+  let $3 = div_with_remainder(r4, 365);
+  let n1 = $3[0];
+  let r1 = $3[1];
+  let n = (() => {
+    let $4 = r1 === 0;
+    if ($4) {
+      return 0;
+    } else {
+      return 1;
+    }
+  })();
+  return n400 * 400 + n100 * 100 + n4 * 4 + n1 + n;
+}
+function to_ordinal_date(date) {
+  let rd = date[0];
+  let year_ = year(date);
+  return new OrdinalDate(year_, rd - days_before_year(year_));
+}
+function to_calendar_date(date) {
+  let ordinal_date = to_ordinal_date(date);
+  return to_calendar_date_helper(
+    ordinal_date.year,
+    new Jan(),
+    ordinal_date.ordinal_day
+  );
+}
+function to_months(rd) {
+  let calendar_date = to_calendar_date(new RD(rd));
+  let whole_months = 12 * (calendar_date.year - 1) + (month_to_number(
+    calendar_date.month
+  ) - 1);
+  let fraction = divideFloat(to_float(calendar_date.day), 100);
+  return to_float(whole_months) + fraction;
+}
+function diff2(unit, date1, date2) {
+  let rd1 = date1[0];
+  let rd2 = date2[0];
+  if (unit instanceof Years) {
+    let _pipe = to_months(rd2) - to_months(rd1);
+    let _pipe$1 = truncate2(_pipe);
+    let _pipe$2 = divide(_pipe$1, 12);
+    return unwrap2(_pipe$2, 0);
+  } else if (unit instanceof Months) {
+    let _pipe = to_months(rd2) - to_months(rd1);
+    return truncate2(_pipe);
+  } else if (unit instanceof Weeks) {
+    let _pipe = divide(rd2 - rd1, 7);
+    return unwrap2(_pipe, 0);
+  } else {
+    return rd2 - rd1;
+  }
 }
 
 // build/dev/javascript/client/client/pages/home_page.mjs
+function countdown() {
+  return to_string2(
+    diff2(
+      new Days(),
+      today(),
+      from_calendar_date(2024, new Dec(), 14)
+    )
+  );
+}
 function body2() {
-  return text("Home");
+  return toList([
+    div(
+      toList([
+        attribute("data-aos", "fade-down"),
+        id("home"),
+        class$("slideshow-container")
+      ]),
+      toList([
+        div(
+          toList([class$("slide-fade")]),
+          toList([
+            div(toList([class$("numbertext")]), toList([text("1 / 3")])),
+            img(
+              toList([
+                attribute("style", "width:100%"),
+                src("/priv/static/photo1.jpeg")
+              ])
+            )
+          ])
+        ),
+        div(
+          toList([class$("slide-fade")]),
+          toList([
+            div(toList([class$("numbertext")]), toList([text("2 / 3")])),
+            img(
+              toList([
+                attribute("style", "width:100%"),
+                src("/priv/static/photo2.jpeg")
+              ])
+            )
+          ])
+        ),
+        div(
+          toList([class$("slide-fade")]),
+          toList([
+            div(toList([class$("numbertext")]), toList([text("3 / 3")])),
+            img(
+              toList([
+                attribute("style", "width:100%"),
+                src("/priv/static/photo3.jpeg")
+              ])
+            )
+          ])
+        ),
+        a(
+          toList([attribute("onclick", "plusSlides(-1)"), class$("prev")]),
+          toList([text("\u276E")])
+        ),
+        a(
+          toList([attribute("onclick", "plusSlides(1)"), class$("next")]),
+          toList([text("\u276F")])
+        )
+      ])
+    ),
+    div(
+      toList([attribute("data-aos", "fade-up"), class$("text-center mt-12")]),
+      toList([
+        h1(
+          toList([
+            attribute("style", "font-family: 'Pacifico', cursive;"),
+            class$("text-5xl text-white font-bold")
+          ]),
+          toList([text("Laura 15 Anos")])
+        ),
+        p(
+          toList([class$("text-xl text-white mt-4")]),
+          toList([text("Pomp\xE9u, MG - 14 de Dezembro de 2024")])
+        )
+      ])
+    ),
+    div(
+      toList([attribute("data-aos", "zoom-in"), class$("text-center mt-6")]),
+      toList([
+        p(
+          toList([class$("text-3xl text-white font-bold")]),
+          toList([
+            text("Faltam "),
+            span(
+              toList([class$("text-yellow-300"), id("countdown")]),
+              toList([text(countdown())])
+            ),
+            text(" dias para a festa!")
+          ])
+        )
+      ])
+    ),
+    div(
+      toList([
+        attribute("data-aos", "fade-right"),
+        id("evento"),
+        class$(
+          "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
+        )
+      ]),
+      toList([
+        div(
+          toList([class$("flex items-center justify-between mb-8")]),
+          toList([
+            img(
+              toList([
+                class$(
+                  "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
+                ),
+                alt("Laura's Birthday"),
+                src("/priv/static/profile.jpeg")
+              ])
+            ),
+            div(
+              toList([class$("flex-1 ml-12")]),
+              toList([
+                h1(
+                  toList([class$("text-5xl font-bold text-pink-600 mb-4")]),
+                  toList([text("Anivers\xE1rio de 15 Anos de Laura")])
+                ),
+                p(
+                  toList([class$("text-gray-600 text-lg mb-6")]),
+                  toList([
+                    text(
+                      "Lhe convido para celebrar esse dia t\xE3o especial em minha vida, meus 15 anos! Confirme sua presen\xE7a at\xE9 o dia 06/12 para receber seu convite individual."
+                    )
+                  ])
+                ),
+                div(
+                  toList([class$("space-x-4")]),
+                  toList([
+                    button(
+                      toList([
+                        class$(
+                          "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                        )
+                      ]),
+                      toList([text("Confirmar Presen\xE7a")])
+                    ),
+                    button(
+                      toList([
+                        class$(
+                          "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                        )
+                      ]),
+                      toList([text("Lista de Presentes")])
+                    )
+                  ])
+                )
+              ])
+            )
+          ])
+        ),
+        div(
+          toList([
+            attribute("data-aos", "fade-up"),
+            class$("bg-gray-100 p-6 rounded-lg shadow-inner")
+          ]),
+          toList([
+            h2(
+              toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
+              toList([text("Sobre Laura")])
+            ),
+            p(
+              toList([class$("text-gray-700 text-lg")]),
+              toList([
+                text(
+                  "Laura est\xE1 completando 15 anos e queremos celebrar com todos que fazem parte de sua vida. A festa ser\xE1 cheia de alegria, m\xFAsica, e muita divers\xE3o. N\xE3o perca!"
+                )
+              ])
+            )
+          ])
+        ),
+        div(
+          toList([attribute("data-aos", "zoom-in"), class$("mt-8 text-center")]),
+          toList([
+            a(
+              toList([
+                class$(
+                  "text-pink-600 hover:text-pink-800 font-semibold underline"
+                ),
+                href("/event")
+              ]),
+              toList([text("Log In")])
+            )
+          ])
+        )
+      ])
+    )
+  ]);
 }
 
 // build/dev/javascript/client/client/pages/photos_page.mjs
 function body3() {
-  return text("Photos");
+  return toList([div(toList([]), toList([text("Photos")]))]);
 }
 
 // build/dev/javascript/client/client/state.mjs
@@ -3863,20 +4455,23 @@ function view(model) {
     ]),
     toList([
       header(),
-      (() => {
-        let $ = model.route;
-        if ($ instanceof Home) {
-          return body2();
-        } else if ($ instanceof Event3) {
-          return body();
-        } else if ($ instanceof Photos) {
-          return body3();
-        } else if ($ instanceof NotFound2) {
-          return text2("404 Not Found");
-        } else {
-          return text2("Testing first");
-        }
-      })()
+      div(
+        toList([]),
+        (() => {
+          let $ = model.route;
+          if ($ instanceof Home) {
+            return body2();
+          } else if ($ instanceof Event3) {
+            return body();
+          } else if ($ instanceof Photos) {
+            return body3();
+          } else if ($ instanceof NotFound2) {
+            return toList([text2("not found")]);
+          } else {
+            return toList([text2("testing ")]);
+          }
+        })()
+      )
     ])
   );
 }
