@@ -10,8 +10,8 @@ var CustomType = class {
 var List = class {
   static fromArray(array3, tail) {
     let t = tail || new Empty();
-    for (let i = array3.length - 1; i >= 0; --i) {
-      t = new NonEmpty(array3[i], t);
+    for (let i2 = array3.length - 1; i2 >= 0; --i2) {
+      t = new NonEmpty(array3[i2], t);
     }
     return t;
   }
@@ -111,12 +111,12 @@ var BitArray = class _BitArray {
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
   let value = 0;
   if (isBigEndian) {
-    for (let i = start3; i < end; i++) {
-      value = value * 256 + byteArray[i];
+    for (let i2 = start3; i2 < end; i2++) {
+      value = value * 256 + byteArray[i2];
     }
   } else {
-    for (let i = end - 1; i >= start3; i--) {
-      value = value * 256 + byteArray[i];
+    for (let i2 = end - 1; i2 >= start3; i2--) {
+      value = value * 256 + byteArray[i2];
     }
   }
   if (isSigned) {
@@ -207,7 +207,7 @@ function unequalDates(a2, b) {
   return a2 instanceof Date && (a2 > b || a2 < b);
 }
 function unequalBuffers(a2, b) {
-  return a2.buffer instanceof ArrayBuffer && a2.BYTES_PER_ELEMENT && !(a2.byteLength === b.byteLength && a2.every((n, i) => n === b[i]));
+  return a2.buffer instanceof ArrayBuffer && a2.BYTES_PER_ELEMENT && !(a2.byteLength === b.byteLength && a2.every((n, i2) => n === b[i2]));
 }
 function unequalArrays(a2, b) {
   return Array.isArray(a2) && a2.length !== b.length;
@@ -871,16 +871,16 @@ function hashMerge(a2, b) {
 function hashString(s) {
   let hash = 0;
   const len = s.length;
-  for (let i = 0; i < len; i++) {
-    hash = Math.imul(31, hash) + s.charCodeAt(i) | 0;
+  for (let i2 = 0; i2 < len; i2++) {
+    hash = Math.imul(31, hash) + s.charCodeAt(i2) | 0;
   }
   return hash;
 }
 function hashNumber(n) {
   tempDataView.setFloat64(0, n);
-  const i = tempDataView.getInt32(0);
+  const i2 = tempDataView.getInt32(0);
   const j = tempDataView.getInt32(4);
-  return Math.imul(73244475, i >> 16 ^ i) ^ j;
+  return Math.imul(73244475, i2 >> 16 ^ i2) ^ j;
 }
 function hashBigInt(n) {
   return hashString(n.toString());
@@ -907,8 +907,8 @@ function hashObject(o) {
     o = new Uint8Array(o);
   }
   if (Array.isArray(o) || o instanceof Uint8Array) {
-    for (let i = 0; i < o.length; i++) {
-      h = Math.imul(31, h) + getHash(o[i]) | 0;
+    for (let i2 = 0; i2 < o.length; i2++) {
+      h = Math.imul(31, h) + getHash(o[i2]) | 0;
     }
   } else if (o instanceof Set) {
     o.forEach((v) => {
@@ -920,8 +920,8 @@ function hashObject(o) {
     });
   } else {
     const keys2 = Object.keys(o);
-    for (let i = 0; i < keys2.length; i++) {
-      const k = keys2[i];
+    for (let i2 = 0; i2 < keys2.length; i2++) {
+      const k = keys2[i2];
       const v = o[k];
       h = h + hashMerge(getHash(v), hashString(k)) | 0;
     }
@@ -988,8 +988,8 @@ function index(bitmap, bit) {
 function cloneAndSet(arr, at, val) {
   const len = arr.length;
   const out = new Array(len);
-  for (let i = 0; i < len; ++i) {
-    out[i] = arr[i];
+  for (let i2 = 0; i2 < len; ++i2) {
+    out[i2] = arr[i2];
   }
   out[at] = val;
   return out;
@@ -997,28 +997,28 @@ function cloneAndSet(arr, at, val) {
 function spliceIn(arr, at, val) {
   const len = arr.length;
   const out = new Array(len + 1);
-  let i = 0;
+  let i2 = 0;
   let g = 0;
-  while (i < at) {
-    out[g++] = arr[i++];
+  while (i2 < at) {
+    out[g++] = arr[i2++];
   }
   out[g++] = val;
-  while (i < len) {
-    out[g++] = arr[i++];
+  while (i2 < len) {
+    out[g++] = arr[i2++];
   }
   return out;
 }
 function spliceOut(arr, at) {
   const len = arr.length;
   const out = new Array(len - 1);
-  let i = 0;
+  let i2 = 0;
   let g = 0;
-  while (i < at) {
-    out[g++] = arr[i++];
+  while (i2 < at) {
+    out[g++] = arr[i2++];
   }
-  ++i;
-  while (i < len) {
-    out[g++] = arr[i++];
+  ++i2;
+  while (i2 < len) {
+    out[g++] = arr[i2++];
   }
   return out;
 }
@@ -1150,10 +1150,10 @@ function assocIndex(root, shift, hash, key, val, addedLeaf) {
       nodes[jdx] = assocIndex(EMPTY, shift + SHIFT, hash, key, val, addedLeaf);
       let j = 0;
       let bitmap = root.bitmap;
-      for (let i = 0; i < 32; i++) {
+      for (let i2 = 0; i2 < 32; i2++) {
         if ((bitmap & 1) !== 0) {
           const node = root.array[j++];
-          nodes[i] = node;
+          nodes[i2] = node;
         }
         bitmap = bitmap >>> 1;
       }
@@ -1214,9 +1214,9 @@ function assocCollision(root, shift, hash, key, val, addedLeaf) {
 }
 function collisionIndexOf(root, key) {
   const size = root.array.length;
-  for (let i = 0; i < size; i++) {
-    if (isEqual(key, root.array[i].k)) {
-      return i;
+  for (let i2 = 0; i2 < size; i2++) {
+    if (isEqual(key, root.array[i2].k)) {
+      return i2;
     }
   }
   return -1;
@@ -1298,27 +1298,27 @@ function withoutArray(root, shift, hash, key) {
     if (root.size <= MIN_ARRAY_NODE) {
       const arr = root.array;
       const out = new Array(root.size - 1);
-      let i = 0;
+      let i2 = 0;
       let j = 0;
       let bitmap = 0;
-      while (i < idx) {
-        const nv = arr[i];
+      while (i2 < idx) {
+        const nv = arr[i2];
         if (nv !== void 0) {
           out[j] = nv;
-          bitmap |= 1 << i;
+          bitmap |= 1 << i2;
           ++j;
         }
-        ++i;
+        ++i2;
       }
-      ++i;
-      while (i < arr.length) {
-        const nv = arr[i];
+      ++i2;
+      while (i2 < arr.length) {
+        const nv = arr[i2];
         if (nv !== void 0) {
           out[j] = nv;
-          bitmap |= 1 << i;
+          bitmap |= 1 << i2;
           ++j;
         }
-        ++i;
+        ++i2;
       }
       return {
         type: INDEX_NODE,
@@ -1398,8 +1398,8 @@ function forEach(root, fn) {
   }
   const items = root.array;
   const size = items.length;
-  for (let i = 0; i < size; i++) {
-    const item = items[i];
+  for (let i2 = 0; i2 < size; i2++) {
+    const item = items[i2];
     if (item === void 0) {
       continue;
     }
@@ -1419,8 +1419,8 @@ var Dict = class _Dict {
   static fromObject(o) {
     const keys2 = Object.keys(o);
     let m = _Dict.new();
-    for (let i = 0; i < keys2.length; i++) {
-      const k = keys2[i];
+    for (let i2 = 0; i2 < keys2.length; i2++) {
+      const k = keys2[i2];
       m = m.set(k, o[k]);
     }
     return m;
@@ -1568,11 +1568,11 @@ function string_length(string3) {
   }
   const iterator = graphemes_iterator(string3);
   if (iterator) {
-    let i = 0;
+    let i2 = 0;
     for (const _ of iterator) {
-      i++;
+      i2++;
     }
-    return i;
+    return i2;
   } else {
     return string3.match(/./gsu).length;
   }
@@ -2353,10 +2353,10 @@ var Text = class extends CustomType {
   }
 };
 var Element = class extends CustomType {
-  constructor(key, namespace2, tag, attrs, children2, self_closing, void$) {
+  constructor(key, namespace, tag, attrs, children2, self_closing, void$) {
     super();
     this.key = key;
-    this.namespace = namespace2;
+    this.namespace = namespace;
     this.tag = tag;
     this.attrs = attrs;
     this.children = children2;
@@ -2448,9 +2448,6 @@ function class$(name) {
 function id(name) {
   return attribute("id", name);
 }
-function type_(name) {
-  return attribute("type", name);
-}
 function href(uri) {
   return attribute("href", uri);
 }
@@ -2494,9 +2491,6 @@ function element(tag, attrs, children2) {
   } else {
     return new Element("", "", tag, attrs, children2, false, false);
   }
-}
-function namespaced(namespace2, tag, attrs, children2) {
-  return new Element("", namespace2, tag, attrs, children2, false, false);
 }
 function text(content) {
   return new Text(content);
@@ -2648,9 +2642,9 @@ function morph(prev, next, dispatch) {
   return out;
 }
 function createElementNode({ prev, next, dispatch, stack }) {
-  const namespace2 = next.namespace || "http://www.w3.org/1999/xhtml";
+  const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
-  const el2 = canMorph ? prev : namespace2 ? document.createElementNS(namespace2, next.tag) : document.createElement(next.tag);
+  const el2 = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
   let handlersForEl;
   if (!registeredHandlers.has(el2)) {
     const emptyHandlers = /* @__PURE__ */ new Map();
@@ -2662,7 +2656,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
   const prevHandlers = canMorph ? new Set(handlersForEl.keys()) : null;
   const prevAttributes = canMorph ? new Set(Array.from(prev.attributes, (a2) => a2.name)) : null;
   let className = null;
-  let style = null;
+  let style2 = null;
   let innerHTML = null;
   if (canMorph && next.tag === "textarea") {
     const innertText = next.children[Symbol.iterator]().next().value?.content;
@@ -2697,7 +2691,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
     } else if (name === "class") {
       className = className === null ? value : className + " " + value;
     } else if (name === "style") {
-      style = style === null ? value : style + value;
+      style2 = style2 === null ? value : style2 + value;
     } else if (name === "dangerous-unescaped-html") {
       innerHTML = value;
     } else {
@@ -2714,8 +2708,8 @@ function createElementNode({ prev, next, dispatch, stack }) {
     if (canMorph)
       prevAttributes.delete("class");
   }
-  if (style !== null) {
-    el2.setAttribute("style", style);
+  if (style2 !== null) {
+    el2.setAttribute("style", style2);
     if (canMorph)
       prevAttributes.delete("style");
   }
@@ -2799,13 +2793,13 @@ function lustreServerEventHandler(event2) {
     data: include.reduce(
       (data2, property) => {
         const path2 = property.split(".");
-        for (let i = 0, o = data2, e = event2; i < path2.length; i++) {
-          if (i === path2.length - 1) {
-            o[path2[i]] = e[path2[i]];
+        for (let i2 = 0, o = data2, e = event2; i2 < path2.length; i2++) {
+          if (i2 === path2.length - 1) {
+            o[path2[i2]] = e[path2[i2]];
           } else {
-            o[path2[i]] ??= {};
-            e = e[path2[i]];
-            o = o[path2[i]];
+            o[path2[i2]] ??= {};
+            e = e[path2[i2]];
+            o = o[path2[i2]];
           }
         }
         return data2;
@@ -3802,13 +3796,9 @@ function body() {
   return toList([div(toList([]), toList([text("Evento")]))]);
 }
 
-// build/dev/javascript/lustre/lustre/element/svg.mjs
-var namespace = "http://www.w3.org/2000/svg";
-function svg(attrs, children2) {
-  return namespaced(namespace, "svg", attrs, children2);
-}
-function path(attrs) {
-  return namespaced(namespace, "path", attrs, toList([]));
+// build/dev/javascript/falala/falala/fa.mjs
+function sliders_h() {
+  return toList([class$("fa-sliders-h")]);
 }
 
 // build/dev/javascript/rada/rada_ffi.mjs
@@ -4206,211 +4196,27 @@ function countdown() {
 function body2() {
   return toList([
     div(
+      sliders_h(),
       toList([
-        attribute("data-twe-ride", "carousel"),
-        attribute("data-twe-carousel-init", ""),
-        class$("relative"),
-        id("carouselExampleCrossfade")
-      ]),
-      toList([
-        div(
+        img(
           toList([
-            attribute("data-twe-carousel-indicators", ""),
-            class$(
-              "absolute inset-x-0 bottom-0 z-[2] mx-[15%] mb-4 flex list-none justify-center p-0"
-            )
-          ]),
-          toList([
-            button(
-              toList([
-                attribute("aria-label", "Slide 1"),
-                attribute("aria-current", "true"),
-                class$(
-                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
-                ),
-                attribute("data-twe-carousel-active", ""),
-                attribute("data-twe-slide-to", "0"),
-                attribute("data-twe-target", "#carouselExampleCrossfade"),
-                type_("button")
-              ]),
-              toList([])
-            ),
-            button(
-              toList([
-                attribute("aria-label", "Slide 2"),
-                class$(
-                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
-                ),
-                attribute("data-twe-slide-to", "1"),
-                attribute("data-twe-target", "#carouselExampleCrossfade"),
-                type_("button")
-              ]),
-              toList([])
-            ),
-            button(
-              toList([
-                attribute("aria-label", "Slide 3"),
-                class$(
-                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
-                ),
-                attribute("data-twe-slide-to", "2"),
-                attribute("data-twe-target", "#carouselExampleCrossfade"),
-                type_("button")
-              ]),
-              toList([])
-            )
+            alt("Foto 1"),
+            class$("block w-full"),
+            src("/priv/static/photo1.jpeg")
           ])
         ),
-        div(
+        img(
           toList([
-            class$(
-              "relative w-full overflow-hidden after:clear-both after:block after:content-['']"
-            )
-          ]),
-          toList([
-            div(
-              toList([
-                attribute("data-twe-carousel-active", ""),
-                attribute("data-twe-carousel-item", ""),
-                attribute("data-twe-carousel-fade", ""),
-                class$(
-                  "relative float-left -mr-[100%] w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"
-                )
-              ]),
-              toList([
-                img(
-                  toList([
-                    alt("Foto 1"),
-                    class$("block w-full"),
-                    src("/priv/static/photo1.jpeg")
-                  ])
-                )
-              ])
-            ),
-            div(
-              toList([
-                attribute("data-twe-carousel-item", ""),
-                attribute("data-twe-carousel-fade", ""),
-                class$(
-                  "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"
-                )
-              ]),
-              toList([
-                img(
-                  toList([
-                    alt("Foto 2"),
-                    class$("block w-full"),
-                    src("/priv/static/photo2.jpeg")
-                  ])
-                )
-              ])
-            ),
-            div(
-              toList([
-                attribute("data-twe-carousel-item", ""),
-                attribute("data-twe-carousel-fade", ""),
-                class$(
-                  "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"
-                )
-              ]),
-              toList([
-                img(
-                  toList([
-                    alt("Foto 3"),
-                    class$("block w-full"),
-                    src("/priv/static/photo3.jpeg")
-                  ])
-                )
-              ])
-            )
+            alt("Foto 1"),
+            class$("block w-full"),
+            src("/priv/static/photo2.jpeg")
           ])
         ),
-        button(
+        img(
           toList([
-            attribute("data-twe-slide", "prev"),
-            attribute("data-twe-target", "#carouselExampleCrossfade"),
-            type_("button"),
-            class$(
-              "absolute bottom-0 left-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none"
-            )
-          ]),
-          toList([
-            span(
-              toList([class$("inline-block h-8 w-8")]),
-              toList([
-                svg(
-                  toList([
-                    class$("h-6 w-6"),
-                    attribute("stroke", "currentColor"),
-                    attribute("stroke-width", "1.5"),
-                    attribute("viewBox", "0 0 24 24"),
-                    attribute("fill", "none"),
-                    attribute("xmlns", "http://www.w3.org/2000/svg")
-                  ]),
-                  toList([
-                    path(
-                      toList([
-                        attribute("d", "M15.75 19.5L8.25 12l7.5-7.5"),
-                        attribute("stroke-linejoin", "round"),
-                        attribute("stroke-linecap", "round")
-                      ])
-                    )
-                  ])
-                )
-              ])
-            ),
-            span(
-              toList([
-                class$(
-                  "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
-                )
-              ]),
-              toList([text("Previous")])
-            )
-          ])
-        ),
-        button(
-          toList([
-            attribute("data-twe-slide", "next"),
-            attribute("data-twe-target", "#carouselExampleCrossfade"),
-            type_("button"),
-            class$(
-              "absolute bottom-0 right-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none"
-            )
-          ]),
-          toList([
-            span(
-              toList([class$("inline-block h-8 w-8")]),
-              toList([
-                svg(
-                  toList([
-                    class$("h-6 w-6"),
-                    attribute("stroke", "currentColor"),
-                    attribute("stroke-width", "1.5"),
-                    attribute("viewBox", "0 0 24 24"),
-                    attribute("fill", "none"),
-                    attribute("xmlns", "http://www.w3.org/2000/svg")
-                  ]),
-                  toList([
-                    path(
-                      toList([
-                        attribute("d", "M8.25 4.5l7.5 7.5-7.5 7.5"),
-                        attribute("stroke-linejoin", "round"),
-                        attribute("stroke-linecap", "round")
-                      ])
-                    )
-                  ])
-                )
-              ])
-            ),
-            span(
-              toList([
-                class$(
-                  "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
-                )
-              ]),
-              toList([text("Next")])
-            )
+            alt("Foto 1"),
+            class$("block w-full"),
+            src("/priv/static/photo3.jpeg")
           ])
         )
       ])

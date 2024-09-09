@@ -6,8 +6,11 @@
 // initTWE({ Carousel });
 
 import client/state.{UserChangedSlide}
+import falala/fa
 import gleam/int
 import lustre/attribute.{alt, attribute, class, href, id, src, type_}
+import lustre/carousel
+import lustre/carousel/slide
 import lustre/element.{text}
 import lustre/element/html.{a, button, div, h1, h2, img, p, span}
 import lustre/element/svg.{path, svg}
@@ -15,203 +18,226 @@ import lustre/event
 import rada/date
 
 // import tw_elements.{Carousel, initTWE}
+fn slides() {
+  let slide1 = slide.StaticSlide("/priv/static/photo1.jpeg")
+  let slide2 = slide.StaticSlide("/priv/static/photo2.jpeg")
+  let slide3 = slide.StaticSlide("/priv/static/photo3.jpeg")
+  [slide1, slide2, slide3]
+}
 
 pub fn body() {
   [
-    div(
-      [
-        attribute("data-twe-ride", "carousel"),
-        attribute("data-twe-carousel-init", ""),
-        class("relative"),
-        id("carouselExampleCrossfade"),
-      ],
-      [
-        div(
-          [
-            attribute("data-twe-carousel-indicators", ""),
-            class(
-              "absolute inset-x-0 bottom-0 z-[2] mx-[15%] mb-4 flex list-none justify-center p-0",
-            ),
-          ],
-          [
-            button(
-              [
-                attribute("aria-label", "Slide 1"),
-                attribute("aria-current", "true"),
-                class(
-                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none",
-                ),
-                attribute("data-twe-carousel-active", ""),
-                attribute("data-twe-slide-to", "0"),
-                attribute("data-twe-target", "#carouselExampleCrossfade"),
-                type_("button"),
-              ],
-              [],
-            ),
-            button(
-              [
-                attribute("aria-label", "Slide 2"),
-                class(
-                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none",
-                ),
-                attribute("data-twe-slide-to", "1"),
-                attribute("data-twe-target", "#carouselExampleCrossfade"),
-                type_("button"),
-              ],
-              [],
-            ),
-            button(
-              [
-                attribute("aria-label", "Slide 3"),
-                class(
-                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none",
-                ),
-                attribute("data-twe-slide-to", "2"),
-                attribute("data-twe-target", "#carouselExampleCrossfade"),
-                type_("button"),
-              ],
-              [],
-            ),
-          ],
-        ),
-        div(
-          [
-            class(
-              "relative w-full overflow-hidden after:clear-both after:block after:content-['']",
-            ),
-          ],
-          [
-            div(
-              [
-                attribute("data-twe-carousel-active", ""),
-                attribute("data-twe-carousel-item", ""),
-                attribute("data-twe-carousel-fade", ""),
-                class(
-                  "relative float-left -mr-[100%] w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
-                ),
-              ],
-              [
-                img([
-                  alt("Foto 1"),
-                  class("block w-full"),
-                  src("/priv/static/photo1.jpeg"),
-                ]),
-              ],
-            ),
-            div(
-              [
-                attribute("data-twe-carousel-item", ""),
-                attribute("data-twe-carousel-fade", ""),
-                class(
-                  "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
-                ),
-              ],
-              [
-                img([
-                  alt("Foto 2"),
-                  class("block w-full"),
-                  src("/priv/static/photo2.jpeg"),
-                ]),
-              ],
-            ),
-            div(
-              [
-                attribute("data-twe-carousel-item", ""),
-                attribute("data-twe-carousel-fade", ""),
-                class(
-                  "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
-                ),
-              ],
-              [
-                img([
-                  alt("Foto 3"),
-                  class("block w-full"),
-                  src("/priv/static/photo3.jpeg"),
-                ]),
-              ],
-            ),
-          ],
-        ),
-        button(
-          [
-            attribute("data-twe-slide", "prev"),
-            attribute("data-twe-target", "#carouselExampleCrossfade"),
-            type_("button"),
-            class(
-              "absolute bottom-0 left-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none",
-            ),
-          ],
-          [
-            span([class("inline-block h-8 w-8")], [
-              svg(
-                [
-                  class("h-6 w-6"),
-                  attribute("stroke", "currentColor"),
-                  attribute("stroke-width", "1.5"),
-                  attribute("viewBox", "0 0 24 24"),
-                  attribute("fill", "none"),
-                  attribute("xmlns", "http://www.w3.org/2000/svg"),
-                ],
-                [
-                  svg.path([
-                    attribute("d", "M15.75 19.5L8.25 12l7.5-7.5"),
-                    attribute("stroke-linejoin", "round"),
-                    attribute("stroke-linecap", "round"),
-                  ]),
-                ],
-              ),
-            ]),
-            span(
-              [
-                class(
-                  "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]",
-                ),
-              ],
-              [text("Previous")],
-            ),
-          ],
-        ),
-        button(
-          [
-            attribute("data-twe-slide", "next"),
-            attribute("data-twe-target", "#carouselExampleCrossfade"),
-            type_("button"),
-            class(
-              "absolute bottom-0 right-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none",
-            ),
-          ],
-          [
-            span([class("inline-block h-8 w-8")], [
-              svg(
-                [
-                  class("h-6 w-6"),
-                  attribute("stroke", "currentColor"),
-                  attribute("stroke-width", "1.5"),
-                  attribute("viewBox", "0 0 24 24"),
-                  attribute("fill", "none"),
-                  attribute("xmlns", "http://www.w3.org/2000/svg"),
-                ],
-                [
-                  path([
-                    attribute("d", "M8.25 4.5l7.5 7.5-7.5 7.5"),
-                    attribute("stroke-linejoin", "round"),
-                    attribute("stroke-linecap", "round"),
-                  ]),
-                ],
-              ),
-            ]),
-            span(
-              [
-                class(
-                  "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]",
-                ),
-              ],
-              [text("Next")],
-            ),
-          ],
-        ),
-      ],
-    ),
+    div(fa.sliders_h(), [
+      img([
+        alt("Foto 1"),
+        class("block w-full"),
+        src("/priv/static/photo1.jpeg"),
+      ]),
+      img([
+        alt("Foto 1"),
+        class("block w-full"),
+        src("/priv/static/photo2.jpeg"),
+      ]),
+      img([
+        alt("Foto 1"),
+        class("block w-full"),
+        src("/priv/static/photo3.jpeg"),
+      ]),
+    ]),
+    // div(
+    //   [
+    //     attribute("data-twe-ride", "carousel"),
+    //     attribute("data-twe-carousel-init", ""),
+    //     class("relative"),
+    //     id("carouselExampleCrossfade"),
+    //   ],
+    //   [
+    //     div(
+    //       [
+    //         attribute("data-twe-carousel-indicators", ""),
+    //         class(
+    //           "absolute inset-x-0 bottom-0 z-[2] mx-[15%] mb-4 flex list-none justify-center p-0",
+    //         ),
+    //       ],
+    //       [
+    //         button(
+    //           [
+    //             attribute("aria-label", "Slide 1"),
+    //             attribute("aria-current", "true"),
+    //             class(
+    //               "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none",
+    //             ),
+    //             attribute("data-twe-carousel-active", ""),
+    //             attribute("data-twe-slide-to", "0"),
+    //             attribute("data-twe-target", "#carouselExampleCrossfade"),
+    //             type_("button"),
+    //           ],
+    //           [],
+    //         ),
+    //         button(
+    //           [
+    //             attribute("aria-label", "Slide 2"),
+    //             class(
+    //               "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none",
+    //             ),
+    //             attribute("data-twe-slide-to", "1"),
+    //             attribute("data-twe-target", "#carouselExampleCrossfade"),
+    //             type_("button"),
+    //           ],
+    //           [],
+    //         ),
+    //         button(
+    //           [
+    //             attribute("aria-label", "Slide 3"),
+    //             class(
+    //               "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none",
+    //             ),
+    //             attribute("data-twe-slide-to", "2"),
+    //             attribute("data-twe-target", "#carouselExampleCrossfade"),
+    //             type_("button"),
+    //           ],
+    //           [],
+    //         ),
+    //       ],
+    //     ),
+    //     div(
+    //       [
+    //         class(
+    //           "relative w-full overflow-hidden after:clear-both after:block after:content-['']",
+    //         ),
+    //       ],
+    //       [
+    //         div(
+    //           [
+    //             attribute("data-twe-carousel-active", ""),
+    //             attribute("data-twe-carousel-item", ""),
+    //             attribute("data-twe-carousel-fade", ""),
+    //             class(
+    //               "relative float-left -mr-[100%] w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
+    //             ),
+    //           ],
+    //           [
+    //             img([
+    //               alt("Foto 1"),
+    //               class("block w-full"),
+    //               src("/priv/static/photo1.jpeg"),
+    //             ]),
+    //           ],
+    //         ),
+    //         div(
+    //           [
+    //             attribute("data-twe-carousel-item", ""),
+    //             attribute("data-twe-carousel-fade", ""),
+    //             class(
+    //               "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
+    //             ),
+    //           ],
+    //           [
+    //             img([
+    //               alt("Foto 2"),
+    //               class("block w-full"),
+    //               src("/priv/static/photo2.jpeg"),
+    //             ]),
+    //           ],
+    //         ),
+    //         div(
+    //           [
+    //             attribute("data-twe-carousel-item", ""),
+    //             attribute("data-twe-carousel-fade", ""),
+    //             class(
+    //               "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
+    //             ),
+    //           ],
+    //           [
+    //             img([
+    //               alt("Foto 3"),
+    //               class("block w-full"),
+    //               src("/priv/static/photo3.jpeg"),
+    //             ]),
+    //           ],
+    //         ),
+    //       ],
+    //     ),
+    //     button(
+    //       [
+    //         attribute("data-twe-slide", "prev"),
+    //         attribute("data-twe-target", "#carouselExampleCrossfade"),
+    //         type_("button"),
+    //         class(
+    //           "absolute bottom-0 left-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none",
+    //         ),
+    //       ],
+    //       [
+    //         span([class("inline-block h-8 w-8")], [
+    //           svg(
+    //             [
+    //               class("h-6 w-6"),
+    //               attribute("stroke", "currentColor"),
+    //               attribute("stroke-width", "1.5"),
+    //               attribute("viewBox", "0 0 24 24"),
+    //               attribute("fill", "none"),
+    //               attribute("xmlns", "http://www.w3.org/2000/svg"),
+    //             ],
+    //             [
+    //               svg.path([
+    //                 attribute("d", "M15.75 19.5L8.25 12l7.5-7.5"),
+    //                 attribute("stroke-linejoin", "round"),
+    //                 attribute("stroke-linecap", "round"),
+    //               ]),
+    //             ],
+    //           ),
+    //         ]),
+    //         span(
+    //           [
+    //             class(
+    //               "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]",
+    //             ),
+    //           ],
+    //           [text("Previous")],
+    //         ),
+    //       ],
+    //     ),
+    //     button(
+    //       [
+    //         attribute("data-twe-slide", "next"),
+    //         attribute("data-twe-target", "#carouselExampleCrossfade"),
+    //         type_("button"),
+    //         class(
+    //           "absolute bottom-0 right-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none",
+    //         ),
+    //       ],
+    //       [
+    //         span([class("inline-block h-8 w-8")], [
+    //           svg(
+    //             [
+    //               class("h-6 w-6"),
+    //               attribute("stroke", "currentColor"),
+    //               attribute("stroke-width", "1.5"),
+    //               attribute("viewBox", "0 0 24 24"),
+    //               attribute("fill", "none"),
+    //               attribute("xmlns", "http://www.w3.org/2000/svg"),
+    //             ],
+    //             [
+    //               path([
+    //                 attribute("d", "M8.25 4.5l7.5 7.5-7.5 7.5"),
+    //                 attribute("stroke-linejoin", "round"),
+    //                 attribute("stroke-linecap", "round"),
+    //               ]),
+    //             ],
+    //           ),
+    //         ]),
+    //         span(
+    //           [
+    //             class(
+    //               "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]",
+    //             ),
+    //           ],
+    //           [text("Next")],
+    //         ),
+    //       ],
+    //     ),
+    //   ],
+    // ),
     div([attribute("data-aos", "fade-up"), class("text-center mt-12")], [
       h1(
         [
