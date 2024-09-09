@@ -7,6 +7,7 @@ import client/state.{
   type Model, type Msg, type Route, CreateGiftResponded, Event, Gifts, GotGifts,
   Home, LinkUpdated, MessageErrorResponse, Model, NameUpdated, NotFound,
   OnRouteChange, Photos, PicUpdated, RequestCreateGift, ShowGift,
+  UserChangedSlide,
 }
 import gleam/dynamic
 import gleam/int
@@ -87,7 +88,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     // Run the create_post function if the RequestCreatePost message was recieved from the frontend.
     CreateGiftResponded(response) -> #(model, get_gifts())
     // If the create post responded then we want to refetch our posts
-    UserChangedSlide(dir: Int) -> #(model, like_post(post_id))
+    UserChangedSlide(_dir) -> #(model, get_gifts())
   }
 }
 

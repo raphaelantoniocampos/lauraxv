@@ -673,11 +673,11 @@ function split2(iodata, pattern) {
 
 // build/dev/javascript/gleam_stdlib/gleam/dynamic.mjs
 var DecodeError = class extends CustomType {
-  constructor(expected, found, path) {
+  constructor(expected, found, path2) {
     super();
     this.expected = expected;
     this.found = found;
-    this.path = path;
+    this.path = path2;
   }
 };
 function from(a2) {
@@ -1642,8 +1642,8 @@ var unicode_whitespaces = [
 ].join();
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function truncate(float2) {
-  return Math.trunc(float2);
+function truncate(float3) {
+  return Math.trunc(float3);
 }
 function compile_regex(pattern, options) {
   try {
@@ -2020,13 +2020,13 @@ function object2(entries) {
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
 var Uri = class extends CustomType {
-  constructor(scheme, userinfo, host, port, path, query, fragment) {
+  constructor(scheme, userinfo, host, port, path2, query, fragment) {
     super();
     this.scheme = scheme;
     this.userinfo = userinfo;
     this.host = host;
     this.port = port;
-    this.path = path;
+    this.path = path2;
     this.query = query;
     this.fragment = fragment;
   }
@@ -2134,13 +2134,13 @@ function do_parse(uri_string) {
     if (matches.hasLength(8)) {
       let scheme2 = matches.tail.head;
       let authority_with_slashes = matches.tail.tail.head;
-      let path2 = matches.tail.tail.tail.tail.head;
+      let path3 = matches.tail.tail.tail.tail.head;
       let query_with_question_mark = matches.tail.tail.tail.tail.tail.head;
       let fragment2 = matches.tail.tail.tail.tail.tail.tail.tail.head;
       return [
         scheme2,
         authority_with_slashes,
-        path2,
+        path3,
         query_with_question_mark,
         fragment2
       ];
@@ -2150,11 +2150,11 @@ function do_parse(uri_string) {
   })();
   let scheme = $[0];
   let authority = $[1];
-  let path = $[2];
+  let path2 = $[2];
   let query = $[3];
   let fragment = $[4];
   let scheme$1 = noneify_empty_string(scheme);
-  let path$1 = unwrap(path, "");
+  let path$1 = unwrap(path2, "");
   let query$1 = noneify_query(query);
   let $1 = split_authority(authority);
   let userinfo = $1[0];
@@ -2214,8 +2214,8 @@ function do_remove_dot_segments(loop$input, loop$accumulator) {
 function remove_dot_segments(input) {
   return do_remove_dot_segments(input, toList([]));
 }
-function path_segments(path) {
-  return remove_dot_segments(split3(path, "/"));
+function path_segments(path2) {
+  return remove_dot_segments(split3(path2, "/"));
 }
 function to_string6(uri) {
   let parts = (() => {
@@ -2293,8 +2293,8 @@ function to_string6(uri) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
-function to_int(bool2) {
-  if (!bool2) {
+function to_int(bool3) {
+  if (!bool3) {
     return 0;
   } else {
     return 1;
@@ -2353,10 +2353,10 @@ var Text = class extends CustomType {
   }
 };
 var Element = class extends CustomType {
-  constructor(key, namespace, tag, attrs, children2, self_closing, void$) {
+  constructor(key, namespace2, tag, attrs, children2, self_closing, void$) {
     super();
     this.key = key;
-    this.namespace = namespace;
+    this.namespace = namespace2;
     this.tag = tag;
     this.attrs = attrs;
     this.children = children2;
@@ -2448,6 +2448,9 @@ function class$(name) {
 function id(name) {
   return attribute("id", name);
 }
+function type_(name) {
+  return attribute("type", name);
+}
 function href(uri) {
   return attribute("href", uri);
 }
@@ -2491,6 +2494,9 @@ function element(tag, attrs, children2) {
   } else {
     return new Element("", "", tag, attrs, children2, false, false);
   }
+}
+function namespaced(namespace2, tag, attrs, children2) {
+  return new Element("", namespace2, tag, attrs, children2, false, false);
 }
 function text(content) {
   return new Text(content);
@@ -2642,9 +2648,9 @@ function morph(prev, next, dispatch) {
   return out;
 }
 function createElementNode({ prev, next, dispatch, stack }) {
-  const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
+  const namespace2 = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
-  const el2 = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
+  const el2 = canMorph ? prev : namespace2 ? document.createElementNS(namespace2, next.tag) : document.createElement(next.tag);
   let handlersForEl;
   if (!registeredHandlers.has(el2)) {
     const emptyHandlers = /* @__PURE__ */ new Map();
@@ -2764,25 +2770,25 @@ function createElementNode({ prev, next, dispatch, stack }) {
   return el2;
 }
 var registeredHandlers = /* @__PURE__ */ new WeakMap();
-function lustreGenericEventHandler(event) {
-  const target = event.currentTarget;
+function lustreGenericEventHandler(event2) {
+  const target = event2.currentTarget;
   if (!registeredHandlers.has(target)) {
-    target.removeEventListener(event.type, lustreGenericEventHandler);
+    target.removeEventListener(event2.type, lustreGenericEventHandler);
     return;
   }
   const handlersForEventTarget = registeredHandlers.get(target);
-  if (!handlersForEventTarget.has(event.type)) {
-    target.removeEventListener(event.type, lustreGenericEventHandler);
+  if (!handlersForEventTarget.has(event2.type)) {
+    target.removeEventListener(event2.type, lustreGenericEventHandler);
     return;
   }
-  handlersForEventTarget.get(event.type)(event);
+  handlersForEventTarget.get(event2.type)(event2);
 }
-function lustreServerEventHandler(event) {
-  const el2 = event.currentTarget;
-  const tag = el2.getAttribute(`data-lustre-on-${event.type}`);
+function lustreServerEventHandler(event2) {
+  const el2 = event2.currentTarget;
+  const tag = el2.getAttribute(`data-lustre-on-${event2.type}`);
   const data = JSON.parse(el2.getAttribute("data-lustre-data") || "{}");
   const include = JSON.parse(el2.getAttribute("data-lustre-include") || "[]");
-  switch (event.type) {
+  switch (event2.type) {
     case "input":
     case "change":
       include.push("target.value");
@@ -2792,14 +2798,14 @@ function lustreServerEventHandler(event) {
     tag,
     data: include.reduce(
       (data2, property) => {
-        const path = property.split(".");
-        for (let i = 0, o = data2, e = event; i < path.length; i++) {
-          if (i === path.length - 1) {
-            o[path[i]] = e[path[i]];
+        const path2 = property.split(".");
+        for (let i = 0, o = data2, e = event2; i < path2.length; i++) {
+          if (i === path2.length - 1) {
+            o[path2[i]] = e[path2[i]];
           } else {
-            o[path[i]] ??= {};
-            e = e[path[i]];
-            o = o[path[i]];
+            o[path2[i]] ??= {};
+            e = e[path2[i]];
+            o = o[path2[i]];
           }
         }
         return data2;
@@ -2929,8 +2935,8 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#queue = [];
         this.#model = action[0][0];
         const vdom = this.#view(this.#model);
-        const dispatch = (handler, immediate = false) => (event) => {
-          const result = handler(event);
+        const dispatch = (handler, immediate = false) => (event2) => {
+          const result = handler(event2);
           if (result instanceof Ok) {
             this.send(new Dispatch(result[0], immediate));
           }
@@ -2949,10 +2955,10 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#tickScheduled = window.requestAnimationFrame(() => this.#tick());
       }
     } else if (action instanceof Emit2) {
-      const event = action[0];
+      const event2 = action[0];
       const data = action[1];
       this.root.dispatchEvent(
-        new CustomEvent(event, {
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2988,8 +2994,8 @@ var LustreClientApplication = class _LustreClientApplication {
     if (!this.#flush(effects, isFirstRender))
       return;
     const vdom = this.#view(this.#model);
-    const dispatch = (handler, immediate = false) => (event) => {
-      const result = handler(event);
+    const dispatch = (handler, immediate = false) => (event2) => {
+      const result = handler(event2);
       if (result instanceof Ok) {
         this.send(new Dispatch(result[0], immediate));
       }
@@ -3008,8 +3014,8 @@ var LustreClientApplication = class _LustreClientApplication {
     while (effects.length > 0) {
       const effect = effects.shift();
       const dispatch = (msg) => this.send(new Dispatch(msg));
-      const emit2 = (event, data) => this.root.dispatchEvent(
-        new CustomEvent(event, {
+      const emit2 = (event2, data) => this.root.dispatchEvent(
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -3067,9 +3073,9 @@ var LustreServerApplication = class _LustreServerApplication {
       this.#queue.push(action[0]);
       this.#tick();
     } else if (action instanceof Emit2) {
-      const event = new Emit(action[0], action[1]);
+      const event2 = new Emit(action[0], action[1]);
       for (const [_, renderer] of this.#renderers) {
-        renderer(event);
+        renderer(event2);
       }
     } else if (action instanceof Event2) {
       const handler = this.#handlers.get(action[0]);
@@ -3122,8 +3128,8 @@ var LustreServerApplication = class _LustreServerApplication {
     while (effects.length > 0) {
       const effect = effects.shift();
       const dispatch = (msg) => this.send(new Dispatch(msg));
-      const emit2 = (event, data) => this.root.dispatchEvent(
-        new CustomEvent(event, {
+      const emit2 = (event2, data) => this.root.dispatchEvent(
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -3279,7 +3285,7 @@ function scheme_from_string(scheme) {
 
 // build/dev/javascript/gleam_http/gleam/http/request.mjs
 var Request = class extends CustomType {
-  constructor(method, headers, body4, scheme, host, port, path, query) {
+  constructor(method, headers, body4, scheme, host, port, path2, query) {
     super();
     this.method = method;
     this.headers = headers;
@@ -3287,7 +3293,7 @@ var Request = class extends CustomType {
     this.scheme = scheme;
     this.host = host;
     this.port = port;
-    this.path = path;
+    this.path = path2;
     this.query = query;
   }
 };
@@ -3342,9 +3348,9 @@ function set_body(req, body4) {
   let scheme = req.scheme;
   let host = req.host;
   let port = req.port;
-  let path = req.path;
+  let path2 = req.path;
   let query = req.query;
-  return new Request(method, headers, body4, scheme, host, port, path, query);
+  return new Request(method, headers, body4, scheme, host, port, path2, query);
 }
 function set_method(req, method) {
   return req.withFields({ method });
@@ -3625,8 +3631,8 @@ var defaults = {
 };
 var initial_location = window?.location?.href;
 var do_init = (dispatch, options = defaults) => {
-  document.addEventListener("click", (event) => {
-    const a2 = find_anchor(event.target);
+  document.addEventListener("click", (event2) => {
+    const a2 = find_anchor(event2.target);
     if (!a2)
       return;
     try {
@@ -3637,7 +3643,7 @@ var do_init = (dispatch, options = defaults) => {
         return;
       if (!options.handle_internal_links && !is_external)
         return;
-      event.preventDefault();
+      event2.preventDefault();
       if (!is_external) {
         window.history.pushState({}, "", a2.href);
         window.requestAnimationFrame(() => {
@@ -3794,6 +3800,15 @@ function header() {
 // build/dev/javascript/client/client/pages/event_page.mjs
 function body() {
   return toList([div(toList([]), toList([text("Evento")]))]);
+}
+
+// build/dev/javascript/lustre/lustre/element/svg.mjs
+var namespace = "http://www.w3.org/2000/svg";
+function svg(attrs, children2) {
+  return namespaced(namespace, "svg", attrs, children2);
+}
+function path(attrs) {
+  return namespaced(namespace, "path", attrs, toList([]));
 }
 
 // build/dev/javascript/rada/rada_ffi.mjs
@@ -4105,6 +4120,79 @@ function diff2(unit, date1, date2) {
   }
 }
 
+// build/dev/javascript/client/client/state.mjs
+var Home = class extends CustomType {
+};
+var Event3 = class extends CustomType {
+};
+var Gifts = class extends CustomType {
+};
+var ShowGift = class extends CustomType {
+  constructor(gift_id) {
+    super();
+    this.gift_id = gift_id;
+  }
+};
+var Photos = class extends CustomType {
+};
+var NotFound2 = class extends CustomType {
+};
+var Model2 = class extends CustomType {
+  constructor(route, gifts, name, pic, link) {
+    super();
+    this.route = route;
+    this.gifts = gifts;
+    this.name = name;
+    this.pic = pic;
+    this.link = link;
+  }
+};
+var OnRouteChange = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var GotGifts = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var NameUpdated = class extends CustomType {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+};
+var PicUpdated = class extends CustomType {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+};
+var LinkUpdated = class extends CustomType {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+};
+var RequestCreateGift = class extends CustomType {
+};
+var CreateGiftResponded = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var MessageErrorResponse = class extends CustomType {
+  constructor(message, error) {
+    super();
+    this.message = message;
+    this.error = error;
+  }
+};
+
 // build/dev/javascript/client/client/pages/home_page.mjs
 function countdown() {
   return to_string2(
@@ -4119,54 +4207,211 @@ function body2() {
   return toList([
     div(
       toList([
-        attribute("data-aos", "fade-down"),
-        id("home"),
-        class$("slideshow-container")
+        attribute("data-twe-ride", "carousel"),
+        attribute("data-twe-carousel-init", ""),
+        class$("relative"),
+        id("carouselExampleCrossfade")
       ]),
       toList([
         div(
-          toList([class$("slide-fade")]),
           toList([
-            div(toList([class$("numbertext")]), toList([text("1 / 3")])),
-            img(
+            attribute("data-twe-carousel-indicators", ""),
+            class$(
+              "absolute inset-x-0 bottom-0 z-[2] mx-[15%] mb-4 flex list-none justify-center p-0"
+            )
+          ]),
+          toList([
+            button(
               toList([
-                attribute("style", "width:100%"),
-                src("/priv/static/photo1.jpeg")
-              ])
+                attribute("aria-label", "Slide 1"),
+                attribute("aria-current", "true"),
+                class$(
+                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
+                ),
+                attribute("data-twe-carousel-active", ""),
+                attribute("data-twe-slide-to", "0"),
+                attribute("data-twe-target", "#carouselExampleCrossfade"),
+                type_("button")
+              ]),
+              toList([])
+            ),
+            button(
+              toList([
+                attribute("aria-label", "Slide 2"),
+                class$(
+                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
+                ),
+                attribute("data-twe-slide-to", "1"),
+                attribute("data-twe-target", "#carouselExampleCrossfade"),
+                type_("button")
+              ]),
+              toList([])
+            ),
+            button(
+              toList([
+                attribute("aria-label", "Slide 3"),
+                class$(
+                  "mx-[3px] box-content h-[3px] w-[30px] flex-initial cursor-pointer border-0 border-y-[10px] border-solid border-transparent bg-white bg-clip-padding p-0 -indent-[999px] opacity-50 transition-opacity duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1.0)] motion-reduce:transition-none"
+                ),
+                attribute("data-twe-slide-to", "2"),
+                attribute("data-twe-target", "#carouselExampleCrossfade"),
+                type_("button")
+              ]),
+              toList([])
             )
           ])
         ),
         div(
-          toList([class$("slide-fade")]),
           toList([
-            div(toList([class$("numbertext")]), toList([text("2 / 3")])),
-            img(
+            class$(
+              "relative w-full overflow-hidden after:clear-both after:block after:content-['']"
+            )
+          ]),
+          toList([
+            div(
               toList([
-                attribute("style", "width:100%"),
-                src("/priv/static/photo2.jpeg")
+                attribute("data-twe-carousel-active", ""),
+                attribute("data-twe-carousel-item", ""),
+                attribute("data-twe-carousel-fade", ""),
+                class$(
+                  "relative float-left -mr-[100%] w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"
+                )
+              ]),
+              toList([
+                img(
+                  toList([
+                    alt("Foto 1"),
+                    class$("block w-full"),
+                    src("/priv/static/photo1.jpeg")
+                  ])
+                )
+              ])
+            ),
+            div(
+              toList([
+                attribute("data-twe-carousel-item", ""),
+                attribute("data-twe-carousel-fade", ""),
+                class$(
+                  "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"
+                )
+              ]),
+              toList([
+                img(
+                  toList([
+                    alt("Foto 2"),
+                    class$("block w-full"),
+                    src("/priv/static/photo2.jpeg")
+                  ])
+                )
+              ])
+            ),
+            div(
+              toList([
+                attribute("data-twe-carousel-item", ""),
+                attribute("data-twe-carousel-fade", ""),
+                class$(
+                  "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"
+                )
+              ]),
+              toList([
+                img(
+                  toList([
+                    alt("Foto 3"),
+                    class$("block w-full"),
+                    src("/priv/static/photo3.jpeg")
+                  ])
+                )
               ])
             )
           ])
         ),
-        div(
-          toList([class$("slide-fade")]),
+        button(
           toList([
-            div(toList([class$("numbertext")]), toList([text("3 / 3")])),
-            img(
+            attribute("data-twe-slide", "prev"),
+            attribute("data-twe-target", "#carouselExampleCrossfade"),
+            type_("button"),
+            class$(
+              "absolute bottom-0 left-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none"
+            )
+          ]),
+          toList([
+            span(
+              toList([class$("inline-block h-8 w-8")]),
               toList([
-                attribute("style", "width:100%"),
-                src("/priv/static/photo3.jpeg")
+                svg(
+                  toList([
+                    class$("h-6 w-6"),
+                    attribute("stroke", "currentColor"),
+                    attribute("stroke-width", "1.5"),
+                    attribute("viewBox", "0 0 24 24"),
+                    attribute("fill", "none"),
+                    attribute("xmlns", "http://www.w3.org/2000/svg")
+                  ]),
+                  toList([
+                    path(
+                      toList([
+                        attribute("d", "M15.75 19.5L8.25 12l7.5-7.5"),
+                        attribute("stroke-linejoin", "round"),
+                        attribute("stroke-linecap", "round")
+                      ])
+                    )
+                  ])
+                )
               ])
+            ),
+            span(
+              toList([
+                class$(
+                  "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+                )
+              ]),
+              toList([text("Previous")])
             )
           ])
         ),
-        a(
-          toList([attribute("onclick", "plusSlides(-1)"), class$("prev")]),
-          toList([text("\u276E")])
-        ),
-        a(
-          toList([attribute("onclick", "plusSlides(1)"), class$("next")]),
-          toList([text("\u276F")])
+        button(
+          toList([
+            attribute("data-twe-slide", "next"),
+            attribute("data-twe-target", "#carouselExampleCrossfade"),
+            type_("button"),
+            class$(
+              "absolute bottom-0 right-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none"
+            )
+          ]),
+          toList([
+            span(
+              toList([class$("inline-block h-8 w-8")]),
+              toList([
+                svg(
+                  toList([
+                    class$("h-6 w-6"),
+                    attribute("stroke", "currentColor"),
+                    attribute("stroke-width", "1.5"),
+                    attribute("viewBox", "0 0 24 24"),
+                    attribute("fill", "none"),
+                    attribute("xmlns", "http://www.w3.org/2000/svg")
+                  ]),
+                  toList([
+                    path(
+                      toList([
+                        attribute("d", "M8.25 4.5l7.5 7.5-7.5 7.5"),
+                        attribute("stroke-linejoin", "round"),
+                        attribute("stroke-linecap", "round")
+                      ])
+                    )
+                  ])
+                )
+              ])
+            ),
+            span(
+              toList([
+                class$(
+                  "!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+                )
+              ]),
+              toList([text("Next")])
+            )
+          ])
         )
       ])
     ),
@@ -4307,79 +4552,6 @@ function body3() {
   return toList([div(toList([]), toList([text("Photos")]))]);
 }
 
-// build/dev/javascript/client/client/state.mjs
-var Home = class extends CustomType {
-};
-var Event3 = class extends CustomType {
-};
-var Gifts = class extends CustomType {
-};
-var ShowGift = class extends CustomType {
-  constructor(gift_id) {
-    super();
-    this.gift_id = gift_id;
-  }
-};
-var Photos = class extends CustomType {
-};
-var NotFound2 = class extends CustomType {
-};
-var Model2 = class extends CustomType {
-  constructor(route, gifts, name, pic, link) {
-    super();
-    this.route = route;
-    this.gifts = gifts;
-    this.name = name;
-    this.pic = pic;
-    this.link = link;
-  }
-};
-var OnRouteChange = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var GotGifts = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var NameUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var PicUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var LinkUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var RequestCreateGift = class extends CustomType {
-};
-var CreateGiftResponded = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var MessageErrorResponse = class extends CustomType {
-  constructor(message, error) {
-    super();
-    this.message = message;
-    this.error = error;
-  }
-};
-
 // build/dev/javascript/client/ffi.mjs
 function get_route() {
   return window.location.pathname;
@@ -4396,7 +4568,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 98, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 100, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4418,7 +4590,7 @@ function get_route2() {
       throw makeError(
         "assignment_no_match",
         "client",
-        109,
+        111,
         "get_route",
         "Assignment pattern did not match",
         { value: $1 }
@@ -4529,7 +4701,7 @@ function update(model, msg) {
       throw makeError(
         "panic",
         "client",
-        64,
+        65,
         "update",
         "panic expression evaluated",
         {}
@@ -4546,8 +4718,10 @@ function update(model, msg) {
     return [model.withFields({ link: value }), none()];
   } else if (msg instanceof RequestCreateGift) {
     return [model, create_gift(model)];
-  } else {
+  } else if (msg instanceof CreateGiftResponded) {
     let response = msg[0];
+    return [model, get_gifts()];
+  } else {
     return [model, get_gifts()];
   }
 }
