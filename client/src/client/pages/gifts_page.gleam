@@ -1,7 +1,7 @@
+// import client.{type Route}
 // import gleam/dynamic
 // import gleam/int
 // import gleam/json
-// import gleam/list
 // import gleam/list
 // import gleam/option.{type Option}
 // import gleam/uri.{type Uri}
@@ -15,7 +15,17 @@
 // import lustre/event
 // import lustre_http
 // import modem
-
+// import shared/gift.{type Gift}
+//
+// type Model {
+//   Model(
+//     route: Route,
+//     gifts: List(Gift),
+//     name: String,
+//     pic: String,
+//     link: String,
+//   )
+// }
 //
 // pub fn view() {
 //   list.append(

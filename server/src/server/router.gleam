@@ -6,6 +6,7 @@ import gleam/list
 import gleam/result
 import gleam/string_builder
 import server/web
+import shared.{type Gift, Gift}
 import simplifile
 import wisp.{type Request, type Response}
 
@@ -37,11 +38,6 @@ pub fn handle_request(req: Request) -> Response {
     _ -> wisp.not_found()
     // If the route is not /gifts return a 404 not found
   }
-}
-
-type Gift {
-  // Create a type that models our gift
-  Gift(id: Int, name: String, pic: String, link: String)
 }
 
 fn list_gifts(req: Request) -> Response {

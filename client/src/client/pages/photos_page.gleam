@@ -1,5 +1,5 @@
 import lustre/element.{text}
 
-pub fn view() {
+pub fn body() {
   text("Photos")
 }
