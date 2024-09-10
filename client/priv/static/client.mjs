@@ -10,8 +10,8 @@ var CustomType = class {
 var List = class {
   static fromArray(array3, tail) {
     let t = tail || new Empty();
-    for (let i2 = array3.length - 1; i2 >= 0; --i2) {
-      t = new NonEmpty(array3[i2], t);
+    for (let i = array3.length - 1; i >= 0; --i) {
+      t = new NonEmpty(array3[i], t);
     }
     return t;
   }
@@ -111,12 +111,12 @@ var BitArray = class _BitArray {
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
   let value = 0;
   if (isBigEndian) {
-    for (let i2 = start3; i2 < end; i2++) {
-      value = value * 256 + byteArray[i2];
+    for (let i = start3; i < end; i++) {
+      value = value * 256 + byteArray[i];
     }
   } else {
-    for (let i2 = end - 1; i2 >= start3; i2--) {
-      value = value * 256 + byteArray[i2];
+    for (let i = end - 1; i >= start3; i--) {
+      value = value * 256 + byteArray[i];
     }
   }
   if (isSigned) {
@@ -207,7 +207,7 @@ function unequalDates(a2, b) {
   return a2 instanceof Date && (a2 > b || a2 < b);
 }
 function unequalBuffers(a2, b) {
-  return a2.buffer instanceof ArrayBuffer && a2.BYTES_PER_ELEMENT && !(a2.byteLength === b.byteLength && a2.every((n, i2) => n === b[i2]));
+  return a2.buffer instanceof ArrayBuffer && a2.BYTES_PER_ELEMENT && !(a2.byteLength === b.byteLength && a2.every((n, i) => n === b[i]));
 }
 function unequalArrays(a2, b) {
   return Array.isArray(a2) && a2.length !== b.length;
@@ -331,9 +331,34 @@ function scan(regex, string3) {
   return regex_scan(regex, string3);
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+var Lt = class extends CustomType {
+};
+var Eq = class extends CustomType {
+};
+var Gt = class extends CustomType {
+};
+
 // build/dev/javascript/gleam_stdlib/gleam/float.mjs
+function floor2(x) {
+  return floor(x);
+}
 function truncate2(x) {
   return truncate(x);
+}
+function negate(x) {
+  return -1 * x;
+}
+function do_round(x) {
+  let $ = x >= 0;
+  if ($) {
+    return round(x);
+  } else {
+    return 0 - round(negate(x));
+  }
+}
+function round2(x) {
+  return do_round(x);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
@@ -345,6 +370,19 @@ function to_string2(x) {
 }
 function to_float(x) {
   return identity(x);
+}
+function compare(a2, b) {
+  let $ = a2 === b;
+  if ($) {
+    return new Eq();
+  } else {
+    let $1 = a2 < b;
+    if ($1) {
+      return new Lt();
+    } else {
+      return new Gt();
+    }
+  }
 }
 function min(a2, b) {
   let $ = a2 < b;
@@ -366,6 +404,14 @@ function clamp(x, min_bound, max_bound) {
   let _pipe = x;
   let _pipe$1 = min(_pipe, max_bound);
   return max(_pipe$1, min_bound);
+}
+function is_odd(x) {
+  return remainderInt(x, 2) !== 0;
+}
+function random(max2) {
+  let _pipe = random_uniform() * to_float(max2);
+  let _pipe$1 = floor2(_pipe);
+  return round2(_pipe$1);
 }
 function divide(dividend, divisor) {
   if (divisor === 0) {
@@ -580,6 +626,28 @@ function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
 function index_fold(over, initial, fun) {
   return do_index_fold(over, initial, fun, 0);
 }
+function tail_recursive_range(loop$start, loop$stop, loop$acc) {
+  while (true) {
+    let start3 = loop$start;
+    let stop = loop$stop;
+    let acc = loop$acc;
+    let $ = compare(start3, stop);
+    if ($ instanceof Eq) {
+      return prepend(stop, acc);
+    } else if ($ instanceof Gt) {
+      loop$start = start3;
+      loop$stop = stop + 1;
+      loop$acc = prepend(stop, acc);
+    } else {
+      loop$start = start3;
+      loop$stop = stop - 1;
+      loop$acc = prepend(stop, acc);
+    }
+  }
+}
+function range(start3, stop) {
+  return tail_recursive_range(start3, stop, toList([]));
+}
 function do_repeat(loop$a, loop$times, loop$acc) {
   while (true) {
     let a2 = loop$a;
@@ -673,11 +741,11 @@ function split2(iodata, pattern) {
 
 // build/dev/javascript/gleam_stdlib/gleam/dynamic.mjs
 var DecodeError = class extends CustomType {
-  constructor(expected, found, path2) {
+  constructor(expected, found, path) {
     super();
     this.expected = expected;
     this.found = found;
-    this.path = path2;
+    this.path = path;
   }
 };
 function from(a2) {
@@ -688,6 +756,9 @@ function classify(data) {
 }
 function int(data) {
   return decode_int(data);
+}
+function bool(data) {
+  return decode_bool(data);
 }
 function shallow_list(value) {
   return decode_list(value);
@@ -823,26 +894,35 @@ function decode2(constructor, t1, t2) {
     }
   };
 }
-function decode4(constructor, t1, t2, t3, t4) {
+function decode5(constructor, t1, t2, t3, t4, t5) {
   return (x) => {
     let $ = t1(x);
     let $1 = t2(x);
     let $2 = t3(x);
     let $3 = t4(x);
-    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk()) {
+    let $4 = t5(x);
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk()) {
       let a2 = $[0];
       let b = $1[0];
       let c = $2[0];
       let d = $3[0];
-      return new Ok(constructor(a2, b, c, d));
+      let e = $4[0];
+      return new Ok(constructor(a2, b, c, d, e));
     } else {
       let a2 = $;
       let b = $1;
       let c = $2;
       let d = $3;
+      let e = $4;
       return new Error(
         concat(
-          toList([all_errors(a2), all_errors(b), all_errors(c), all_errors(d)])
+          toList([
+            all_errors(a2),
+            all_errors(b),
+            all_errors(c),
+            all_errors(d),
+            all_errors(e)
+          ])
         )
       );
     }
@@ -871,16 +951,16 @@ function hashMerge(a2, b) {
 function hashString(s) {
   let hash = 0;
   const len = s.length;
-  for (let i2 = 0; i2 < len; i2++) {
-    hash = Math.imul(31, hash) + s.charCodeAt(i2) | 0;
+  for (let i = 0; i < len; i++) {
+    hash = Math.imul(31, hash) + s.charCodeAt(i) | 0;
   }
   return hash;
 }
 function hashNumber(n) {
   tempDataView.setFloat64(0, n);
-  const i2 = tempDataView.getInt32(0);
+  const i = tempDataView.getInt32(0);
   const j = tempDataView.getInt32(4);
-  return Math.imul(73244475, i2 >> 16 ^ i2) ^ j;
+  return Math.imul(73244475, i >> 16 ^ i) ^ j;
 }
 function hashBigInt(n) {
   return hashString(n.toString());
@@ -907,8 +987,8 @@ function hashObject(o) {
     o = new Uint8Array(o);
   }
   if (Array.isArray(o) || o instanceof Uint8Array) {
-    for (let i2 = 0; i2 < o.length; i2++) {
-      h = Math.imul(31, h) + getHash(o[i2]) | 0;
+    for (let i = 0; i < o.length; i++) {
+      h = Math.imul(31, h) + getHash(o[i]) | 0;
     }
   } else if (o instanceof Set) {
     o.forEach((v) => {
@@ -920,8 +1000,8 @@ function hashObject(o) {
     });
   } else {
     const keys2 = Object.keys(o);
-    for (let i2 = 0; i2 < keys2.length; i2++) {
-      const k = keys2[i2];
+    for (let i = 0; i < keys2.length; i++) {
+      const k = keys2[i];
       const v = o[k];
       h = h + hashMerge(getHash(v), hashString(k)) | 0;
     }
@@ -988,8 +1068,8 @@ function index(bitmap, bit) {
 function cloneAndSet(arr, at, val) {
   const len = arr.length;
   const out = new Array(len);
-  for (let i2 = 0; i2 < len; ++i2) {
-    out[i2] = arr[i2];
+  for (let i = 0; i < len; ++i) {
+    out[i] = arr[i];
   }
   out[at] = val;
   return out;
@@ -997,28 +1077,28 @@ function cloneAndSet(arr, at, val) {
 function spliceIn(arr, at, val) {
   const len = arr.length;
   const out = new Array(len + 1);
-  let i2 = 0;
+  let i = 0;
   let g = 0;
-  while (i2 < at) {
-    out[g++] = arr[i2++];
+  while (i < at) {
+    out[g++] = arr[i++];
   }
   out[g++] = val;
-  while (i2 < len) {
-    out[g++] = arr[i2++];
+  while (i < len) {
+    out[g++] = arr[i++];
   }
   return out;
 }
 function spliceOut(arr, at) {
   const len = arr.length;
   const out = new Array(len - 1);
-  let i2 = 0;
+  let i = 0;
   let g = 0;
-  while (i2 < at) {
-    out[g++] = arr[i2++];
+  while (i < at) {
+    out[g++] = arr[i++];
   }
-  ++i2;
-  while (i2 < len) {
-    out[g++] = arr[i2++];
+  ++i;
+  while (i < len) {
+    out[g++] = arr[i++];
   }
   return out;
 }
@@ -1150,10 +1230,10 @@ function assocIndex(root, shift, hash, key, val, addedLeaf) {
       nodes[jdx] = assocIndex(EMPTY, shift + SHIFT, hash, key, val, addedLeaf);
       let j = 0;
       let bitmap = root.bitmap;
-      for (let i2 = 0; i2 < 32; i2++) {
+      for (let i = 0; i < 32; i++) {
         if ((bitmap & 1) !== 0) {
           const node = root.array[j++];
-          nodes[i2] = node;
+          nodes[i] = node;
         }
         bitmap = bitmap >>> 1;
       }
@@ -1214,9 +1294,9 @@ function assocCollision(root, shift, hash, key, val, addedLeaf) {
 }
 function collisionIndexOf(root, key) {
   const size = root.array.length;
-  for (let i2 = 0; i2 < size; i2++) {
-    if (isEqual(key, root.array[i2].k)) {
-      return i2;
+  for (let i = 0; i < size; i++) {
+    if (isEqual(key, root.array[i].k)) {
+      return i;
     }
   }
   return -1;
@@ -1298,27 +1378,27 @@ function withoutArray(root, shift, hash, key) {
     if (root.size <= MIN_ARRAY_NODE) {
       const arr = root.array;
       const out = new Array(root.size - 1);
-      let i2 = 0;
+      let i = 0;
       let j = 0;
       let bitmap = 0;
-      while (i2 < idx) {
-        const nv = arr[i2];
+      while (i < idx) {
+        const nv = arr[i];
         if (nv !== void 0) {
           out[j] = nv;
-          bitmap |= 1 << i2;
+          bitmap |= 1 << i;
           ++j;
         }
-        ++i2;
+        ++i;
       }
-      ++i2;
-      while (i2 < arr.length) {
-        const nv = arr[i2];
+      ++i;
+      while (i < arr.length) {
+        const nv = arr[i];
         if (nv !== void 0) {
           out[j] = nv;
-          bitmap |= 1 << i2;
+          bitmap |= 1 << i;
           ++j;
         }
-        ++i2;
+        ++i;
       }
       return {
         type: INDEX_NODE,
@@ -1398,8 +1478,8 @@ function forEach(root, fn) {
   }
   const items = root.array;
   const size = items.length;
-  for (let i2 = 0; i2 < size; i2++) {
-    const item = items[i2];
+  for (let i = 0; i < size; i++) {
+    const item = items[i];
     if (item === void 0) {
       continue;
     }
@@ -1419,8 +1499,8 @@ var Dict = class _Dict {
   static fromObject(o) {
     const keys2 = Object.keys(o);
     let m = _Dict.new();
-    for (let i2 = 0; i2 < keys2.length; i2++) {
-      const k = keys2[i2];
+    for (let i = 0; i < keys2.length; i++) {
+      const k = keys2[i];
       m = m.set(k, o[k]);
     }
     return m;
@@ -1568,11 +1648,11 @@ function string_length(string3) {
   }
   const iterator = graphemes_iterator(string3);
   if (iterator) {
-    let i2 = 0;
+    let i = 0;
     for (const _ of iterator) {
-      i2++;
+      i++;
     }
-    return i2;
+    return i;
   } else {
     return string3.match(/./gsu).length;
   }
@@ -1642,8 +1722,21 @@ var unicode_whitespaces = [
 ].join();
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
+function floor(float3) {
+  return Math.floor(float3);
+}
+function round(float3) {
+  return Math.round(float3);
+}
 function truncate(float3) {
   return Math.trunc(float3);
+}
+function random_uniform() {
+  const random_uniform_result = Math.random();
+  if (random_uniform_result === 1) {
+    return random_uniform();
+  }
+  return random_uniform_result;
 }
 function compile_regex(pattern, options) {
   try {
@@ -1732,6 +1825,9 @@ function decode_string(data) {
 }
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
+}
+function decode_bool(data) {
+  return typeof data === "boolean" ? new Ok(data) : decoder_error("Bool", data);
 }
 function decode_list(data) {
   if (Array.isArray(data)) {
@@ -2014,19 +2110,22 @@ function to_string5(json) {
 function string2(input) {
   return identity2(input);
 }
+function bool2(input) {
+  return identity2(input);
+}
 function object2(entries) {
   return object(entries);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
 var Uri = class extends CustomType {
-  constructor(scheme, userinfo, host, port, path2, query, fragment) {
+  constructor(scheme, userinfo, host, port, path, query, fragment) {
     super();
     this.scheme = scheme;
     this.userinfo = userinfo;
     this.host = host;
     this.port = port;
-    this.path = path2;
+    this.path = path;
     this.query = query;
     this.fragment = fragment;
   }
@@ -2134,13 +2233,13 @@ function do_parse(uri_string) {
     if (matches.hasLength(8)) {
       let scheme2 = matches.tail.head;
       let authority_with_slashes = matches.tail.tail.head;
-      let path3 = matches.tail.tail.tail.tail.head;
+      let path2 = matches.tail.tail.tail.tail.head;
       let query_with_question_mark = matches.tail.tail.tail.tail.tail.head;
       let fragment2 = matches.tail.tail.tail.tail.tail.tail.tail.head;
       return [
         scheme2,
         authority_with_slashes,
-        path3,
+        path2,
         query_with_question_mark,
         fragment2
       ];
@@ -2150,11 +2249,11 @@ function do_parse(uri_string) {
   })();
   let scheme = $[0];
   let authority = $[1];
-  let path2 = $[2];
+  let path = $[2];
   let query = $[3];
   let fragment = $[4];
   let scheme$1 = noneify_empty_string(scheme);
-  let path$1 = unwrap(path2, "");
+  let path$1 = unwrap(path, "");
   let query$1 = noneify_query(query);
   let $1 = split_authority(authority);
   let userinfo = $1[0];
@@ -2214,8 +2313,8 @@ function do_remove_dot_segments(loop$input, loop$accumulator) {
 function remove_dot_segments(input) {
   return do_remove_dot_segments(input, toList([]));
 }
-function path_segments(path2) {
-  return remove_dot_segments(split3(path2, "/"));
+function path_segments(path) {
+  return remove_dot_segments(split3(path, "/"));
 }
 function to_string6(uri) {
   let parts = (() => {
@@ -2442,11 +2541,17 @@ function handlers(element2) {
 function attribute(name, value) {
   return new Attribute(name, from(value), false);
 }
+function property(name, value) {
+  return new Attribute(name, from(value), true);
+}
 function class$(name) {
   return attribute("class", name);
 }
 function id(name) {
   return attribute("id", name);
+}
+function disabled(is_disabled) {
+  return property("disabled", is_disabled);
 }
 function href(uri) {
   return attribute("href", uri);
@@ -2656,7 +2761,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
   const prevHandlers = canMorph ? new Set(handlersForEl.keys()) : null;
   const prevAttributes = canMorph ? new Set(Array.from(prev.attributes, (a2) => a2.name)) : null;
   let className = null;
-  let style2 = null;
+  let style = null;
   let innerHTML = null;
   if (canMorph && next.tag === "textarea") {
     const innertText = next.children[Symbol.iterator]().next().value?.content;
@@ -2691,7 +2796,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
     } else if (name === "class") {
       className = className === null ? value : className + " " + value;
     } else if (name === "style") {
-      style2 = style2 === null ? value : style2 + value;
+      style = style === null ? value : style + value;
     } else if (name === "dangerous-unescaped-html") {
       innerHTML = value;
     } else {
@@ -2708,8 +2813,8 @@ function createElementNode({ prev, next, dispatch, stack }) {
     if (canMorph)
       prevAttributes.delete("class");
   }
-  if (style2 !== null) {
-    el2.setAttribute("style", style2);
+  if (style !== null) {
+    el2.setAttribute("style", style);
     if (canMorph)
       prevAttributes.delete("style");
   }
@@ -2791,15 +2896,15 @@ function lustreServerEventHandler(event2) {
   return {
     tag,
     data: include.reduce(
-      (data2, property) => {
-        const path2 = property.split(".");
-        for (let i2 = 0, o = data2, e = event2; i2 < path2.length; i2++) {
-          if (i2 === path2.length - 1) {
-            o[path2[i2]] = e[path2[i2]];
+      (data2, property2) => {
+        const path = property2.split(".");
+        for (let i = 0, o = data2, e = event2; i < path.length; i++) {
+          if (i === path.length - 1) {
+            o[path[i]] = e[path[i]];
           } else {
-            o[path2[i2]] ??= {};
-            e = e[path2[i2]];
-            o = o[path2[i2]];
+            o[path[i]] ??= {};
+            e = e[path[i]];
+            o = o[path[i]];
           }
         }
         return data2;
@@ -3184,6 +3289,12 @@ function h1(attrs, children2) {
 function h2(attrs, children2) {
   return element("h2", attrs, children2);
 }
+function h3(attrs, children2) {
+  return element("h3", attrs, children2);
+}
+function main(attrs, children2) {
+  return element("main", attrs, children2);
+}
 function nav(attrs, children2) {
   return element("nav", attrs, children2);
 }
@@ -3204,6 +3315,9 @@ function a(attrs, children2) {
 }
 function span(attrs, children2) {
   return element("span", attrs, children2);
+}
+function strong(attrs, children2) {
+  return element("strong", attrs, children2);
 }
 function img(attrs) {
   return element("img", attrs, toList([]));
@@ -3279,15 +3393,15 @@ function scheme_from_string(scheme) {
 
 // build/dev/javascript/gleam_http/gleam/http/request.mjs
 var Request = class extends CustomType {
-  constructor(method, headers, body4, scheme, host, port, path2, query) {
+  constructor(method, headers, body5, scheme, host, port, path, query) {
     super();
     this.method = method;
     this.headers = headers;
-    this.body = body4;
+    this.body = body5;
     this.scheme = scheme;
     this.host = host;
     this.port = port;
-    this.path = path2;
+    this.path = path;
     this.query = query;
   }
 };
@@ -3336,15 +3450,15 @@ function set_header(request, key, value) {
   let headers = key_set(request.headers, lowercase2(key), value);
   return request.withFields({ headers });
 }
-function set_body(req, body4) {
+function set_body(req, body5) {
   let method = req.method;
   let headers = req.headers;
   let scheme = req.scheme;
   let host = req.host;
   let port = req.port;
-  let path2 = req.path;
+  let path = req.path;
   let query = req.query;
-  return new Request(method, headers, body4, scheme, host, port, path2, query);
+  return new Request(method, headers, body5, scheme, host, port, path, query);
 }
 function set_method(req, method) {
   return req.withFields({ method });
@@ -3357,11 +3471,11 @@ function to(url) {
 
 // build/dev/javascript/gleam_http/gleam/http/response.mjs
 var Response = class extends CustomType {
-  constructor(status, headers, body4) {
+  constructor(status, headers, body5) {
     super();
     this.status = status;
     this.headers = headers;
-    this.body = body4;
+    this.body = body5;
   }
 };
 
@@ -3452,13 +3566,13 @@ function make_headers(headersList) {
   return headers;
 }
 async function read_text_body(response) {
-  let body4;
+  let body5;
   try {
-    body4 = await response.body.text();
+    body5 = await response.body.text();
   } catch (error) {
     return new Error(new UnableToReadBody());
   }
-  return new Ok(response.withFields({ body: body4 }));
+  return new Ok(response.withFields({ body: body5 }));
 }
 
 // build/dev/javascript/gleam_fetch/gleam/fetch.mjs
@@ -3556,7 +3670,7 @@ function get2(url, expect) {
     }
   );
 }
-function post(url, body4, expect) {
+function post(url, body5, expect) {
   return from2(
     (dispatch) => {
       let $ = to(url);
@@ -3569,7 +3683,7 @@ function post(url, body4, expect) {
           "Content-Type",
           "application/json"
         );
-        let _pipe$3 = set_body(_pipe$2, to_string5(body4));
+        let _pipe$3 = set_body(_pipe$2, to_string5(body5));
         return do_send(_pipe$3, expect, dispatch);
       } else {
         return dispatch(expect.run(new Error(new BadUrl(url))));
@@ -3580,19 +3694,19 @@ function post(url, body4, expect) {
 function response_to_result(response) {
   if (response instanceof Response && (200 <= response.status && response.status <= 299)) {
     let status = response.status;
-    let body4 = response.body;
-    return new Ok(body4);
+    let body5 = response.body;
+    return new Ok(body5);
   } else if (response instanceof Response && response.status === 401) {
     return new Error(new Unauthorized());
   } else if (response instanceof Response && response.status === 404) {
     return new Error(new NotFound());
   } else if (response instanceof Response && response.status === 500) {
-    let body4 = response.body;
-    return new Error(new InternalServerError(body4));
+    let body5 = response.body;
+    return new Error(new InternalServerError(body5));
   } else {
     let code = response.status;
-    let body4 = response.body;
-    return new Error(new OtherError(code, body4));
+    let body5 = response.body;
+    return new Error(new OtherError(code, body5));
   }
 }
 function expect_json(decoder, to_msg) {
@@ -3602,8 +3716,8 @@ function expect_json(decoder, to_msg) {
       let _pipe$1 = then$(_pipe, response_to_result);
       let _pipe$2 = then$(
         _pipe$1,
-        (body4) => {
-          let $ = decode3(body4, decoder);
+        (body5) => {
+          let $ = decode3(body5, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -3720,12 +3834,13 @@ function init2(handler) {
 
 // build/dev/javascript/shared/shared.mjs
 var Gift = class extends CustomType {
-  constructor(id2, name, pic, link) {
+  constructor(id2, name, pic, link, selected) {
     super();
     this.id = id2;
     this.name = name;
     this.pic = pic;
     this.link = link;
+    this.selected = selected;
   }
 };
 
@@ -3793,12 +3908,238 @@ function header() {
 
 // build/dev/javascript/client/client/pages/event_page.mjs
 function body() {
-  return toList([div(toList([]), toList([text("Evento")]))]);
+  return toList([
+    main(
+      toList([
+        attribute("data-aos", "fade-up"),
+        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+      ]),
+      toList([
+        h1(
+          toList([
+            attribute("style", "font-family: 'Pacifico', cursive;"),
+            class$("text-5xl text-white font-bold mb-12")
+          ]),
+          toList([text("Detalhes do Evento")])
+        ),
+        div(
+          toList([class$("w-full flex flex-col lg:flex-row gap-8")]),
+          toList([
+            div(
+              toList([class$("flex-1")]),
+              toList([
+                img(
+                  toList([
+                    class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
+                    alt("Local da Festa"),
+                    src("/priv/static/paiol.jpg")
+                  ])
+                )
+              ])
+            ),
+            div(
+              toList([
+                class$("flex-1 bg-white text-gray-800 rounded-lg shadow-lg p-6")
+              ]),
+              toList([
+                h2(
+                  toList([class$("text-3xl font-bold text-pink-700 mb-4")]),
+                  toList([text("Anivers\xE1rio de 15 Anos da Laura")])
+                ),
+                p(
+                  toList([class$("text-lg text-gray-700 mb-4")]),
+                  toList([text("Pomp\xE9u, MG - 14 de Dezembro de 2024")])
+                ),
+                p(
+                  toList([class$("text-lg text-gray-700 mb-8")]),
+                  toList([text("Hor\xE1rio: 19:00")])
+                ),
+                h2(
+                  toList([class$("text-2xl font-semibold text-pink-700 mb-4")]),
+                  toList([text("Detalhes do Evento")])
+                ),
+                p(
+                  toList([class$("text-lg text-gray-700 mb-2")]),
+                  toList([
+                    strong(toList([]), toList([text("Endere\xE7o:")])),
+                    text("R. Padre Jo\xE3o Porto, 579 - Centro, Pomp\xE9u")
+                  ])
+                ),
+                p(
+                  toList([class$("text-lg text-gray-700 mb-4")]),
+                  toList([
+                    text(
+                      'O evento ser\xE1 realizado no sal\xE3o de festas do "Paiol\n					Mineiro", um ambiente requintado e aconchegante, perfeito para uma noite\n					inesquec\xEDvel.'
+                    )
+                  ])
+                ),
+                h2(
+                  toList([class$("text-2xl font-semibold text-pink-700 mb-4")]),
+                  toList([text("Traje")])
+                ),
+                p(
+                  toList([class$("text-lg text-gray-700 mb-2")]),
+                  toList([
+                    strong(toList([]), toList([text("Traje:")])),
+                    text("Esporte Fino")
+                  ])
+                ),
+                p(
+                  toList([class$("text-lg text-gray-700")]),
+                  toList([
+                    text(
+                      "Sugerimos aos convidados vestirem-se confortavelmente para uma noite de muita divers\xE3o."
+                    )
+                  ])
+                )
+              ])
+            )
+          ])
+        )
+      ])
+    )
+  ]);
 }
 
-// build/dev/javascript/falala/falala/fa.mjs
-function sliders_h() {
-  return toList([class$("fa-sliders-h")]);
+// build/dev/javascript/client/client/pages/gifts_page.mjs
+function empty_gifts(n) {
+  let _pipe = range(1, n);
+  return map2(
+    _pipe,
+    (n2) => {
+      let selected = is_odd(random(2));
+      return new Gift(
+        n2,
+        "Presente " + to_string2(n2),
+        "https://placehold.co/200x150/png",
+        "https://placehold.co/200x150/png",
+        selected
+      );
+    }
+  );
+}
+function gift_widget(gift) {
+  return div(
+    toList([
+      attribute("data-aos", "zoom-in"),
+      class$("relative bg-white p-4 rounded-lg shadow-lg")
+    ]),
+    (() => {
+      let $ = gift.selected;
+      if ($) {
+        return toList([
+          div(
+            toList([
+              class$("absolute inset-0 bg-black opacity-50 rounded-lg z-10")
+            ]),
+            toList([])
+          ),
+          div(
+            toList([
+              class$("absolute inset-0 flex items-center justify-center z-20")
+            ]),
+            toList([
+              span(
+                toList([class$("bg-red-600 text-white px-4 py-1 rounded-full")]),
+                toList([text("Selecionado")])
+              )
+            ])
+          ),
+          img(
+            toList([
+              class$("w-full h-auto rounded-lg grayscale z-0"),
+              alt("Presente " + to_string2(gift.id)),
+              src(gift.pic)
+            ])
+          ),
+          h3(
+            toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
+            toList([text(gift.name)])
+          ),
+          a(
+            toList([
+              class$("text-pink-600 hover:text-pink-800 underline"),
+              href(gift.link)
+            ]),
+            toList([text("Ver refer\xEAncia")])
+          ),
+          button(
+            toList([
+              disabled(true),
+              class$(
+                "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed"
+              )
+            ]),
+            toList([text("Escolher")])
+          )
+        ]);
+      } else {
+        return toList([
+          div(
+            toList([
+              attribute("data-aos", "zoom-in"),
+              class$("bg-white p-4 rounded-lg shadow-lg")
+            ]),
+            toList([
+              img(
+                toList([
+                  class$("w-full h-auto rounded-lg"),
+                  alt("Presente " + to_string2(gift.id)),
+                  src(gift.pic)
+                ])
+              ),
+              h3(
+                toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
+                toList([text(gift.name)])
+              ),
+              a(
+                toList([
+                  class$("text-pink-600 hover:text-pink-800 underline"),
+                  href(gift.link)
+                ]),
+                toList([text("Ver refer\xEAncia")])
+              ),
+              button(
+                toList([
+                  class$(
+                    "mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+                  )
+                ]),
+                toList([text("Escolher")])
+              )
+            ])
+          )
+        ]);
+      }
+    })()
+  );
+}
+function body2() {
+  return toList([
+    main(
+      toList([
+        attribute("data-aos", "fade-up"),
+        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+      ]),
+      toList([
+        h1(
+          toList([
+            attribute("style", "font-family: 'Pacifico', cursive;"),
+            class$("text-5xl text-white font-bold mb-12")
+          ]),
+          toList([text("Lista de Presentes")])
+        ),
+        div(
+          toList([
+            class$(
+              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full"
+            )
+          ]),
+          map2(empty_gifts(10), gift_widget)
+        )
+      ])
+    )
+  ]);
 }
 
 // build/dev/javascript/rada/rada_ffi.mjs
@@ -4128,13 +4469,14 @@ var Photos = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, gifts, name, pic, link) {
+  constructor(route, gifts, name, pic, link, selected) {
     super();
     this.route = route;
     this.gifts = gifts;
     this.name = name;
     this.pic = pic;
     this.link = link;
+    this.selected = selected;
   }
 };
 var OnRouteChange = class extends CustomType {
@@ -4193,158 +4535,138 @@ function countdown() {
     )
   );
 }
-function body2() {
+function body3() {
   return toList([
-    div(
-      sliders_h(),
+    main(
       toList([
-        img(
-          toList([
-            alt("Foto 1"),
-            class$("block w-full"),
-            src("/priv/static/photo1.jpeg")
-          ])
-        ),
-        img(
-          toList([
-            alt("Foto 1"),
-            class$("block w-full"),
-            src("/priv/static/photo2.jpeg")
-          ])
-        ),
-        img(
-          toList([
-            alt("Foto 1"),
-            class$("block w-full"),
-            src("/priv/static/photo3.jpeg")
-          ])
-        )
-      ])
-    ),
-    div(
-      toList([attribute("data-aos", "fade-up"), class$("text-center mt-12")]),
+        attribute("data-aos", "fade-up"),
+        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+      ]),
       toList([
         h1(
           toList([
             attribute("style", "font-family: 'Pacifico', cursive;"),
-            class$("text-5xl text-white font-bold")
+            class$("text-5xl text-white font-bold mb-12")
           ]),
           toList([text("Laura 15 Anos")])
         ),
-        p(
+        h3(
           toList([class$("text-xl text-white mt-4")]),
-          toList([text("Pomp\xE9u, MG - 14 de Dezembro de 2024")])
-        )
-      ])
-    ),
-    div(
-      toList([attribute("data-aos", "zoom-in"), class$("text-center mt-6")]),
-      toList([
-        p(
-          toList([class$("text-3xl text-white font-bold")]),
-          toList([
-            text("Faltam "),
-            span(
-              toList([class$("text-yellow-300"), id("countdown")]),
-              toList([text(countdown())])
-            ),
-            text(" dias para a festa!")
-          ])
-        )
-      ])
-    ),
-    div(
-      toList([
-        attribute("data-aos", "fade-right"),
-        id("evento"),
-        class$(
-          "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
-        )
-      ]),
-      toList([
+          toList([text("14 de Dezembro de 2024")])
+        ),
         div(
-          toList([class$("flex items-center justify-between mb-8")]),
+          toList([attribute("data-aos", "zoom-in"), class$("text-center mt-6")]),
           toList([
-            img(
+            p(
+              toList([class$("text-3xl text-white font-bold")]),
               toList([
-                class$(
-                  "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
+                text("Faltam "),
+                span(
+                  toList([class$("text-yellow-300"), id("countdown")]),
+                  toList([text(countdown())])
                 ),
-                alt("Laura's Birthday"),
-                src("/priv/static/profile.jpeg")
+                text(" dias para a festa!")
               ])
-            ),
+            )
+          ])
+        ),
+        div(
+          toList([
+            attribute("data-aos", "fade-right"),
+            id("evento"),
+            class$(
+              "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
+            )
+          ]),
+          toList([
             div(
-              toList([class$("flex-1 ml-12")]),
+              toList([class$("flex items-center justify-between mb-8")]),
               toList([
-                h1(
-                  toList([class$("text-5xl font-bold text-pink-600 mb-4")]),
-                  toList([text("Anivers\xE1rio de 15 Anos de Laura")])
-                ),
-                p(
-                  toList([class$("text-gray-600 text-lg mb-6")]),
+                img(
                   toList([
-                    text(
-                      "Lhe convido para celebrar esse dia t\xE3o especial em minha vida, meus 15 anos! Confirme sua presen\xE7a at\xE9 o dia 06/12 para receber seu convite individual."
-                    )
+                    class$(
+                      "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
+                    ),
+                    alt("Laura's Birthday"),
+                    src("/priv/static/profile.jpeg")
                   ])
                 ),
                 div(
-                  toList([class$("space-x-4")]),
+                  toList([class$("flex-1 ml-12")]),
                   toList([
-                    button(
-                      toList([
-                        class$(
-                          "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
-                        )
-                      ]),
-                      toList([text("Confirmar Presen\xE7a")])
+                    h1(
+                      toList([class$("text-5xl font-bold text-pink-600 mb-4")]),
+                      toList([text("Anivers\xE1rio de 15 Anos de Laura")])
                     ),
-                    button(
+                    p(
+                      toList([class$("text-gray-600 text-lg mb-6")]),
                       toList([
-                        class$(
-                          "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                        text(
+                          "Lhe convido para celebrar esse dia t\xE3o especial em minha vida, meus 15 anos! Confirme sua presen\xE7a at\xE9 o dia 06/12 para receber seu convite individual."
                         )
-                      ]),
-                      toList([text("Lista de Presentes")])
+                      ])
+                    ),
+                    div(
+                      toList([class$("space-x-4")]),
+                      toList([
+                        button(
+                          toList([
+                            class$(
+                              "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                            )
+                          ]),
+                          toList([text("Confirmar Presen\xE7a")])
+                        ),
+                        button(
+                          toList([
+                            class$(
+                              "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                            )
+                          ]),
+                          toList([text("Lista de Presentes")])
+                        )
+                      ])
                     )
                   ])
                 )
               ])
-            )
-          ])
-        ),
-        div(
-          toList([
-            attribute("data-aos", "fade-up"),
-            class$("bg-gray-100 p-6 rounded-lg shadow-inner")
-          ]),
-          toList([
-            h2(
-              toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
-              toList([text("Sobre Laura")])
             ),
-            p(
-              toList([class$("text-gray-700 text-lg")]),
+            div(
               toList([
-                text(
-                  "Laura est\xE1 completando 15 anos e queremos celebrar com todos que fazem parte de sua vida. A festa ser\xE1 cheia de alegria, m\xFAsica, e muita divers\xE3o. N\xE3o perca!"
+                attribute("data-aos", "fade-up"),
+                class$("bg-gray-100 p-6 rounded-lg shadow-inner")
+              ]),
+              toList([
+                h2(
+                  toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
+                  toList([text("Sobre Laura")])
+                ),
+                p(
+                  toList([class$("text-gray-700 text-lg")]),
+                  toList([
+                    text(
+                      "Laura est\xE1 completando 15 anos e queremos celebrar com todos que fazem parte de sua vida. A festa ser\xE1 cheia de alegria, m\xFAsica, e muita divers\xE3o. N\xE3o perca!"
+                    )
+                  ])
                 )
               ])
-            )
-          ])
-        ),
-        div(
-          toList([attribute("data-aos", "zoom-in"), class$("mt-8 text-center")]),
-          toList([
-            a(
+            ),
+            div(
               toList([
-                class$(
-                  "text-pink-600 hover:text-pink-800 font-semibold underline"
-                ),
-                href("/event")
+                attribute("data-aos", "zoom-in"),
+                class$("mt-8 text-center")
               ]),
-              toList([text("Log In")])
+              toList([
+                a(
+                  toList([
+                    class$(
+                      "text-pink-600 hover:text-pink-800 font-semibold underline"
+                    ),
+                    href("/event")
+                  ]),
+                  toList([text("Log In")])
+                )
+              ])
             )
           ])
         )
@@ -4354,8 +4676,60 @@ function body2() {
 }
 
 // build/dev/javascript/client/client/pages/photos_page.mjs
-function body3() {
-  return toList([div(toList([]), toList([text("Photos")]))]);
+var Photo = class extends CustomType {
+  constructor(n, src2) {
+    super();
+    this.n = n;
+    this.src = src2;
+  }
+};
+function empty_photos(n) {
+  let _pipe = range(1, n);
+  return map2(
+    _pipe,
+    (n2) => {
+      return new Photo(n2, "https://placehold.co/600x400/png");
+    }
+  );
+}
+function body4() {
+  return toList([
+    main(
+      toList([
+        attribute("data-aos", "fade-up"),
+        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+      ]),
+      toList([
+        h1(
+          toList([
+            attribute("style", "font-family: 'Pacifico', cursive;"),
+            class$("text-5xl text-white font-bold mb-12")
+          ]),
+          toList([text("Fotos do Evento")])
+        ),
+        div(
+          toList([
+            class$(
+              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full"
+            )
+          ]),
+          map2(
+            empty_photos(10),
+            (photo) => {
+              return img(
+                toList([
+                  attribute("data-aos", "zoom-in"),
+                  class$("w-full h-auto rounded-lg shadow-lg"),
+                  alt("Foto " + to_string2(photo.n)),
+                  src(photo.src)
+                ])
+              );
+            }
+          )
+        )
+      ])
+    )
+  ]);
 }
 
 // build/dev/javascript/client/ffi.mjs
@@ -4374,7 +4748,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 100, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 101, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4396,7 +4770,7 @@ function get_route2() {
       throw makeError(
         "assignment_no_match",
         "client",
-        111,
+        112,
         "get_route",
         "Assignment pattern did not match",
         { value: $1 }
@@ -4413,14 +4787,15 @@ function on_url_change(uri) {
 }
 function gift_decoder() {
   return list(
-    decode4(
-      (var0, var1, var2, var3) => {
-        return new Gift(var0, var1, var2, var3);
+    decode5(
+      (var0, var1, var2, var3, var4) => {
+        return new Gift(var0, var1, var2, var3, var4);
       },
       field("id", int),
       field("name", string),
       field("pic", string),
-      field("link", string)
+      field("link", string),
+      field("selected", bool)
     )
   );
 }
@@ -4438,11 +4813,13 @@ function view(model) {
         (() => {
           let $ = model.route;
           if ($ instanceof Home) {
-            return body2();
+            return body3();
           } else if ($ instanceof Event3) {
             return body();
           } else if ($ instanceof Photos) {
-            return body3();
+            return body4();
+          } else if ($ instanceof Gifts) {
+            return body2();
           } else if ($ instanceof NotFound2) {
             return toList([text2("not found")]);
           } else {
@@ -4466,7 +4843,7 @@ function get_gifts() {
 }
 function init3(_) {
   return [
-    new Model2(get_route2(), toList([]), "", "", ""),
+    new Model2(get_route2(), toList([]), "", "", "", false),
     batch(toList([init2(on_url_change), get_gifts()]))
   ];
 }
@@ -4477,7 +4854,8 @@ function create_gift(model) {
       toList([
         ["name", string2(model.name)],
         ["pic", string2(model.pic)],
-        ["link", string2(model.link)]
+        ["link", string2(model.link)],
+        ["selected", bool2(model.selected)]
       ])
     ),
     expect_json(
@@ -4507,7 +4885,7 @@ function update(model, msg) {
       throw makeError(
         "panic",
         "client",
-        65,
+        66,
         "update",
         "panic expression evaluated",
         {}
@@ -4531,10 +4909,10 @@ function update(model, msg) {
     return [model, get_gifts()];
   }
 }
-function main() {
+function main2() {
   let _pipe = application(init3, update, view);
   return start2(_pipe, "#app", void 0);
 }
 
 // build/.lustre/entry.mjs
-main();
+main2();

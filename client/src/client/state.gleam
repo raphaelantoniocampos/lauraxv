@@ -20,6 +20,7 @@ pub type Model {
     name: String,
     pic: String,
     link: String,
+    selected: Bool,
   )
 }
 

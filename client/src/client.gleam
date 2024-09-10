@@ -36,6 +36,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       name: "",
       pic: "",
       link: "",
+      selected: False,
       // Here we can get the current route when the page is initialized in the browser
     ),
     effect.batch([
@@ -130,7 +131,7 @@ fn do_get_route() -> String
 fn gift_decoder() {
   dynamic.list(
     // We want to decode a list so we use a dynamic.list here
-    dynamic.decode4(
+    dynamic.decode5(
       // And it is a list of json that looks like this {id: 1, title: "title", body: "body"} so we use a decodeN matching the number of arguments
       Gift,
       // You input the type of your data here
@@ -139,6 +140,7 @@ fn gift_decoder() {
       dynamic.field("name", dynamic.string),
       dynamic.field("pic", dynamic.string),
       dynamic.field("link", dynamic.string),
+      dynamic.field("selected", dynamic.bool),
     ),
   )
 }
@@ -157,6 +159,7 @@ fn view(model: Model) {
         Home -> home_page.body()
         Event -> event_page.body()
         Photos -> photos_page.body()
+        Gifts -> gifts_page.body()
         // Gifts -> {
         //   list.append(
         //     [
@@ -225,6 +228,7 @@ fn create_gift(model: Model) {
       #("name", json.string(model.name)),
       #("pic", json.string(model.pic)),
       #("link", json.string(model.link)),
+      #("selected", json.bool(model.selected)),
     ]),
     lustre_http.expect_json(
       dynamic.decode2(
