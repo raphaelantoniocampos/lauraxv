@@ -1,51 +1,19 @@
-import client/state.{UserChangedSlide}
 import gleam/int
 import lustre/attribute.{alt, attribute, class, href, id, src}
-import lustre/element.{text}
+import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p, span}
 import lustre/event
 import rada/date
 
-fn slides() {
-  todo
-  // div(
-  //   [
-  //     attribute("data-aos", "fade-down"),
-  //     id("home"),
-  //     class("swiper-container mt-8 w-full max-w-4xl"),
-  //   ],
-  //   [
-  //     div([class("swiper-wrapper")], [
-  //       div([class("swiper-slide")], [
-  //         img([
-  //           class("w-full rounded-lg shadow-lg"),
-  //           alt("Foto 1"),
-  //           src("/priv/static/photo1.jpeg"),
-  //         ]),
-  //       ]),
-  //       div([class("swiper-slide")], [
-  //       img([
-  //         class("w-full rounded-lg shadow-lg"),
-  //         alt("Foto 2"),
-  //         src("/priv/static/photo2.jpeg"),
-  //       ]),
-  //     ]),
-  //     div([class("swiper-slide")], [
-  //       img([
-  //         class("w-full rounded-lg shadow-lg"),
-  //         alt("Foto 3"),
-  //         src("/priv/static/photo3.jpeg"),
-  //       ]),
-  //     ]),
-  //     ]),
-  //     div([class("swiper-button-next")], []),
-  //     div([class("swiper-button-prev")], []),
-  //     div([class("swiper-pagination")], []),
-  //   ],
-  // ),
+fn countdown() -> Int {
+  date.diff(
+    date.Days,
+    date.today(),
+    date.from_calendar_date(2024, date.Dec, 14),
+  )
 }
 
-pub fn body() {
+pub fn body() -> List(Element(a)) {
   [
     main(
       [
@@ -65,7 +33,7 @@ pub fn body() {
           p([class("text-3xl text-white font-bold")], [
             text("Faltam "),
             span([class("text-yellow-300"), id("countdown")], [
-              text(countdown()),
+              text(int.to_string(countdown())),
             ]),
             text(" dias para a festa!"),
           ]),
@@ -148,93 +116,4 @@ pub fn body() {
       ],
     ),
   ]
-}
-
-// (
-//           [
-//             class("prev"),
-//             event.on_click(plus_slides(-1)),
-//             attribute.type_("button"),
-//           ],
-//           [text("❮")],
-//         ),
-
-pub type Dir {
-  Next
-  Prev
-}
-
-pub fn change_slide_button(dir: Dir) {
-  case dir {
-    Next ->
-      button(
-        [
-          class("next"),
-          event.on_click(UserChangedSlide(1)),
-          attribute.type_("button"),
-        ],
-        [text(">")],
-      )
-    Prev ->
-      button(
-        [
-          class("prev"),
-          event.on_click(UserChangedSlide(-1)),
-          attribute.type_("button"),
-        ],
-        [text("<")],
-      )
-  }
-}
-
-fn plus_slides(current_slide_index: Int, total_slides: Int, n: Int) -> Int {
-  let new_index = current_slide_index + n
-  show_slide(new_index, total_slides)
-}
-
-fn current_slide(_current_slide_index: Int, total_slides: Int, n: Int) -> Int {
-  show_slide(n, total_slides)
-}
-
-fn show_slide(slide_index: Int, total_slides: Int) -> Int {
-  case slide_index {
-    slide_index if slide_index > total_slides -> 1
-    slide_index if slide_index < 1 -> total_slides
-    _ -> slide_index
-  }
-}
-
-fn countdown() {
-  int.to_string(date.diff(
-    date.Days,
-    date.today(),
-    date.from_calendar_date(2024, date.Dec, 14),
-  ))
-  // document.addEventListener('DOMContentLoaded', function () {
-  //   var swiper = new Swiper('.swiper-container', {
-  //     direction: 'horizontal',
-  //     loop: true,
-  //     pagination: {
-  //       el: '.swiper-pagination',
-  //       clickable: true,
-  //     },
-  //     navigation: {
-  //       nextEl: '.swiper-button-next',
-  //       prevEl: '.swiper-button-prev',
-  //     },
-  //   });
-  // let now = birl.now()
-  // let event_date = birl.Day(year: 2024, month: 12, date: 14)
-  // let remaining = birl.difference(now, event_date)
-  //   function updateCountdown() {
-  //     const eventDate = new Date('2024-12-14T00:00:00');
-  //     const now = new Date();
-  //     const timeDiff = eventDate - now;
-  //     const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-  //     document.getElementById('countdown').textContent = daysRemaining;
-  //   }
-  //
-  //   updateCountdown();
-  //   setInterval(updateCountdown, 1000 * 60 * 60 * 24);
-  // });
 }

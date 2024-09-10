@@ -32,7 +32,6 @@ pub type Msg {
   PicUpdated(value: String)
   LinkUpdated(value: String)
   RequestCreateGift
-  UserChangedSlide(dir: Int)
   // Create a message for our form to create the post
   CreateGiftResponded(Result(MessageErrorResponse, lustre_http.HttpError))
   // Create a message for when the backend send back a result

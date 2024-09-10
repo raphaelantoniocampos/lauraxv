@@ -1,19 +1,19 @@
 import gleam/int
 import gleam/list
 import lustre/attribute.{alt, attribute, class, src}
-import lustre/element.{text}
+import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, img, main}
 
 type Photo {
   Photo(n: Int, src: String)
 }
 
-fn empty_photos(n: Int) {
+fn empty_photos(n: Int) -> List(Photo) {
   list.range(1, n)
   |> list.map(fn(n) { Photo(n, "https://placehold.co/600x400/png") })
 }
 
-pub fn body() {
+pub fn body() -> List(Element(a)) {
   [
     main(
       [

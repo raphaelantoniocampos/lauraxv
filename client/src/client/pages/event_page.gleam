@@ -1,8 +1,8 @@
 import lustre/attribute.{alt, attribute, class, src}
-import lustre/element.{text}
+import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, h2, img, main, p, strong}
 
-pub fn body() {
+pub fn body() -> List(Element(a)) {
   [
     main(
       [

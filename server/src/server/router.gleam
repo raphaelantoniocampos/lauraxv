@@ -52,12 +52,13 @@ fn list_gifts(req: Request) -> Response {
     // Here we will parse our data from json to a type and then back into json to simulate this coming from a database of some sort but this could really just be a simple returning of the file_data if you wanted to if you are just doing files that map directly to the response.
     let gifts_decoder =
       // Create a decoder that parses a list of gifts eg. [{id: 1, name: "Livro Lua", body: "https://"}]
-      dynamic.list(dynamic.decode4(
+      dynamic.list(dynamic.decode5(
         Gift,
         dynamic.field("id", dynamic.int),
         dynamic.field("name", dynamic.string),
         dynamic.field("pic", dynamic.string),
         dynamic.field("link", dynamic.string),
+        dynamic.field("selected", dynamic.bool),
       ))
 
     use gifts <- result.try(
@@ -89,7 +90,7 @@ fn list_gifts(req: Request) -> Response {
 
 // Create a type for our create gift request data
 type CreateGift {
-  CreateGift(name: String, pic: String, link: String)
+  CreateGift(name: String, pic: String, link: String, selected: Bool)
 }
 
 fn create_gift(req: Request) -> Response {
@@ -101,11 +102,12 @@ fn create_gift(req: Request) -> Response {
   let result = {
     // Create a decoder for our request data
     let create_gift_decoder =
-      dynamic.decode3(
+      dynamic.decode4(
         CreateGift,
         dynamic.field("name", dynamic.string),
         dynamic.field("pic", dynamic.string),
         dynamic.field("link", dynamic.string),
+        dynamic.field("selected", dynamic.bool),
       )
 
     use parsed_request <- result.try(case create_gift_decoder(body) {
@@ -121,12 +123,13 @@ fn create_gift(req: Request) -> Response {
     // Load the gifts again from the file
     let gifts_decoder =
       // Create a decoder that parses a list of gifts eg. [{id: 1, name: "Livro Lua", pic: "https://"}]
-      dynamic.list(dynamic.decode4(
+      dynamic.list(dynamic.decode5(
         Gift,
         dynamic.field("id", dynamic.int),
         dynamic.field("name", dynamic.string),
         dynamic.field("pic", dynamic.string),
         dynamic.field("link", dynamic.string),
+        dynamic.field("selected", dynamic.bool),
       ))
 
     use gifts <- result.try(
@@ -143,6 +146,7 @@ fn create_gift(req: Request) -> Response {
           name: parsed_request.name,
           pic: parsed_request.pic,
           link: parsed_request.link,
+          selected: parsed_request.selected,
         ),
       ])
 
@@ -154,6 +158,7 @@ fn create_gift(req: Request) -> Response {
           #("name", json.string(gift.name)),
           #("pic", json.string(gift.pic)),
           #("link", json.string(gift.link)),
+          #("selected", json.bool(gift.selected)),
         ])
       })
 

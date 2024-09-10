@@ -1,13 +1,11 @@
 import gleam/int
 import gleam/list
 import lustre/attribute.{alt, attribute, class, disabled, href, src}
-import lustre/element.{text}
-import lustre/element/html.{
-  a, button, div, h1, h2, h3, img, main, p, span, strong,
-}
+import lustre/element.{type Element, text}
+import lustre/element/html.{a, button, div, h1, h3, img, main, span}
 import shared.{type Gift, Gift}
 
-fn empty_gifts(n: Int) {
+fn empty_gifts(n: Int) -> List(Gift) {
   list.range(1, n)
   |> list.map(fn(n) {
     let selected = int.is_odd(int.random(2))
@@ -21,7 +19,7 @@ fn empty_gifts(n: Int) {
   })
 }
 
-fn gift_widget(gift: Gift) {
+fn gift_widget(gift: Gift) -> Element(a) {
   div(
     [
       attribute("data-aos", "zoom-in"),
@@ -107,7 +105,7 @@ fn gift_widget(gift: Gift) {
   )
 }
 
-pub fn body() {
+pub fn body() -> List(Element(a)) {
   [
     main(
       [

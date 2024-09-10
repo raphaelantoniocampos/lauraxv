@@ -1,7 +1,8 @@
 import lustre/attribute.{class, href}
+import lustre/element.{type Element}
 import lustre/element/html.{a, li, nav, text, ul}
 
-pub fn header() {
+pub fn header() -> Element(a) {
   nav([class("w-full bg-white shadow-md py-4 px-8 flex justify-center")], [
     ul([class("flex space-x-8 text-pink-600 font-semibold")], [
       li([], [

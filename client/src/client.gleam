@@ -7,15 +7,15 @@ import client/state.{
   type Model, type Msg, type Route, CreateGiftResponded, Event, Gifts, GotGifts,
   Home, LinkUpdated, MessageErrorResponse, Model, NameUpdated, NotFound,
   OnRouteChange, Photos, PicUpdated, RequestCreateGift, ShowGift,
-  UserChangedSlide,
 }
-import gleam/dynamic
+import gleam/dynamic.{type DecodeError, type Dynamic}
 import gleam/int
 import gleam/json
 import gleam/uri.{type Uri}
 import lustre
 import lustre/attribute.{class}
 import lustre/effect.{type Effect}
+import lustre/element.{type Element}
 import lustre/element/html.{div, text}
 import lustre_http
 import modem
@@ -89,7 +89,6 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     // Run the create_post function if the RequestCreatePost message was recieved from the frontend.
     CreateGiftResponded(response) -> #(model, get_gifts())
     // If the create post responded then we want to refetch our posts
-    UserChangedSlide(_dir) -> #(model, get_gifts())
   }
 }
 
@@ -128,7 +127,7 @@ fn on_url_change(uri: Uri) -> Msg {
 @external(javascript, "./ffi.mjs", "get_route")
 fn do_get_route() -> String
 
-fn gift_decoder() {
+fn gift_decoder() -> fn(Dynamic) -> Result(List(Gift), List(DecodeError)) {
   dynamic.list(
     // We want to decode a list so we use a dynamic.list here
     dynamic.decode5(
@@ -145,7 +144,7 @@ fn gift_decoder() {
   )
 }
 
-fn view(model: Model) {
+fn view(model: Model) -> Element(a) {
   div(
     [
       class(
@@ -210,7 +209,7 @@ fn view(model: Model) {
   )
 }
 
-fn get_gifts() {
+fn get_gifts() -> Effect(Msg) {
   lustre_http.get(
     // Then you call lustre_http get
     "http://localhost:8000/gifts",
@@ -220,7 +219,7 @@ fn get_gifts() {
   )
 }
 
-fn create_gift(model: Model) {
+fn create_gift(model: Model) -> Effect(Msg) {
   lustre_http.post(
     "http://localhost:8000/gifts",
     // This will be a call to our future backends create post route
