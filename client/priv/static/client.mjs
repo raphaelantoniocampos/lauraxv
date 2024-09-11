@@ -3844,8 +3844,8 @@ var Gift = class extends CustomType {
   }
 };
 
-// build/dev/javascript/client/client/components/header.mjs
-function header() {
+// build/dev/javascript/client/client/components/navigation_bar.mjs
+function navigation_bar() {
   return nav(
     toList([class$("w-full bg-white shadow-md py-4 px-8 flex justify-center")]),
     toList([
@@ -4451,88 +4451,12 @@ function diff2(unit, date1, date2) {
   }
 }
 
-// build/dev/javascript/client/client/state.mjs
-var Home = class extends CustomType {
-};
-var Event3 = class extends CustomType {
-};
-var Gifts = class extends CustomType {
-};
-var ShowGift = class extends CustomType {
-  constructor(gift_id) {
-    super();
-    this.gift_id = gift_id;
-  }
-};
-var Photos = class extends CustomType {
-};
-var NotFound2 = class extends CustomType {
-};
-var Model2 = class extends CustomType {
-  constructor(route, gifts, name, pic, link, selected) {
-    super();
-    this.route = route;
-    this.gifts = gifts;
-    this.name = name;
-    this.pic = pic;
-    this.link = link;
-    this.selected = selected;
-  }
-};
-var OnRouteChange = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var GotGifts = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var NameUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var PicUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var LinkUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var RequestCreateGift = class extends CustomType {
-};
-var CreateGiftResponded = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var MessageErrorResponse = class extends CustomType {
-  constructor(message, error) {
-    super();
-    this.message = message;
-    this.error = error;
-  }
-};
-
 // build/dev/javascript/client/client/pages/home_page.mjs
 function countdown() {
-  return to_string2(
-    diff2(
-      new Days(),
-      today(),
-      from_calendar_date(2024, new Dec(), 14)
-    )
+  return diff2(
+    new Days(),
+    today(),
+    from_calendar_date(2024, new Dec(), 14)
   );
 }
 function body3() {
@@ -4563,7 +4487,7 @@ function body3() {
                 text("Faltam "),
                 span(
                   toList([class$("text-yellow-300"), id("countdown")]),
-                  toList([text(countdown())])
+                  toList([text(to_string2(countdown()))])
                 ),
                 text(" dias para a festa!")
               ])
@@ -4732,6 +4656,80 @@ function body4() {
   ]);
 }
 
+// build/dev/javascript/client/client/state.mjs
+var Home = class extends CustomType {
+};
+var Event3 = class extends CustomType {
+};
+var Gifts = class extends CustomType {
+};
+var ShowGift = class extends CustomType {
+  constructor(gift_id) {
+    super();
+    this.gift_id = gift_id;
+  }
+};
+var Photos = class extends CustomType {
+};
+var NotFound2 = class extends CustomType {
+};
+var Model2 = class extends CustomType {
+  constructor(route, gifts, name, pic, link, selected) {
+    super();
+    this.route = route;
+    this.gifts = gifts;
+    this.name = name;
+    this.pic = pic;
+    this.link = link;
+    this.selected = selected;
+  }
+};
+var OnRouteChange = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var GotGifts = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var NameUpdated = class extends CustomType {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+};
+var PicUpdated = class extends CustomType {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+};
+var LinkUpdated = class extends CustomType {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+};
+var RequestCreateGift = class extends CustomType {
+};
+var CreateGiftResponded = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var MessageErrorResponse = class extends CustomType {
+  constructor(message, error) {
+    super();
+    this.message = message;
+    this.error = error;
+  }
+};
+
 // build/dev/javascript/client/ffi.mjs
 function get_route() {
   return window.location.pathname;
@@ -4748,7 +4746,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 101, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 100, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4770,7 +4768,7 @@ function get_route2() {
       throw makeError(
         "assignment_no_match",
         "client",
-        112,
+        111,
         "get_route",
         "Assignment pattern did not match",
         { value: $1 }
@@ -4807,7 +4805,7 @@ function view(model) {
       )
     ]),
     toList([
-      header(),
+      navigation_bar(),
       div(
         toList([]),
         (() => {
@@ -4902,10 +4900,8 @@ function update(model, msg) {
     return [model.withFields({ link: value }), none()];
   } else if (msg instanceof RequestCreateGift) {
     return [model, create_gift(model)];
-  } else if (msg instanceof CreateGiftResponded) {
-    let response = msg[0];
-    return [model, get_gifts()];
   } else {
+    let response = msg[0];
     return [model, get_gifts()];
   }
 }

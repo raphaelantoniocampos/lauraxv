@@ -1,4 +1,4 @@
-import client/components/header.{header}
+import client/components/navigation_bar.{navigation_bar}
 import client/pages/event_page
 import client/pages/gifts_page
 import client/pages/home_page
@@ -127,23 +127,6 @@ fn on_url_change(uri: Uri) -> Msg {
 @external(javascript, "./ffi.mjs", "get_route")
 fn do_get_route() -> String
 
-fn gift_decoder() -> fn(Dynamic) -> Result(List(Gift), List(DecodeError)) {
-  dynamic.list(
-    // We want to decode a list so we use a dynamic.list here
-    dynamic.decode5(
-      // And it is a list of json that looks like this {id: 1, title: "title", body: "body"} so we use a decodeN matching the number of arguments
-      Gift,
-      // You input the type of your data here
-      dynamic.field("id", dynamic.int),
-      // Then here and for the following lines you define the field with the name and the type
-      dynamic.field("name", dynamic.string),
-      dynamic.field("pic", dynamic.string),
-      dynamic.field("link", dynamic.string),
-      dynamic.field("selected", dynamic.bool),
-    ),
-  )
-}
-
 fn view(model: Model) -> Element(a) {
   div(
     [
@@ -152,7 +135,7 @@ fn view(model: Model) -> Element(a) {
       ),
     ],
     [
-      header(),
+      navigation_bar(),
       div([], case model.route {
         // Here we match the current route in the state and return different html based on what route is recieved
         Home -> home_page.body()
