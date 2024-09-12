@@ -1,6 +1,5 @@
 import gleam/dynamic
-import shared/gift.{type Gift, Gift, gifts_decoder}
-import sqlight
+import shared/gift.{type Gift, Gift}
 // pub fn coneta() {
 //   use conn <- sqlight.with_connection("file:db.sqlite3")
 //

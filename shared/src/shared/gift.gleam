@@ -1,15 +1,10 @@
 import decode
-import gleam/option.{type Option, None, Some}
 
-//
+// import gleam/dynamic.{type Dynamic}
+// import gleam/option.{type Option, None, Some}
+
 pub type Gift {
-  Gift(
-    id: Int,
-    name: String,
-    pic: String,
-    link: String,
-    selected_by: Option(Int),
-  )
+  Gift(id: Int, name: String, pic: String, link: String, selected_by: Int)
 }
 
 pub fn gift_decoder() {
@@ -26,5 +21,5 @@ pub fn gift_decoder() {
   |> decode.field("name", decode.string)
   |> decode.field("pic", decode.string)
   |> decode.field("link", decode.string)
-  |> decode.field("selected_by", decode.optional(decode.int))
+  |> decode.field("selected_by", decode.int)
 }

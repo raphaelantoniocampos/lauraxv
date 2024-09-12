@@ -1,6 +1,5 @@
 import gleam/int
 import gleam/list
-import gleam/option
 import lustre/attribute.{alt, attribute, class, disabled, href, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h3, img, main, span}
@@ -9,24 +8,24 @@ import shared/gift.{type Gift, Gift}
 fn empty_gifts(n: Int) -> List(Gift) {
   list.range(1, n)
   |> list.map(fn(n) {
-    let selected = int.is_odd(int.random(2))
+    let selected = int.random(n)
     Gift(
       id: n,
       name: "Presente " <> int.to_string(n),
       pic: "https://placehold.co/200x150/png",
       link: "https://placehold.co/200x150/png",
-      selected_by: option.Some(n),
+      selected_by: selected,
     )
   })
 }
 
-fn gift_widget(gift: Gift) -> Element(a) {
+fn gift(gift: Gift) -> Element(a) {
   div(
     [
       attribute("data-aos", "zoom-in"),
       class("relative bg-white p-4 rounded-lg shadow-lg"),
     ],
-    case gift.selected {
+    case int.is_odd(gift.selected_by) {
       True -> {
         [
           div(
@@ -106,7 +105,7 @@ fn gift_widget(gift: Gift) -> Element(a) {
   )
 }
 
-pub fn body() -> List(Element(a)) {
+pub fn gifts_view() -> List(Element(a)) {
   [
     main(
       [
@@ -123,7 +122,7 @@ pub fn body() -> List(Element(a)) {
         ),
         div(
           [class("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")],
-          list.map(empty_gifts(10), gift_widget),
+          list.map(empty_gifts(10), gift),
         ),
       ],
     ),

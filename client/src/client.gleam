@@ -1,16 +1,26 @@
-import client/components/navigation_bar.{navigation_bar}
-import client/pages/event_page
-import client/pages/gifts_page
-import client/pages/home_page
-import client/pages/photos_page
 import client/state.{
-  type Model, type Msg, type Route, CreateGiftResponded, Event, Gifts, GotGifts,
-  Home, LinkUpdated, MessageErrorResponse, Model, NameUpdated, NotFound,
-  OnRouteChange, Photos, PicUpdated, RequestCreateGift, ShowGift,
+  type Model, type Msg, type Route, ChangePassword, ChangePasswordResponded,
+  ChangePasswordTargetRecieved, ConfirmPresence, CreateAuthCodeResponded,
+  EventPage, ForgotPassword, ForgotPasswordResponded, GiftsPage, GiftsRecieved,
+  GuestRecieved, Home, Login, LoginResponded, LoginUpdateError, LoginUpdateName,
+  LoginUpdatePassword, LogoutResponded, Model, NotFound, OnRouteChange,
+  PhotosPage, PhotosRecieved, RequestChangePassword, RequestCreateAuthCode,
+  RequestForgotPassword, RequestLogin, RequestLogout, RequestSelectGift,
+  RequestSignUp, SelectGift, SelectGiftResponded, SelectGiftUpdateError,
+  SignUpResponded, SignUpUpdateEmail, SignUpUpdateError, SignUpUpdateName,
+  SignUpUpdatePassword, Signup, message_error_decoder,
 }
+
+import client/navigation_bar.{navigation_bar}
+import client/routes/event.{event_view}
+import client/routes/gifts.{gifts_view}
+import client/routes/home.{home_view}
+import client/routes/photos.{photos_view}
+import decode
 import gleam/dynamic.{type DecodeError, type Dynamic}
 import gleam/int
 import gleam/json
+import gleam/option.{None}
 import gleam/uri.{type Uri}
 import lustre
 import lustre/attribute.{class}
@@ -19,7 +29,10 @@ import lustre/element.{type Element}
 import lustre/element/html.{div, text}
 import lustre_http
 import modem
-import shared.{type Gift, Gift}
+import shared/gift.{type Gift, Gift, gift_decoder}
+import shared/guest.{type Guest, Guest, guest_decoder}
+
+const api_url = "http://localhost:8000"
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -32,89 +45,86 @@ fn init(_) -> #(Model, Effect(Msg)) {
   #(
     Model(
       route: get_route(),
+      guest: None,
+      sign_up_name: "",
+      sign_up_email: "",
+      sign_up_password: "",
+      sign_up_error: None,
+      login_email: "",
+      login_password: "",
+      login_error: None,
+      confirm_presence: 0,
       gifts: [],
-      name: "",
-      pic: "",
-      link: "",
-      selected: False,
-      // Here we can get the current route when the page is initialized in the browser
+      select_gift: 0,
+      photos: [],
+      forgot_password_response: None,
+      change_password_target: "",
     ),
-    effect.batch([
-      modem.init(on_url_change),
-      // Move the modem.init here inside the new effect.batch
-      get_gifts(),
-    ]),
+    effect.batch([modem.init(on_url_change), get_gifts(), get_guest()]),
   )
+  //   effect.batch(
+  //     [modem.init(on_url_change), get_auth_user(), get_posts()]
+  //     |> list.append(case get_route() {
+  //       ShowPost(_) -> [get_show_post()]
+  //       Signup(_) -> [get_inviter(get_auth_code())]
+  //       ChangePassword(token) -> [get_change_password_target(token)]
+  //       _ -> []
+  //     }),
+  //   ),
+  // )
 }
 
 // Create our update method
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
     OnRouteChange(route) -> #(
-      Model(
-        ..model,
-        // This isn't neccesary currently but is required to keep the state between the route changes
-
-        route: route,
-      ),
+      Model(..model, route: route),
       effect.none(),
       // This just tells our program to not do anything after
     )
-    GotGifts(gifts_result) -> {
-      case gifts_result {
-        Ok(gifts) -> #(Model(..model, gifts: gifts), effect.none())
-        Error(_) -> panic
-      }
-    }
-    NameUpdated(value) -> #(
-      // If the user updates the title input
-
-      Model(..model, name: value),
-      // Then we update the current model with the current state and we modify the title to the new value
-
-      effect.none(),
-    )
-
-    PicUpdated(value) -> #(
-      // Same with the body
-      Model(..model, pic: value),
-      effect.none(),
-    )
-    LinkUpdated(value) -> #(
-      // Same with the body
-      Model(..model, link: value),
-      effect.none(),
-    )
-    RequestCreateGift -> #(model, create_gift(model))
-    // Run the create_post function if the RequestCreatePost message was recieved from the frontend.
-    CreateGiftResponded(response) -> #(model, get_gifts())
-    // If the create post responded then we want to refetch our posts
+    _ -> #(model, effect.none())
   }
 }
 
-// Define our function where we get our route
 fn get_route() -> Route {
   let uri = case do_get_route() |> uri.parse {
     Ok(uri) -> uri
-
     _ -> panic as "Invalid uri"
-    // The uri is coming from our javascript integration so an invalid uri should be unreachable state so we can safely panic here
   }
 
   case uri.path |> uri.path_segments {
-    // Here we match for the route in the uri split on the slashes so / becomes [] and /about becomes ["about"] and so on
     [] -> Home
-    ["event"] -> Event
-    ["photos"] -> Photos
-    ["gifts"] -> Gifts
-    ["gift", gift_id_string] -> {
-      let assert Ok(gift_id) = int.parse(gift_id_string)
-      // Here we parse our gift_id from our url and require it to be an int. Ideally in a production application you'd do some error handling here but we only care if it's an integer.
-      ShowGift(gift_id)
-      // Return the route Gift with our gift_id
-    }
+    ["auth", "login"] -> Login
+    ["auth", "signup", auth_code] -> Signup(auth_code: auth_code)
+    ["auth", "forgot-password"] -> ForgotPassword
+    ["auth", "forgot-password", token] -> ChangePassword(token)
+    ["confirm-presence", user_id] -> ConfirmPresence(user_id: user_id)
+    ["gifts"] -> GiftsPage
+    ["api", "gifts", gift_id] ->
+      case int.parse(gift_id) {
+        Ok(id) -> SelectGift(id)
+        Error(_) -> NotFound
+      }
+    ["event"] -> EventPage
+    ["Photos"] -> PhotosPage
     _ -> NotFound
   }
+}
+
+fn request_forgot_password(model: Model) {
+  lustre_http.post(
+    api_url <> "/api/auth/forgot-password",
+    json.object([#("email", json.string(model.login_email))]),
+    lustre_http.expect_json(message_error_decoder(), ForgotPasswordResponded),
+  )
+}
+
+fn create_auth_code() {
+  lustre_http.post(
+    api_url <> "/api/auth-code",
+    json.object([]),
+    lustre_http.expect_json(message_error_decoder(), CreateAuthCodeResponded),
+  )
 }
 
 // Define our function for handling when the route changes
@@ -126,6 +136,21 @@ fn on_url_change(uri: Uri) -> Msg {
 // Gleam doesn't expose any functions for getting the current url so we will use the ffi functionality to import this function from javascript later. In laymans terms this makes Gleam be able to import any javascript and use it as a function.
 @external(javascript, "./ffi.mjs", "get_route")
 fn do_get_route() -> String
+
+pub fn get_auth_user() -> Effect(Msg) {
+  let url = api_url <> "/api/auth/validate"
+
+  let decoder =
+    dynamic.decode4(
+      Guest,
+      dynamic.field("id", dynamic.int),
+      dynamic.field("name", dynamic.string),
+      dynamic.field("email", dynamic.string),
+      dynamic.field("confirmed", dynamic.bool),
+    )
+
+  lustre_http.get(url, lustre_http.expect_json(decoder, GuestRecieved))
+}
 
 fn view(model: Model) -> Element(a) {
   div(
@@ -193,32 +218,27 @@ fn view(model: Model) -> Element(a) {
 }
 
 fn get_gifts() -> Effect(Msg) {
+  let decoder =
+    dynamic.list(
+      // We want to decode a list so we use a dynamic.list here
+      dynamic.decode5(
+        // And it is a list of json that looks like this {id: 1, title: "title", body: "body"} so we use a decodeN matching the number of arguments
+        Gift,
+        // You input the type of your data here
+        dynamic.field("id", dynamic.int),
+        // Then here and for the following lines you define the field with the name and the type
+        dynamic.field("name", dynamic.string),
+        dynamic.field("pic", dynamic.string),
+        dynamic.field("link", dynamic.string),
+        dynamic.field("selected_by", dynamic.int),
+      ),
+    )
+  let url = api_url <> "/api/gifts"
   lustre_http.get(
     // Then you call lustre_http get
-    "http://localhost:8000/gifts",
+    url,
     // This will be a call to our future backend
-    lustre_http.expect_json(gift_decoder(), GotGifts),
+    lustre_http.expect_json(decoder, GotGifts),
     // Then lustre_http exposes a method to parse the resulting data as json that takes in our json decoder from earlier with the Msg that signals that the data was recieved
-  )
-}
-
-fn create_gift(model: Model) -> Effect(Msg) {
-  lustre_http.post(
-    "http://localhost:8000/gifts",
-    // This will be a call to our future backends create post route
-    json.object([
-      #("name", json.string(model.name)),
-      #("pic", json.string(model.pic)),
-      #("link", json.string(model.link)),
-      #("selected", json.bool(model.selected)),
-    ]),
-    lustre_http.expect_json(
-      dynamic.decode2(
-        MessageErrorResponse,
-        dynamic.optional_field("message", dynamic.string),
-        dynamic.optional_field("error", dynamic.string),
-      ),
-      CreateGiftResponded,
-    ),
   )
 }

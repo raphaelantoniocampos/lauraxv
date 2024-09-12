@@ -2,7 +2,7 @@ import lustre/attribute.{alt, attribute, class, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, h2, img, main, p, strong}
 
-pub fn body() -> List(Element(a)) {
+pub fn event_view() -> List(Element(a)) {
   [
     main(
       [

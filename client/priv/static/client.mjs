@@ -88,8 +88,8 @@ var BitArray = class _BitArray {
     return this.buffer.length;
   }
   // @internal
-  byteAt(index3) {
-    return this.buffer[index3];
+  byteAt(index4) {
+    return this.buffer[index4];
   }
   // @internal
   floatFromSlice(start3, end, isBigEndian) {
@@ -104,8 +104,8 @@ var BitArray = class _BitArray {
     return new _BitArray(this.buffer.slice(start3, end));
   }
   // @internal
-  sliceAfter(index3) {
-    return new _BitArray(this.buffer.slice(index3));
+  sliceAfter(index4) {
+    return new _BitArray(this.buffer.slice(index4));
   }
 };
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
@@ -327,8 +327,8 @@ var Options = class extends CustomType {
 function compile(pattern, options) {
   return compile_regex(pattern, options);
 }
-function scan(regex, string3) {
-  return regex_scan(regex, string3);
+function scan(regex, string4) {
+  return regex_scan(regex, string4);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/order.mjs
@@ -362,8 +362,8 @@ function round2(x) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
-function parse(string3) {
-  return parse_int(string3);
+function parse(string4) {
+  return parse_int(string4);
 }
 function to_string2(x) {
   return to_string(x);
@@ -610,16 +610,16 @@ function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
     let over = loop$over;
     let acc = loop$acc;
     let with$ = loop$with;
-    let index3 = loop$index;
+    let index4 = loop$index;
     if (over.hasLength(0)) {
       return acc;
     } else {
       let first$1 = over.head;
       let rest$1 = over.tail;
       loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index3);
+      loop$acc = with$(acc, first$1, index4);
       loop$with = with$;
-      loop$index = index3 + 1;
+      loop$index = index4 + 1;
     }
   }
 }
@@ -729,8 +729,8 @@ function nil_error(result) {
 function from_strings(strings) {
   return concat2(strings);
 }
-function from_string(string3) {
-  return identity(string3);
+function from_string(string4) {
+  return identity(string4);
 }
 function to_string3(builder) {
   return identity(builder);
@@ -756,9 +756,6 @@ function classify(data) {
 }
 function int(data) {
   return decode_int(data);
-}
-function bool(data) {
-  return decode_bool(data);
 }
 function shallow_list(value) {
   return decode_list(value);
@@ -1642,11 +1639,11 @@ function parse_int(value) {
 function to_string(term) {
   return term.toString();
 }
-function string_length(string3) {
-  if (string3 === "") {
+function string_length(string4) {
+  if (string4 === "") {
     return 0;
   }
-  const iterator = graphemes_iterator(string3);
+  const iterator = graphemes_iterator(string4);
   if (iterator) {
     let i = 0;
     for (const _ of iterator) {
@@ -1654,38 +1651,38 @@ function string_length(string3) {
     }
     return i;
   } else {
-    return string3.match(/./gsu).length;
+    return string4.match(/./gsu).length;
   }
 }
-function graphemes(string3) {
-  const iterator = graphemes_iterator(string3);
+function graphemes(string4) {
+  const iterator = graphemes_iterator(string4);
   if (iterator) {
     return List.fromArray(Array.from(iterator).map((item) => item.segment));
   } else {
-    return List.fromArray(string3.match(/./gsu));
+    return List.fromArray(string4.match(/./gsu));
   }
 }
-function graphemes_iterator(string3) {
+function graphemes_iterator(string4) {
   if (Intl && Intl.Segmenter) {
-    return new Intl.Segmenter().segment(string3)[Symbol.iterator]();
+    return new Intl.Segmenter().segment(string4)[Symbol.iterator]();
   }
 }
-function pop_grapheme(string3) {
+function pop_grapheme(string4) {
   let first3;
-  const iterator = graphemes_iterator(string3);
+  const iterator = graphemes_iterator(string4);
   if (iterator) {
     first3 = iterator.next().value?.segment;
   } else {
-    first3 = string3.match(/./su)?.[0];
+    first3 = string4.match(/./su)?.[0];
   }
   if (first3) {
-    return new Ok([first3, string3.slice(first3.length)]);
+    return new Ok([first3, string4.slice(first3.length)]);
   } else {
     return new Error(Nil);
   }
 }
-function lowercase(string3) {
-  return string3.toLowerCase();
+function lowercase(string4) {
+  return string4.toLowerCase();
 }
 function split(xs, pattern) {
   return List.fromArray(xs.split(pattern));
@@ -1751,8 +1748,8 @@ function compile_regex(pattern, options) {
     return new Error(new CompileError(error.message, number));
   }
 }
-function regex_scan(regex, string3) {
-  const matches = Array.from(string3.matchAll(regex)).map((match) => {
+function regex_scan(regex, string4) {
+  const matches = Array.from(string4.matchAll(regex)).map((match) => {
     const content = match[0];
     const submatches = [];
     for (let n = match.length - 1; n > 0; n--) {
@@ -1826,9 +1823,6 @@ function decode_string(data) {
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
 }
-function decode_bool(data) {
-  return typeof data === "boolean" ? new Ok(data) : decoder_error("Bool", data);
-}
 function decode_list(data) {
   if (Array.isArray(data)) {
     return new Ok(List.fromArray(data));
@@ -1860,9 +1854,9 @@ function decode_field(value, name) {
     return try_get_field(value, name, not_a_map_error);
   }
 }
-function try_get_field(value, field2, or_else) {
+function try_get_field(value, field3, or_else) {
   try {
-    return field2 in value ? new Ok(new Some(value[field2])) : or_else();
+    return field3 in value ? new Ok(new Some(value[field3])) : or_else();
   } catch {
     return or_else();
   }
@@ -1872,8 +1866,8 @@ function try_get_field(value, field2, or_else) {
 function new$() {
   return new_map();
 }
-function insert(dict, key, value) {
-  return map_insert(key, value, dict);
+function insert(dict2, key, value) {
+  return map_insert(key, value, dict2);
 }
 function reverse_and_concat(loop$remaining, loop$accumulator) {
   while (true) {
@@ -1903,64 +1897,64 @@ function do_keys_acc(loop$list, loop$acc) {
     }
   }
 }
-function do_keys(dict) {
-  let list_of_pairs = map_to_list(dict);
+function do_keys(dict2) {
+  let list_of_pairs = map_to_list(dict2);
   return do_keys_acc(list_of_pairs, toList([]));
 }
-function keys(dict) {
-  return do_keys(dict);
+function keys(dict2) {
+  return do_keys(dict2);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function length2(string3) {
-  return string_length(string3);
+function length2(string4) {
+  return string_length(string4);
 }
-function lowercase2(string3) {
-  return lowercase(string3);
+function lowercase2(string4) {
+  return lowercase(string4);
 }
-function starts_with2(string3, prefix) {
-  return starts_with(string3, prefix);
+function starts_with2(string4, prefix) {
+  return starts_with(string4, prefix);
 }
 function concat3(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
 }
-function pop_grapheme2(string3) {
-  return pop_grapheme(string3);
+function pop_grapheme2(string4) {
+  return pop_grapheme(string4);
 }
-function do_slice(string3, idx, len) {
-  let _pipe = string3;
+function do_slice(string4, idx, len) {
+  let _pipe = string4;
   let _pipe$1 = graphemes(_pipe);
   let _pipe$2 = drop(_pipe$1, idx);
   let _pipe$3 = take(_pipe$2, len);
   return concat3(_pipe$3);
 }
-function slice(string3, idx, len) {
+function slice(string4, idx, len) {
   let $ = len < 0;
   if ($) {
     return "";
   } else {
     let $1 = idx < 0;
     if ($1) {
-      let translated_idx = length2(string3) + idx;
+      let translated_idx = length2(string4) + idx;
       let $2 = translated_idx < 0;
       if ($2) {
         return "";
       } else {
-        return do_slice(string3, translated_idx, len);
+        return do_slice(string4, translated_idx, len);
       }
     } else {
-      return do_slice(string3, idx, len);
+      return do_slice(string4, idx, len);
     }
   }
 }
-function drop_left(string3, num_graphemes) {
+function drop_left(string4, num_graphemes) {
   let $ = num_graphemes < 0;
   if ($) {
-    return string3;
+    return string4;
   } else {
-    return slice(string3, num_graphemes, length2(string3) - num_graphemes);
+    return slice(string4, num_graphemes, length2(string4) - num_graphemes);
   }
 }
 function split3(x, substring) {
@@ -1984,12 +1978,12 @@ function object(entries) {
 function identity2(x) {
   return x;
 }
-function decode(string3) {
+function decode(string4) {
   try {
-    const result = JSON.parse(string3);
+    const result = JSON.parse(string4);
     return new Ok(result);
   } catch (err) {
-    return new Error(getJsonDecodeError(err, string3));
+    return new Error(getJsonDecodeError(err, string4));
   }
 }
 function getJsonDecodeError(stdErr, json) {
@@ -2054,12 +2048,12 @@ function jsCoreUnexpectedByteError(err) {
 function toHex(char) {
   return "0x" + char.charCodeAt(0).toString(16).toUpperCase();
 }
-function getPositionFromMultiline(line, column, string3) {
+function getPositionFromMultiline(line, column, string4) {
   if (line === 1)
     return column - 1;
   let currentLn = 1;
   let position = 0;
-  string3.split("").find((char, idx) => {
+  string4.split("").find((char, idx) => {
     if (char === "\n")
       currentLn += 1;
     if (currentLn === line) {
@@ -2110,7 +2104,7 @@ function to_string5(json) {
 function string2(input) {
   return identity2(input);
 }
-function bool2(input) {
+function bool(input) {
   return identity2(input);
 }
 function object2(entries) {
@@ -2130,14 +2124,14 @@ var Uri = class extends CustomType {
     this.fragment = fragment;
   }
 };
-function regex_submatches(pattern, string3) {
+function regex_submatches(pattern, string4) {
   let _pipe = pattern;
   let _pipe$1 = compile(_pipe, new Options(true, false));
   let _pipe$2 = nil_error(_pipe$1);
   let _pipe$3 = map3(
     _pipe$2,
     (_capture) => {
-      return scan(_capture, string3);
+      return scan(_capture, string4);
     }
   );
   let _pipe$4 = try$(_pipe$3, first);
@@ -2491,8 +2485,8 @@ function do_element_list_handlers(elements2, handlers2, key) {
   return index_fold(
     elements2,
     handlers2,
-    (handlers3, element2, index3) => {
-      let key$1 = key + "-" + to_string2(index3);
+    (handlers3, element2, index4) => {
+      let key$1 = key + "-" + to_string2(index4);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -2603,9 +2597,9 @@ function text(content) {
 
 // build/dev/javascript/gleam_stdlib/gleam/set.mjs
 var Set2 = class extends CustomType {
-  constructor(dict) {
+  constructor(dict2) {
     super();
-    this.dict = dict;
+    this.dict = dict2;
   }
 };
 function new$3() {
@@ -3832,15 +3826,15 @@ function init2(handler) {
   );
 }
 
-// build/dev/javascript/shared/shared.mjs
+// build/dev/javascript/shared/shared/gift.mjs
 var Gift = class extends CustomType {
-  constructor(id2, name, pic, link, selected) {
+  constructor(id2, name, pic, link, selected_by) {
     super();
     this.id = id2;
     this.name = name;
     this.pic = pic;
     this.link = link;
-    this.selected = selected;
+    this.selected_by = selected_by;
   }
 };
 
@@ -4007,7 +4001,7 @@ function empty_gifts(n) {
   return map2(
     _pipe,
     (n2) => {
-      let selected = is_odd(random(2));
+      let selected = random(n2);
       return new Gift(
         n2,
         "Presente " + to_string2(n2),
@@ -4025,7 +4019,7 @@ function gift_widget(gift) {
       class$("relative bg-white p-4 rounded-lg shadow-lg")
     ]),
     (() => {
-      let $ = gift.selected;
+      let $ = is_odd(gift.selected_by);
       if ($) {
         return toList([
           div(
@@ -4783,20 +4777,6 @@ function get_route2() {
 function on_url_change(uri) {
   return new OnRouteChange(get_route2());
 }
-function gift_decoder() {
-  return list(
-    decode5(
-      (var0, var1, var2, var3, var4) => {
-        return new Gift(var0, var1, var2, var3, var4);
-      },
-      field("id", int),
-      field("name", string),
-      field("pic", string),
-      field("link", string),
-      field("selected", bool)
-    )
-  );
-}
 function view(model) {
   return div(
     toList([
@@ -4829,14 +4809,23 @@ function view(model) {
   );
 }
 function get_gifts() {
+  let decoder = list(
+    decode5(
+      (var0, var1, var2, var3, var4) => {
+        return new Gift(var0, var1, var2, var3, var4);
+      },
+      field("id", int),
+      field("name", string),
+      field("pic", string),
+      field("link", string),
+      field("selected_by", int)
+    )
+  );
   return get2(
     "http://localhost:8000/gifts",
-    expect_json(
-      gift_decoder(),
-      (var0) => {
-        return new GotGifts(var0);
-      }
-    )
+    expect_json(decoder, (var0) => {
+      return new GotGifts(var0);
+    })
   );
 }
 function init3(_) {
@@ -4853,7 +4842,7 @@ function create_gift(model) {
         ["name", string2(model.name)],
         ["pic", string2(model.pic)],
         ["link", string2(model.link)],
-        ["selected", bool2(model.selected)]
+        ["selected", bool(model.selected)]
       ])
     ),
     expect_json(

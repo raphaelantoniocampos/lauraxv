@@ -13,7 +13,7 @@ fn empty_photos(n: Int) -> List(Photo) {
   |> list.map(fn(n) { Photo(n, "https://placehold.co/600x400/png") })
 }
 
-pub fn body() -> List(Element(a)) {
+pub fn photos_view() -> List(Element(a)) {
   [
     main(
       [
