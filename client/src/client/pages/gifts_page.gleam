@@ -1,9 +1,10 @@
 import gleam/int
 import gleam/list
+import gleam/option
 import lustre/attribute.{alt, attribute, class, disabled, href, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h3, img, main, span}
-import shared.{type Gift, Gift}
+import shared/gift.{type Gift, Gift}
 
 fn empty_gifts(n: Int) -> List(Gift) {
   list.range(1, n)
@@ -14,7 +15,7 @@ fn empty_gifts(n: Int) -> List(Gift) {
       name: "Presente " <> int.to_string(n),
       pic: "https://placehold.co/200x150/png",
       link: "https://placehold.co/200x150/png",
-      selected: selected,
+      selected_by: option.Some(n),
     )
   })
 }
