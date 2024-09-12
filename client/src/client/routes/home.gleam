@@ -13,7 +13,7 @@ fn countdown() -> Int {
   )
 }
 
-pub fn body() -> List(Element(a)) {
+pub fn home_view() -> List(Element(a)) {
   [
     main(
       [
