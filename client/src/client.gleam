@@ -242,3 +242,22 @@ fn get_gifts() -> Effect(Msg) {
     // Then lustre_http exposes a method to parse the resulting data as json that takes in our json decoder from earlier with the Msg that signals that the data was recieved
   )
 }
+
+fn get_guest() -> Effect(Msg) {
+  let decoder =
+    dynamic.list(
+      // We want to decode a list so we use a dynamic.list here
+      dynamic.decode4(
+        // And it is a list of json that looks like this {id: 1, title: "title", body: "body"} so we use a decodeN matching the number of arguments
+        Guest,
+        // You input the type of your data here
+        dynamic.field("id", dynamic.int),
+        // Then here and for the following lines you define the field with the name and the type
+        dynamic.field("name", dynamic.string),
+        dynamic.field("email", dynamic.string),
+        dynamic.field("confirmed", dynamic.bool),
+      ),
+    )
+  let url = api_url <> "/api/auth/validate"
+  lustre_http.get(url, lustre_http.expect_json(decoder, GuestRecieved))
+}
