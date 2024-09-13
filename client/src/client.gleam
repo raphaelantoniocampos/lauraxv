@@ -3,25 +3,26 @@ import client/state.{
   ChangePasswordTargetRecieved, ConfirmPresence, CreateAuthCodeResponded,
   EmailResponse, EventPage, ForgotPassword, ForgotPasswordResponded,
   GetGiftsResponse, GiftsPage, GiftsRecieved, GuestRecieved, Home, Login,
-  LoginResponded, LoginUpdateError, LoginUpdateName, LoginUpdatePassword,
-  LogoutResponded, Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved,
-  RequestChangePassword, RequestCreateAuthCode, RequestForgotPassword,
-  RequestLogin, RequestLogout, RequestSelectGift, RequestSignUp, SelectGift,
-  SelectGiftResponded, SelectGiftUpdateError, SignUpResponded, SignUpUpdateEmail,
-  SignUpUpdateError, SignUpUpdateName, SignUpUpdatePassword, Signup,
-  message_error_decoder,
+  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdateName,
+  LoginUpdatePassword, LogoutResponded, Model, NotFound, OnRouteChange,
+  PhotosPage, PhotosRecieved, RequestChangePassword, RequestCreateAuthCode,
+  RequestForgotPassword, RequestLogin, RequestLogout, RequestSelectGift,
+  RequestSignUp, SelectGift, SelectGiftResponded, SelectGiftUpdateError,
+  SignUpResponded, SignUpUpdateEmail, SignUpUpdateError, SignUpUpdateName,
+  SignUpUpdatePassword, Signup, message_error_decoder,
 }
 
 import client/pages/event.{event_view}
 import client/pages/gifts.{gifts_view}
 import client/pages/home.{home_view}
+import client/pages/login.{login, login_view}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import decode
 import gleam/dynamic.{type DecodeError, type Dynamic}
 import gleam/int
 import gleam/json
-import gleam/option.{None}
+import gleam/option.{None, Some}
 import gleam/uri.{type Uri}
 import lustre
 import lustre/attribute.{class, href, id}
@@ -30,9 +31,7 @@ import lustre/element.{type Element}
 import lustre/element/html.{a, body, div, li, nav, text, ul}
 import lustre_http
 import modem
-import shared.{type Gift, Gift, Guest, Photo}
-
-const api_url = "http://localhost:8000"
+import shared.{type Gift, type Guest, Gift, Guest, Photo, api_url}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -50,6 +49,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       sign_up_email: "",
       sign_up_password: "",
       sign_up_error: None,
+      login_name: "",
       login_email: "",
       login_password: "",
       login_error: None,
@@ -77,11 +77,54 @@ fn init(_) -> #(Model, Effect(Msg)) {
 // Create our update method
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
-    OnRouteChange(route) -> #(
-      Model(..model, route: route),
+    OnRouteChange(route) -> #(Model(..model, route: route), effect.none())
+
+    LoginResponded(resp_result) ->
+      case resp_result {
+        Ok(resp) ->
+          case resp.error {
+            Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+            )
+            None -> #(
+              Model(
+                ..model,
+                login_email: "",
+                login_password: "",
+                login_error: None,
+              ),
+              effect.batch([get_auth_guest()]),
+            )
+          }
+        Error(_) -> #(
+          model,
+          effect.from(fn(dispatch) {
+            dispatch(LoginUpdateError(Some("HTTP Error")))
+          }),
+        )
+      }
+
+    GuestRecieved(guest_result) ->
+      case guest_result {
+        Ok(guest) -> #(Model(..model, guest: Some(guest)), effect.none())
+        Error(_) -> #(model, effect.none())
+      }
+    RequestLogin -> #(model, login(model))
+
+    LoginUpdateEmail(value) -> #(
+      Model(..model, login_email: value),
       effect.none(),
-      // This just tells our program to not do anything after
     )
+    LoginUpdatePassword(value) -> #(
+      Model(..model, login_password: value),
+      effect.none(),
+    )
+    LoginUpdateError(value) -> #(
+      Model(..model, login_error: value),
+      effect.none(),
+    )
+
     _ -> #(model, effect.none())
   }
 }
@@ -110,11 +153,6 @@ fn get_route() -> Route {
     ["auth", "forgot-password", token] -> ChangePassword(token)
     ["confirm-presence", guest_id] -> ConfirmPresence(guest_id: guest_id)
     ["gifts"] -> GiftsPage
-    ["api", "gifts", gift_id] ->
-      case int.parse(gift_id) {
-        Ok(id) -> SelectGift(id)
-        Error(_) -> NotFound
-      }
     ["event"] -> EventPage
     ["photos"] -> PhotosPage
     _ -> NotFound
@@ -265,7 +303,7 @@ fn send_password_change(model: Model) {
   )
 }
 
-fn view(model: Model) -> Element(a) {
+fn view(model: Model) -> Element(Msg) {
   body(
     [
       class(
@@ -321,13 +359,22 @@ fn view(model: Model) -> Element(a) {
             ]),
           ]),
           nav([class("flex space-x-8 text-pink-600 font-semibold")], [
-            a(
-              [
-                class("hover:text-pink-800 transition duration-300"),
-                href("/auth/login"),
-              ],
-              [text("Login")],
-            ),
+            case model.guest {
+              None -> {
+                a(
+                  [
+                    class("hover:text-pink-800 transition duration-300"),
+                    href("/auth/login"),
+                  ],
+                  [text("Login")],
+                )
+              }
+              Some(guest) -> {
+                a([class("hover:text-pink-800 transition duration-300")], [
+                  text(guest.name),
+                ])
+              }
+            },
           ]),
         ],
       ),
@@ -337,6 +384,7 @@ fn view(model: Model) -> Element(a) {
         EventPage -> event_view()
         PhotosPage -> photos_view()
         GiftsPage -> gifts_view()
+        Login -> login_view(model)
         // Gifts -> {
         //   list.append(
         //     [

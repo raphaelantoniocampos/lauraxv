@@ -27,6 +27,7 @@ pub type Model {
     sign_up_email: String,
     sign_up_password: String,
     sign_up_error: Option(String),
+    login_name: String,
     login_email: String,
     login_password: String,
     login_error: Option(String),

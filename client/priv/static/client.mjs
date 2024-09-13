@@ -2,7 +2,7 @@
 var CustomType = class {
   withFields(fields) {
     let properties = Object.keys(this).map(
-      (label) => label in fields ? fields[label] : this[label]
+      (label2) => label2 in fields ? fields[label2] : this[label2]
     );
     return new this.constructor(...properties);
   }
@@ -109,24 +109,24 @@ var BitArray = class _BitArray {
   }
 };
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
-  let value = 0;
+  let value3 = 0;
   if (isBigEndian) {
     for (let i = start3; i < end; i++) {
-      value = value * 256 + byteArray[i];
+      value3 = value3 * 256 + byteArray[i];
     }
   } else {
     for (let i = end - 1; i >= start3; i--) {
-      value = value * 256 + byteArray[i];
+      value3 = value3 * 256 + byteArray[i];
     }
   }
   if (isSigned) {
     const byteSize = end - start3;
     const highBit = 2 ** (byteSize * 8 - 1);
-    if (value >= highBit) {
-      value -= highBit * 2;
+    if (value3 >= highBit) {
+      value3 -= highBit * 2;
     }
   }
-  return value;
+  return value3;
 }
 function byteArrayToFloat(byteArray, start3, end, isBigEndian) {
   const view2 = new DataView(byteArray.buffer);
@@ -147,9 +147,9 @@ var Result = class _Result extends CustomType {
   }
 };
 var Ok = class extends Result {
-  constructor(value) {
+  constructor(value3) {
     super();
-    this[0] = value;
+    this[0] = value3;
   }
   // @internal
   isOk() {
@@ -675,6 +675,19 @@ function do_repeat(loop$a, loop$times, loop$acc) {
 function repeat(a2, times) {
   return do_repeat(a2, times, toList([]));
 }
+function key_set(list3, key, value3) {
+  if (list3.hasLength(0)) {
+    return toList([[key, value3]]);
+  } else if (list3.atLeastLength(1) && isEqual(list3.head[0], key)) {
+    let k = list3.head[0];
+    let rest$1 = list3.tail;
+    return prepend([key, value3], rest$1);
+  } else {
+    let first$1 = list3.head;
+    let rest$1 = list3.tail;
+    return prepend(first$1, key_set(rest$1, key, value3));
+  }
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
 function map3(result, fun) {
@@ -819,8 +832,8 @@ function int(data) {
 function bool(data) {
   return decode_bool(data);
 }
-function shallow_list(value) {
-  return decode_list(value);
+function shallow_list(value3) {
+  return decode_list(value3);
 }
 function any(decoders) {
   return (data) => {
@@ -898,10 +911,10 @@ function string(data) {
   return decode_string(data);
 }
 function field(name, inner_type) {
-  return (value) => {
+  return (value3) => {
     let missing_field_error = new DecodeError("field", "nothing", toList([]));
     return try$(
-      decode_field(value, name),
+      decode_field(value3, name),
       (maybe_inner) => {
         let _pipe = maybe_inner;
         let _pipe$1 = to_result(_pipe, toList([missing_field_error]));
@@ -914,6 +927,43 @@ function field(name, inner_type) {
         );
       }
     );
+  };
+}
+function optional_field(name, inner_type) {
+  return (value3) => {
+    return try$(
+      decode_field(value3, name),
+      (maybe_inner) => {
+        if (maybe_inner instanceof None) {
+          return new Ok(new None());
+        } else {
+          let dynamic_inner = maybe_inner[0];
+          let _pipe = dynamic_inner;
+          let _pipe$1 = decode_option(_pipe, inner_type);
+          return map_errors(
+            _pipe$1,
+            (_capture) => {
+              return push_path(_capture, name);
+            }
+          );
+        }
+      }
+    );
+  };
+}
+function decode2(constructor, t1, t2) {
+  return (value3) => {
+    let $ = t1(value3);
+    let $1 = t2(value3);
+    if ($.isOk() && $1.isOk()) {
+      let a2 = $[0];
+      let b = $1[0];
+      return new Ok(constructor(a2, b));
+    } else {
+      let a2 = $;
+      let b = $1;
+      return new Error(concat(toList([all_errors(a2), all_errors(b)])));
+    }
   };
 }
 function decode4(constructor, t1, t2, t3, t4) {
@@ -1645,9 +1695,9 @@ var NOT_FOUND = {};
 function identity(x) {
   return x;
 }
-function parse_int(value) {
-  if (/^[-+]?(\d+)$/.test(value)) {
-    return new Ok(parseInt(value));
+function parse_int(value3) {
+  if (/^[-+]?(\d+)$/.test(value3)) {
+    return new Ok(parseInt(value3));
   } else {
     return new Error(Nil);
   }
@@ -1788,14 +1838,14 @@ function map_to_list(map7) {
   return List.fromArray(map7.entries());
 }
 function map_get(map7, key) {
-  const value = map7.get(key, NOT_FOUND);
-  if (value === NOT_FOUND) {
+  const value3 = map7.get(key, NOT_FOUND);
+  if (value3 === NOT_FOUND) {
     return new Error(Nil);
   }
-  return new Ok(value);
+  return new Ok(value3);
 }
-function map_insert(key, value, map7) {
-  return map7.set(key, value);
+function map_insert(key, value3, map7) {
+  return map7.set(key, value3);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -1848,22 +1898,34 @@ function decode_list(data) {
   }
   return data instanceof List ? new Ok(data) : decoder_error("List", data);
 }
-function decode_field(value, name) {
-  const not_a_map_error = () => decoder_error("Dict", value);
-  if (value instanceof Dict || value instanceof WeakMap || value instanceof Map) {
-    const entry = map_get(value, name);
-    return new Ok(entry.isOk() ? new Some(entry[0]) : new None());
-  } else if (value === null) {
-    return not_a_map_error();
-  } else if (Object.getPrototypeOf(value) == Object.prototype) {
-    return try_get_field(value, name, () => new Ok(new None()));
+function decode_option(data, decoder) {
+  if (data === null || data === void 0 || data instanceof None)
+    return new Ok(new None());
+  if (data instanceof Some)
+    data = data[0];
+  const result = decoder(data);
+  if (result.isOk()) {
+    return new Ok(new Some(result[0]));
   } else {
-    return try_get_field(value, name, not_a_map_error);
+    return result;
   }
 }
-function try_get_field(value, field3, or_else) {
+function decode_field(value3, name) {
+  const not_a_map_error = () => decoder_error("Dict", value3);
+  if (value3 instanceof Dict || value3 instanceof WeakMap || value3 instanceof Map) {
+    const entry = map_get(value3, name);
+    return new Ok(entry.isOk() ? new Some(entry[0]) : new None());
+  } else if (value3 === null) {
+    return not_a_map_error();
+  } else if (Object.getPrototypeOf(value3) == Object.prototype) {
+    return try_get_field(value3, name, () => new Ok(new None()));
+  } else {
+    return try_get_field(value3, name, not_a_map_error);
+  }
+}
+function try_get_field(value3, field3, or_else) {
   try {
-    return field3 in value ? new Ok(new Some(value[field3])) : or_else();
+    return field3 in value3 ? new Ok(new Some(value3[field3])) : or_else();
   } catch {
     return or_else();
   }
@@ -1873,8 +1935,8 @@ function try_get_field(value, field3, or_else) {
 function new$() {
   return new_map();
 }
-function insert(dict2, key, value) {
-  return map_insert(key, value, dict2);
+function insert(dict2, key, value3) {
+  return map_insert(key, value3, dict2);
 }
 function reverse_and_concat(loop$remaining, loop$accumulator) {
   while (true) {
@@ -2037,6 +2099,15 @@ function field2(decoder, field_name, field_decoder) {
 }
 
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
+function json_to_string(json) {
+  return JSON.stringify(json);
+}
+function object(entries) {
+  return Object.fromEntries(entries);
+}
+function identity2(x) {
+  return x;
+}
 function decode(string4) {
   try {
     const result = JSON.parse(string4);
@@ -2154,8 +2225,17 @@ function do_decode(json, decoder) {
     }
   );
 }
-function decode2(json, decoder) {
+function decode3(json, decoder) {
   return do_decode(json, decoder);
+}
+function to_string5(json) {
+  return json_to_string(json);
+}
+function string3(input2) {
+  return identity2(input2);
+}
+function object2(entries) {
+  return object(entries);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
@@ -2321,13 +2401,13 @@ function parse2(uri_string) {
 }
 function do_remove_dot_segments(loop$input, loop$accumulator) {
   while (true) {
-    let input = loop$input;
+    let input2 = loop$input;
     let accumulator = loop$accumulator;
-    if (input.hasLength(0)) {
+    if (input2.hasLength(0)) {
       return reverse(accumulator);
     } else {
-      let segment = input.head;
-      let rest = input.tail;
+      let segment = input2.head;
+      let rest = input2.tail;
       let accumulator$1 = (() => {
         if (segment === "") {
           let accumulator$12 = accumulator;
@@ -2351,13 +2431,13 @@ function do_remove_dot_segments(loop$input, loop$accumulator) {
     }
   }
 }
-function remove_dot_segments(input) {
-  return do_remove_dot_segments(input, toList([]));
+function remove_dot_segments(input2) {
+  return do_remove_dot_segments(input2, toList([]));
 }
 function path_segments(path) {
   return remove_dot_segments(split3(path, "/"));
 }
-function to_string5(uri) {
+function to_string6(uri) {
   let parts = (() => {
     let $ = uri.fragment;
     if ($ instanceof Some) {
@@ -2518,6 +2598,13 @@ var Attribute = class extends CustomType {
     this.as_property = as_property;
   }
 };
+var Event = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
 function attribute_to_event_handler(attribute2) {
   if (attribute2 instanceof Attribute) {
     return new Error(void 0);
@@ -2579,11 +2666,14 @@ function handlers(element2) {
 }
 
 // build/dev/javascript/lustre/lustre/attribute.mjs
-function attribute(name, value) {
-  return new Attribute(name, from(value), false);
+function attribute(name, value3) {
+  return new Attribute(name, from(value3), false);
 }
-function property(name, value) {
-  return new Attribute(name, from(value), true);
+function property(name, value3) {
+  return new Attribute(name, from(value3), true);
+}
+function on(name, handler) {
+  return new Event("on" + name, handler);
 }
 function class$(name) {
   return attribute("class", name);
@@ -2591,8 +2681,23 @@ function class$(name) {
 function id(name) {
   return attribute("id", name);
 }
+function type_(name) {
+  return attribute("type", name);
+}
+function value(val) {
+  return attribute("value", val);
+}
+function autocomplete(name) {
+  return attribute("autocomplete", name);
+}
 function disabled(is_disabled) {
   return property("disabled", is_disabled);
+}
+function required(is_required) {
+  return property("required", is_required);
+}
+function for$(id2) {
+  return attribute("for", id2);
 }
 function href(uri) {
   return attribute("href", uri);
@@ -2640,6 +2745,9 @@ function element(tag, attrs, children2) {
 }
 function text(content) {
   return new Text(content);
+}
+function none2() {
+  return new Text("");
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/set.mjs
@@ -2811,15 +2919,15 @@ function createElementNode({ prev, next, dispatch, stack }) {
   }
   for (const attr of next.attrs) {
     const name = attr[0];
-    const value = attr[1];
+    const value3 = attr[1];
     if (attr.as_property) {
-      if (el2[name] !== value)
-        el2[name] = value;
+      if (el2[name] !== value3)
+        el2[name] = value3;
       if (canMorph)
         prevAttributes.delete(name);
     } else if (name.startsWith("on")) {
       const eventName = name.slice(2);
-      const callback = dispatch(value, eventName === "input");
+      const callback = dispatch(value3, eventName === "input");
       if (!handlersForEl.has(eventName)) {
         el2.addEventListener(eventName, lustreGenericEventHandler);
       }
@@ -2833,18 +2941,18 @@ function createElementNode({ prev, next, dispatch, stack }) {
         el2.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
-      el2.setAttribute(name, value);
+      el2.setAttribute(name, value3);
     } else if (name === "class") {
-      className = className === null ? value : className + " " + value;
+      className = className === null ? value3 : className + " " + value3;
     } else if (name === "style") {
-      style = style === null ? value : style + value;
+      style = style === null ? value3 : style + value3;
     } else if (name === "dangerous-unescaped-html") {
-      innerHTML = value;
+      innerHTML = value3;
     } else {
-      if (el2.getAttribute(name) !== value)
-        el2.setAttribute(name, value);
+      if (el2.getAttribute(name) !== value3)
+        el2.setAttribute(name, value3);
       if (name === "value" || name === "selected")
-        el2[name] = value;
+        el2[name] = value3;
       if (canMorph)
         prevAttributes.delete(name);
     }
@@ -3288,6 +3396,7 @@ var LustreServerApplication = class _LustreServerApplication {
 };
 var start_server_application = LustreServerApplication.start;
 var is_browser = () => globalThis.window && window.document;
+var prevent_default = (event2) => event2.preventDefault();
 
 // build/dev/javascript/lustre/lustre.mjs
 var App = class extends CustomType {
@@ -3368,6 +3477,15 @@ function img(attrs) {
 }
 function button(attrs, children2) {
   return element("button", attrs, children2);
+}
+function form(attrs, children2) {
+  return element("form", attrs, children2);
+}
+function input(attrs) {
+  return element("input", attrs, toList([]));
+}
+function label(attrs, children2) {
+  return element("label", attrs, children2);
 }
 
 // build/dev/javascript/gleam_http/gleam/http.mjs
@@ -3490,6 +3608,23 @@ function from_uri(uri) {
     }
   );
 }
+function set_header(request, key, value3) {
+  let headers = key_set(request.headers, lowercase2(key), value3);
+  return request.withFields({ headers });
+}
+function set_body(req, body2) {
+  let method = req.method;
+  let headers = req.headers;
+  let scheme = req.scheme;
+  let host = req.host;
+  let port = req.port;
+  let path = req.path;
+  let query = req.query;
+  return new Request(method, headers, body2, scheme, host, port, path, query);
+}
+function set_method(req, method) {
+  return req.withFields({ method });
+}
 function to(url) {
   let _pipe = url;
   let _pipe$1 = parse2(_pipe);
@@ -3511,22 +3646,22 @@ var PromiseLayer = class _PromiseLayer {
   constructor(promise) {
     this.promise = promise;
   }
-  static wrap(value) {
-    return value instanceof Promise ? new _PromiseLayer(value) : value;
+  static wrap(value3) {
+    return value3 instanceof Promise ? new _PromiseLayer(value3) : value3;
   }
-  static unwrap(value) {
-    return value instanceof _PromiseLayer ? value.promise : value;
+  static unwrap(value3) {
+    return value3 instanceof _PromiseLayer ? value3.promise : value3;
   }
 };
-function resolve(value) {
-  return Promise.resolve(PromiseLayer.wrap(value));
+function resolve(value3) {
+  return Promise.resolve(PromiseLayer.wrap(value3));
 }
 function then_await(promise, fn) {
-  return promise.then((value) => fn(PromiseLayer.unwrap(value)));
+  return promise.then((value3) => fn(PromiseLayer.unwrap(value3)));
 }
 function map_promise(promise, fn) {
   return promise.then(
-    (value) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value)))
+    (value3) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value3)))
   );
 }
 function rescue(promise, fn) {
@@ -3576,7 +3711,7 @@ function from_fetch_response(response) {
   );
 }
 function to_fetch_request(request) {
-  let url = to_string5(to_uri(request));
+  let url = to_string6(to_uri(request));
   let method = method_to_string(request.method).toUpperCase();
   let options = {
     headers: make_headers(request.headers),
@@ -3697,6 +3832,27 @@ function get2(url, expect) {
     }
   );
 }
+function post(url, body2, expect) {
+  return from3(
+    (dispatch) => {
+      let $ = to(url);
+      if ($.isOk()) {
+        let req = $[0];
+        let _pipe = req;
+        let _pipe$1 = set_method(_pipe, new Post());
+        let _pipe$2 = set_header(
+          _pipe$1,
+          "Content-Type",
+          "application/json"
+        );
+        let _pipe$3 = set_body(_pipe$2, to_string5(body2));
+        return do_send(_pipe$3, expect, dispatch);
+      } else {
+        return dispatch(expect.run(new Error(new BadUrl(url))));
+      }
+    }
+  );
+}
 function response_to_result(response) {
   if (response instanceof Response && (200 <= response.status && response.status <= 299)) {
     let status = response.status;
@@ -3723,7 +3879,7 @@ function expect_json(decoder, to_msg) {
       let _pipe$2 = then$(
         _pipe$1,
         (body2) => {
-          let $ = decode2(body2, decoder);
+          let $ = decode3(body2, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -3865,14 +4021,12 @@ var Photo = class extends CustomType {
     this.src = src2;
   }
 };
+var api_url = "http://localhost:8000";
 
 // build/dev/javascript/client/client/pages/event.mjs
 function event_view() {
   return main(
-    toList([
-      attribute("data-aos", "fade-up"),
-      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-    ]),
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
     toList([
       h1(
         toList([
@@ -3928,7 +4082,7 @@ function event_view() {
                 toList([class$("text-lg text-gray-700 mb-4")]),
                 toList([
                   text(
-                    'O evento ser\xE1 realizado no sal\xE3o de festas do "Paiol\n					Mineiro", um ambiente requintado e aconchegante, perfeito para uma noite\n					inesquec\xEDvel.'
+                    'O evento ser\xE1 realizado no sal\xE3o de festas do "Paiol Mineiro", um ambiente requintado e aconchegante, perfeito para uma noite inesquec\xEDvel.'
                   )
                 ])
               ),
@@ -3978,10 +4132,7 @@ function empty_gifts(n) {
 }
 function gift_widget(gift) {
   return div(
-    toList([
-      attribute("data-aos", "zoom-in"),
-      class$("relative bg-white p-4 rounded-lg shadow-lg")
-    ]),
+    toList([class$("relative bg-white p-4 rounded-lg shadow-lg")]),
     (() => {
       let $ = is_odd(gift.selected_by);
       if ($) {
@@ -4034,10 +4185,7 @@ function gift_widget(gift) {
       } else {
         return toList([
           div(
-            toList([
-              attribute("data-aos", "zoom-in"),
-              class$("bg-white p-4 rounded-lg shadow-lg")
-            ]),
+            toList([class$("bg-white p-4 rounded-lg shadow-lg")]),
             toList([
               img(
                 toList([
@@ -4074,10 +4222,7 @@ function gift_widget(gift) {
 }
 function gifts_view() {
   return main(
-    toList([
-      attribute("data-aos", "fade-up"),
-      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-    ]),
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
     toList([
       h1(
         toList([
@@ -4093,6 +4238,35 @@ function gifts_view() {
         map2(empty_gifts(10), gift_widget)
       )
     ])
+  );
+}
+
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name, handler) {
+  return on(name, handler);
+}
+function value2(event2) {
+  let _pipe = event2;
+  return field("target", field("value", string))(
+    _pipe
+  );
+}
+function on_input(msg) {
+  return on2(
+    "input",
+    (event2) => {
+      let _pipe = value2(event2);
+      return map3(_pipe, msg);
+    }
+  );
+}
+function on_submit(msg) {
+  return on2(
+    "submit",
+    (event2) => {
+      let $ = prevent_default(event2);
+      return new Ok(msg);
+    }
   );
 }
 
@@ -4415,10 +4589,7 @@ function countdown() {
 }
 function home_view() {
   return main(
-    toList([
-      attribute("data-aos", "fade-up"),
-      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-    ]),
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
     toList([
       h1(
         toList([
@@ -4432,7 +4603,7 @@ function home_view() {
         toList([text("14 de Dezembro de 2024")])
       ),
       div(
-        toList([attribute("data-aos", "zoom-in"), class$("text-center mt-6")]),
+        toList([class$("text-center mt-6")]),
         toList([
           p(
             toList([class$("text-3xl text-white font-bold")]),
@@ -4449,7 +4620,6 @@ function home_view() {
       ),
       div(
         toList([
-          attribute("data-aos", "fade-right"),
           id("evento"),
           class$(
             "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
@@ -4509,10 +4679,7 @@ function home_view() {
             ])
           ),
           div(
-            toList([
-              attribute("data-aos", "fade-up"),
-              class$("bg-gray-100 p-6 rounded-lg shadow-inner")
-            ]),
+            toList([class$("bg-gray-100 p-6 rounded-lg shadow-inner")]),
             toList([
               h2(
                 toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
@@ -4529,55 +4696,6 @@ function home_view() {
             ])
           )
         ])
-      )
-    ])
-  );
-}
-
-// build/dev/javascript/client/client/pages/not_found.mjs
-function not_found_view() {
-  return div(toList([]), toList([text2("404 Not Found")]));
-}
-
-// build/dev/javascript/client/client/pages/photos.mjs
-function empty_photos(n) {
-  let _pipe = range(1, n);
-  return map2(
-    _pipe,
-    (n2) => {
-      return new Photo(n2, "https://placehold.co/600x400/png");
-    }
-  );
-}
-function photo_widget(photo) {
-  return img(
-    toList([
-      attribute("data-aos", "zoom-in"),
-      class$("w-full h-auto rounded-lg shadow-lg"),
-      alt("Foto " + to_string2(photo.photo_id)),
-      src(photo.src)
-    ])
-  );
-}
-function photos_view() {
-  return main(
-    toList([
-      attribute("data-aos", "fade-up"),
-      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-    ]),
-    toList([
-      h1(
-        toList([
-          attribute("style", "font-family: 'Pacifico', cursive;"),
-          class$("text-5xl text-white font-bold mb-12")
-        ]),
-        toList([text("Fotos do Evento")])
-      ),
-      div(
-        toList([
-          class$("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")
-        ]),
-        map2(empty_photos(10), photo_widget)
       )
     ])
   );
@@ -4610,12 +4728,6 @@ var ConfirmPresence = class extends CustomType {
 };
 var GiftsPage = class extends CustomType {
 };
-var SelectGift = class extends CustomType {
-  constructor(gift_id) {
-    super();
-    this.gift_id = gift_id;
-  }
-};
 var EventPage = class extends CustomType {
 };
 var PhotosPage = class extends CustomType {
@@ -4623,7 +4735,7 @@ var PhotosPage = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, guest, sign_up_name, sign_up_email, sign_up_password, sign_up_error, login_email, login_password, login_error, confirm_presence, gifts, select_gift, photos, forgot_password_response, change_password_target) {
+  constructor(route, guest, sign_up_name, sign_up_email, sign_up_password, sign_up_error, login_name, login_email, login_password, login_error, confirm_presence, gifts, select_gift, photos, forgot_password_response, change_password_target) {
     super();
     this.route = route;
     this.guest = guest;
@@ -4631,6 +4743,7 @@ var Model2 = class extends CustomType {
     this.sign_up_email = sign_up_email;
     this.sign_up_password = sign_up_password;
     this.sign_up_error = sign_up_error;
+    this.login_name = login_name;
     this.login_email = login_email;
     this.login_password = login_password;
     this.login_error = login_error;
@@ -4660,12 +4773,263 @@ var GiftsRecieved = class extends CustomType {
     this[0] = x0;
   }
 };
+var LoginUpdateName = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var LoginUpdateEmail = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var LoginUpdatePassword = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var LoginUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var RequestLogin = class extends CustomType {
+};
+var LoginResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var MessageErrorResponse = class extends CustomType {
+  constructor(message, error) {
+    super();
+    this.message = message;
+    this.error = error;
+  }
+};
 var GetGiftsResponse = class extends CustomType {
   constructor(gifts) {
     super();
     this.gifts = gifts;
   }
 };
+function message_error_decoder() {
+  return decode2(
+    (var0, var1) => {
+      return new MessageErrorResponse(var0, var1);
+    },
+    optional_field("message", string),
+    optional_field("error", string)
+  );
+}
+
+// build/dev/javascript/client/client/pages/login.mjs
+function login(model) {
+  return post(
+    api_url + "/api/auth/login",
+    object2(
+      toList([
+        ["email", string3(model.login_email)],
+        ["password", string3(model.login_password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new LoginResponded(var0);
+      }
+    )
+  );
+}
+function login_view(model) {
+  return main(
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
+    toList([
+      div(
+        toList([class$("w-full max-w-md p-8 bg-white rounded-lg shadow-lg")]),
+        toList([
+          h1(
+            toList([
+              attribute("style", "font-family: 'Pacifico', cursive;"),
+              class$("text-4xl text-pink-700 font-bold mb-12 text-center")
+            ]),
+            toList([text("Entrar")])
+          ),
+          form(
+            toList([class$("space-y-6"), on_submit(new RequestLogin())]),
+            toList([
+              div(
+                toList([]),
+                toList([
+                  label(
+                    toList([
+                      class$("block text-sm font-medium text-gray-700"),
+                      for$("email")
+                    ]),
+                    toList([text("Nome")])
+                  ),
+                  input(
+                    toList([
+                      class$(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                      ),
+                      on_input(
+                        (var0) => {
+                          return new LoginUpdateName(var0);
+                        }
+                      ),
+                      id("name"),
+                      type_("name"),
+                      autocomplete("name"),
+                      required(true),
+                      value(model.login_name)
+                    ])
+                  )
+                ])
+              ),
+              div(
+                toList([]),
+                toList([
+                  label(
+                    toList([
+                      class$("block text-sm font-medium text-gray-700"),
+                      for$("email")
+                    ]),
+                    toList([text("Email")])
+                  ),
+                  input(
+                    toList([
+                      class$(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                      ),
+                      on_input(
+                        (var0) => {
+                          return new LoginUpdateEmail(var0);
+                        }
+                      ),
+                      id("email"),
+                      type_("email"),
+                      autocomplete("email"),
+                      required(true),
+                      value(model.login_email)
+                    ])
+                  )
+                ])
+              ),
+              div(
+                toList([]),
+                toList([
+                  label(
+                    toList([
+                      class$("block text-sm font-medium text-gray-700"),
+                      for$("password")
+                    ]),
+                    toList([text("Senha")])
+                  ),
+                  input(
+                    toList([
+                      class$(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                      ),
+                      on_input(
+                        (var0) => {
+                          return new LoginUpdatePassword(var0);
+                        }
+                      ),
+                      id("password"),
+                      type_("password"),
+                      required(true),
+                      value(model.login_password)
+                    ])
+                  )
+                ])
+              ),
+              div(
+                toList([class$("flex items-center justify-center")]),
+                toList([
+                  button(
+                    toList([
+                      class$(
+                        "w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105"
+                      ),
+                      type_("submit")
+                    ]),
+                    toList([text("Entrar")])
+                  )
+                ])
+              ),
+              (() => {
+                let $ = model.login_error;
+                if ($ instanceof Some) {
+                  let err = $[0];
+                  return p(
+                    toList([class$("text-red-500 text-center")]),
+                    toList([text("Error: " + err)])
+                  );
+                } else {
+                  return none2();
+                }
+              })()
+            ])
+          )
+        ])
+      )
+    ])
+  );
+}
+
+// build/dev/javascript/client/client/pages/not_found.mjs
+function not_found_view() {
+  return div(
+    toList([class$("flex items-center justify-center min-h-screen text-white")]),
+    toList([strong(toList([]), toList([text2("404 Not Found")]))])
+  );
+}
+
+// build/dev/javascript/client/client/pages/photos.mjs
+function empty_photos(n) {
+  let _pipe = range(1, n);
+  return map2(
+    _pipe,
+    (n2) => {
+      return new Photo(n2, "https://placehold.co/600x400/png");
+    }
+  );
+}
+function photo_widget(photo) {
+  return img(
+    toList([
+      class$("w-full h-auto rounded-lg shadow-lg"),
+      alt("Foto " + to_string2(photo.photo_id)),
+      src(photo.src)
+    ])
+  );
+}
+function photos_view() {
+  return main(
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
+    toList([
+      h1(
+        toList([
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class$("text-5xl text-white font-bold mb-12")
+        ]),
+        toList([text("Fotos do Evento")])
+      ),
+      div(
+        toList([
+          class$("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")
+        ]),
+        map2(empty_photos(10), photo_widget)
+      )
+    ])
+  );
+}
 
 // build/dev/javascript/client/ffi.mjs
 function get_route() {
@@ -4673,14 +5037,6 @@ function get_route() {
 }
 
 // build/dev/javascript/client/client.mjs
-function update(model, msg) {
-  if (msg instanceof OnRouteChange) {
-    let route = msg[0];
-    return [model.withFields({ route }), none()];
-  } else {
-    return [model, none()];
-  }
-}
 function get_route2() {
   let uri = (() => {
     let $2 = (() => {
@@ -4691,7 +5047,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 102, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 145, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4715,15 +5071,6 @@ function get_route2() {
     return new ConfirmPresence(guest_id);
   } else if ($.hasLength(1) && $.head === "gifts") {
     return new GiftsPage();
-  } else if ($.hasLength(3) && $.head === "api" && $.tail.head === "gifts") {
-    let gift_id = $.tail.tail.head;
-    let $1 = parse(gift_id);
-    if ($1.isOk()) {
-      let id$1 = $1[0];
-      return new SelectGift(id$1);
-    } else {
-      return new NotFound2();
-    }
   } else if ($.hasLength(1) && $.head === "event") {
     return new EventPage();
   } else if ($.hasLength(1) && $.head === "photos") {
@@ -4734,6 +5081,89 @@ function get_route2() {
 }
 function on_url_change(uri) {
   return new OnRouteChange(get_route2());
+}
+function get_auth_guest() {
+  let url = api_url + "/api/auth/validate";
+  let decoder = decode4(
+    (var0, var1, var2, var3) => {
+      return new Guest(var0, var1, var2, var3);
+    },
+    field("id", int),
+    field("name", string),
+    field("email", string),
+    field("confirmed", bool)
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new GuestRecieved(var0);
+      }
+    )
+  );
+}
+function update(model, msg) {
+  if (msg instanceof OnRouteChange) {
+    let route = msg[0];
+    return [model.withFields({ route }), none()];
+  } else if (msg instanceof LoginResponded) {
+    let resp_result = msg.resp_result;
+    if (resp_result.isOk()) {
+      let resp = resp_result[0];
+      let $ = resp.error;
+      if ($ instanceof Some) {
+        let err = $[0];
+        return [
+          model,
+          from3(
+            (dispatch) => {
+              return dispatch(new LoginUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else {
+        return [
+          model.withFields({
+            login_email: "",
+            login_password: "",
+            login_error: new None()
+          }),
+          batch(toList([get_auth_guest()]))
+        ];
+      }
+    } else {
+      return [
+        model,
+        from3(
+          (dispatch) => {
+            return dispatch(new LoginUpdateError(new Some("HTTP Error")));
+          }
+        )
+      ];
+    }
+  } else if (msg instanceof GuestRecieved) {
+    let guest_result = msg[0];
+    if (guest_result.isOk()) {
+      let guest = guest_result[0];
+      return [model.withFields({ guest: new Some(guest) }), none()];
+    } else {
+      return [model, none()];
+    }
+  } else if (msg instanceof RequestLogin) {
+    return [model, login(model)];
+  } else if (msg instanceof LoginUpdateEmail) {
+    let value3 = msg.value;
+    return [model.withFields({ login_email: value3 }), none()];
+  } else if (msg instanceof LoginUpdatePassword) {
+    let value3 = msg.value;
+    return [model.withFields({ login_password: value3 }), none()];
+  } else if (msg instanceof LoginUpdateError) {
+    let value3 = msg.value;
+    return [model.withFields({ login_error: value3 }), none()];
+  } else {
+    return [model, none()];
+  }
 }
 function gift_decoder() {
   let _pipe = into(
@@ -4764,6 +5194,54 @@ function gift_decoder() {
   let _pipe$3 = field2(_pipe$2, "pic", string2);
   let _pipe$4 = field2(_pipe$3, "link", string2);
   return field2(_pipe$4, "selected_by", int2);
+}
+function get_gifts() {
+  let url = api_url + "/api/posts";
+  let response_decoder = (() => {
+    let _pipe = into(
+      parameter((gifts) => {
+        return new GetGiftsResponse(gifts);
+      })
+    );
+    return field2(_pipe, "gifts", list2(gift_decoder()));
+  })();
+  return get2(
+    url,
+    expect_json(
+      (data) => {
+        let _pipe = response_decoder;
+        return from2(_pipe, data);
+      },
+      (var0) => {
+        return new GiftsRecieved(var0);
+      }
+    )
+  );
+}
+function init3(_) {
+  return [
+    new Model2(
+      get_route2(),
+      new None(),
+      "",
+      "",
+      "",
+      new None(),
+      "",
+      "",
+      "",
+      new None(),
+      0,
+      toList([]),
+      0,
+      toList([]),
+      new None(),
+      ""
+    ),
+    batch(
+      toList([init2(on_url_change), get_gifts(), get_auth_guest()])
+    )
+  ];
 }
 function view(model) {
   return body(
@@ -4838,13 +5316,26 @@ function view(model) {
           nav(
             toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
             toList([
-              a(
-                toList([
-                  class$("hover:text-pink-800 transition duration-300"),
-                  href("/auth/login")
-                ]),
-                toList([text2("Login")])
-              )
+              (() => {
+                let $ = model.guest;
+                if ($ instanceof None) {
+                  return a(
+                    toList([
+                      class$("hover:text-pink-800 transition duration-300"),
+                      href("/auth/login")
+                    ]),
+                    toList([text2("Login")])
+                  );
+                } else {
+                  let guest = $[0];
+                  return a(
+                    toList([
+                      class$("hover:text-pink-800 transition duration-300")
+                    ]),
+                    toList([text2(guest.name)])
+                  );
+                }
+              })()
             ])
           )
         ])
@@ -4859,6 +5350,8 @@ function view(model) {
           return photos_view();
         } else if ($ instanceof GiftsPage) {
           return gifts_view();
+        } else if ($ instanceof Login) {
+          return login_view(model);
         } else if ($ instanceof NotFound2) {
           return not_found_view();
         } else {
@@ -4867,75 +5360,6 @@ function view(model) {
       })()
     ])
   );
-}
-var api_url = "http://localhost:8000";
-function get_auth_guest() {
-  let url = api_url + "/api/auth/validate";
-  let decoder = decode4(
-    (var0, var1, var2, var3) => {
-      return new Guest(var0, var1, var2, var3);
-    },
-    field("id", int),
-    field("name", string),
-    field("email", string),
-    field("confirmed", bool)
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new GuestRecieved(var0);
-      }
-    )
-  );
-}
-function get_gifts() {
-  let url = api_url + "/api/posts";
-  let response_decoder = (() => {
-    let _pipe = into(
-      parameter((gifts) => {
-        return new GetGiftsResponse(gifts);
-      })
-    );
-    return field2(_pipe, "gifts", list2(gift_decoder()));
-  })();
-  return get2(
-    url,
-    expect_json(
-      (data) => {
-        let _pipe = response_decoder;
-        return from2(_pipe, data);
-      },
-      (var0) => {
-        return new GiftsRecieved(var0);
-      }
-    )
-  );
-}
-function init3(_) {
-  return [
-    new Model2(
-      get_route2(),
-      new None(),
-      "",
-      "",
-      "",
-      new None(),
-      "",
-      "",
-      new None(),
-      0,
-      toList([]),
-      0,
-      toList([]),
-      new None(),
-      ""
-    ),
-    batch(
-      toList([init2(on_url_change), get_gifts(), get_auth_guest()])
-    )
-  ];
 }
 function main2() {
   let _pipe = application(init3, update, view);
