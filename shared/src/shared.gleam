@@ -1,3 +1,5 @@
+pub const api_url = "http://localhost:8000"
+
 pub type Gift {
   Gift(gift_id: Int, name: String, pic: String, link: String, selected_by: Int)
 }
