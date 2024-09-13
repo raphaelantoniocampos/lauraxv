@@ -1,11 +1,9 @@
 import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
-import shared/gift.{type Gift}
-import shared/guest.{type Guest}
 
 // import shared/guest.{type Guest}
-import shared/photo.{type Photo}
+import shared.{type Gift, type Guest, type Photo}
 
 pub type Route {
   Home
@@ -13,7 +11,7 @@ pub type Route {
   Signup(auth_code: String)
   ForgotPassword
   ChangePassword(token: String)
-  ConfirmPresence(user_id: String)
+  ConfirmPresence(guest_id: String)
   GiftsPage
   SelectGift(gift_id: Int)
   EventPage

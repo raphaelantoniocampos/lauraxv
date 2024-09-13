@@ -21,8 +21,9 @@ gleam_erlang = ">= 0.26.0 and < 1.0.0"
 simplifile = ">= 2.1.0 and < 3.0.0"
 gleam_json = ">= 1.0.1 and < 2.0.0"
 cors_builder = ">= 2.0.0 and < 3.0.0"
-shared = { path = "../shared" }
 decode = ">= 0.2.1 and < 1.0.0"
+shared = { path = "../shared" }
+client = { path = "../client" }
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

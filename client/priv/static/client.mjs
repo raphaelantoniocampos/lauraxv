@@ -88,8 +88,8 @@ var BitArray = class _BitArray {
     return this.buffer.length;
   }
   // @internal
-  byteAt(index4) {
-    return this.buffer[index4];
+  byteAt(index5) {
+    return this.buffer[index5];
   }
   // @internal
   floatFromSlice(start3, end, isBigEndian) {
@@ -104,8 +104,8 @@ var BitArray = class _BitArray {
     return new _BitArray(this.buffer.slice(start3, end));
   }
   // @internal
-  sliceAfter(index4) {
-    return new _BitArray(this.buffer.slice(index4));
+  sliceAfter(index5) {
+    return new _BitArray(this.buffer.slice(index5));
   }
 };
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
@@ -446,43 +446,43 @@ function do_reverse(loop$remaining, loop$accumulator) {
 function reverse(xs) {
   return do_reverse(xs, toList([]));
 }
-function first(list2) {
-  if (list2.hasLength(0)) {
+function first(list3) {
+  if (list3.hasLength(0)) {
     return new Error(void 0);
   } else {
-    let x = list2.head;
+    let x = list3.head;
     return new Ok(x);
   }
 }
 function do_map(loop$list, loop$fun, loop$acc) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let fun = loop$fun;
     let acc = loop$acc;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return reverse(acc);
     } else {
-      let x = list2.head;
-      let xs = list2.tail;
+      let x = list3.head;
+      let xs = list3.tail;
       loop$list = xs;
       loop$fun = fun;
       loop$acc = prepend(fun(x), acc);
     }
   }
 }
-function map2(list2, fun) {
-  return do_map(list2, fun, toList([]));
+function map2(list3, fun) {
+  return do_map(list3, fun, toList([]));
 }
 function do_try_map(loop$list, loop$fun, loop$acc) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let fun = loop$fun;
     let acc = loop$acc;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return new Ok(reverse(acc));
     } else {
-      let x = list2.head;
-      let xs = list2.tail;
+      let x = list3.head;
+      let xs = list3.tail;
       let $ = fun(x);
       if ($.isOk()) {
         let y = $[0];
@@ -496,21 +496,21 @@ function do_try_map(loop$list, loop$fun, loop$acc) {
     }
   }
 }
-function try_map(list2, fun) {
-  return do_try_map(list2, fun, toList([]));
+function try_map(list3, fun) {
+  return do_try_map(list3, fun, toList([]));
 }
 function drop(loop$list, loop$n) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let n = loop$n;
     let $ = n <= 0;
     if ($) {
-      return list2;
+      return list3;
     } else {
-      if (list2.hasLength(0)) {
+      if (list3.hasLength(0)) {
         return toList([]);
       } else {
-        let xs = list2.tail;
+        let xs = list3.tail;
         loop$list = xs;
         loop$n = n - 1;
       }
@@ -519,18 +519,18 @@ function drop(loop$list, loop$n) {
 }
 function do_take(loop$list, loop$n, loop$acc) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let n = loop$n;
     let acc = loop$acc;
     let $ = n <= 0;
     if ($) {
       return reverse(acc);
     } else {
-      if (list2.hasLength(0)) {
+      if (list3.hasLength(0)) {
         return reverse(acc);
       } else {
-        let x = list2.head;
-        let xs = list2.tail;
+        let x = list3.head;
+        let xs = list3.tail;
         loop$list = xs;
         loop$n = n - 1;
         loop$acc = prepend(x, acc);
@@ -538,8 +538,8 @@ function do_take(loop$list, loop$n, loop$acc) {
     }
   }
 }
-function take(list2, n) {
-  return do_take(list2, n, toList([]));
+function take(list3, n) {
+  return do_take(list3, n, toList([]));
 }
 function do_append(loop$first, loop$second) {
   while (true) {
@@ -579,10 +579,10 @@ function do_concat(loop$lists, loop$acc) {
     if (lists.hasLength(0)) {
       return reverse(acc);
     } else {
-      let list2 = lists.head;
+      let list3 = lists.head;
       let further_lists = lists.tail;
       loop$lists = further_lists;
-      loop$acc = reverse_and_prepend(list2, acc);
+      loop$acc = reverse_and_prepend(list3, acc);
     }
   }
 }
@@ -591,18 +591,27 @@ function concat(lists) {
 }
 function fold(loop$list, loop$initial, loop$fun) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let initial = loop$initial;
     let fun = loop$fun;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return initial;
     } else {
-      let x = list2.head;
-      let rest$1 = list2.tail;
+      let x = list3.head;
+      let rest$1 = list3.tail;
       loop$list = rest$1;
       loop$initial = fun(initial, x);
       loop$fun = fun;
     }
+  }
+}
+function fold_right(list3, initial, fun) {
+  if (list3.hasLength(0)) {
+    return initial;
+  } else {
+    let x = list3.head;
+    let rest$1 = list3.tail;
+    return fun(fold_right(rest$1, initial, fun), x);
   }
 }
 function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
@@ -610,16 +619,16 @@ function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
     let over = loop$over;
     let acc = loop$acc;
     let with$ = loop$with;
-    let index4 = loop$index;
+    let index5 = loop$index;
     if (over.hasLength(0)) {
       return acc;
     } else {
       let first$1 = over.head;
       let rest$1 = over.tail;
       loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index4);
+      loop$acc = with$(acc, first$1, index5);
       loop$with = with$;
-      loop$index = index4 + 1;
+      loop$index = index5 + 1;
     }
   }
 }
@@ -665,19 +674,6 @@ function do_repeat(loop$a, loop$times, loop$acc) {
 }
 function repeat(a2, times) {
   return do_repeat(a2, times, toList([]));
-}
-function key_set(list2, key, value) {
-  if (list2.hasLength(0)) {
-    return toList([[key, value]]);
-  } else if (list2.atLeastLength(1) && isEqual(list2.head[0], key)) {
-    let k = list2.head[0];
-    let rest$1 = list2.tail;
-    return prepend([key, value], rest$1);
-  } else {
-    let first$1 = list2.head;
-    let rest$1 = list2.tail;
-    return prepend(first$1, key_set(rest$1, key, value));
-  }
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
@@ -739,6 +735,69 @@ function split2(iodata, pattern) {
   return split(iodata, pattern);
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function length2(string4) {
+  return string_length(string4);
+}
+function lowercase2(string4) {
+  return lowercase(string4);
+}
+function starts_with2(string4, prefix) {
+  return starts_with(string4, prefix);
+}
+function concat3(strings) {
+  let _pipe = strings;
+  let _pipe$1 = from_strings(_pipe);
+  return to_string3(_pipe$1);
+}
+function pop_grapheme2(string4) {
+  return pop_grapheme(string4);
+}
+function do_slice(string4, idx, len) {
+  let _pipe = string4;
+  let _pipe$1 = graphemes(_pipe);
+  let _pipe$2 = drop(_pipe$1, idx);
+  let _pipe$3 = take(_pipe$2, len);
+  return concat3(_pipe$3);
+}
+function slice(string4, idx, len) {
+  let $ = len < 0;
+  if ($) {
+    return "";
+  } else {
+    let $1 = idx < 0;
+    if ($1) {
+      let translated_idx = length2(string4) + idx;
+      let $2 = translated_idx < 0;
+      if ($2) {
+        return "";
+      } else {
+        return do_slice(string4, translated_idx, len);
+      }
+    } else {
+      return do_slice(string4, idx, len);
+    }
+  }
+}
+function drop_left(string4, num_graphemes) {
+  let $ = num_graphemes < 0;
+  if ($) {
+    return string4;
+  } else {
+    return slice(string4, num_graphemes, length2(string4) - num_graphemes);
+  }
+}
+function split3(x, substring) {
+  if (substring === "") {
+    return graphemes(x);
+  } else {
+    let _pipe = x;
+    let _pipe$1 = from_string(_pipe);
+    let _pipe$2 = split2(_pipe$1, substring);
+    return map2(_pipe$2, to_string3);
+  }
+}
+
 // build/dev/javascript/gleam_stdlib/gleam/dynamic.mjs
 var DecodeError = class extends CustomType {
   constructor(expected, found, path) {
@@ -756,6 +815,9 @@ function classify(data) {
 }
 function int(data) {
   return decode_int(data);
+}
+function bool(data) {
+  return decode_bool(data);
 }
 function shallow_list(value) {
   return decode_list(value);
@@ -811,8 +873,8 @@ function list(decoder_type) {
   return (dynamic) => {
     return try$(
       shallow_list(dynamic),
-      (list2) => {
-        let _pipe = list2;
+      (list3) => {
+        let _pipe = list3;
         let _pipe$1 = try_map(_pipe, decoder_type);
         return map_errors(
           _pipe$1,
@@ -854,72 +916,26 @@ function field(name, inner_type) {
     );
   };
 }
-function optional_field(name, inner_type) {
-  return (value) => {
-    return try$(
-      decode_field(value, name),
-      (maybe_inner) => {
-        if (maybe_inner instanceof None) {
-          return new Ok(new None());
-        } else {
-          let dynamic_inner = maybe_inner[0];
-          let _pipe = dynamic_inner;
-          let _pipe$1 = decode_option(_pipe, inner_type);
-          return map_errors(
-            _pipe$1,
-            (_capture) => {
-              return push_path(_capture, name);
-            }
-          );
-        }
-      }
-    );
-  };
-}
-function decode2(constructor, t1, t2) {
-  return (value) => {
-    let $ = t1(value);
-    let $1 = t2(value);
-    if ($.isOk() && $1.isOk()) {
-      let a2 = $[0];
-      let b = $1[0];
-      return new Ok(constructor(a2, b));
-    } else {
-      let a2 = $;
-      let b = $1;
-      return new Error(concat(toList([all_errors(a2), all_errors(b)])));
-    }
-  };
-}
-function decode5(constructor, t1, t2, t3, t4, t5) {
+function decode4(constructor, t1, t2, t3, t4) {
   return (x) => {
     let $ = t1(x);
     let $1 = t2(x);
     let $2 = t3(x);
     let $3 = t4(x);
-    let $4 = t5(x);
-    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk()) {
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk()) {
       let a2 = $[0];
       let b = $1[0];
       let c = $2[0];
       let d = $3[0];
-      let e = $4[0];
-      return new Ok(constructor(a2, b, c, d, e));
+      return new Ok(constructor(a2, b, c, d));
     } else {
       let a2 = $;
       let b = $1;
       let c = $2;
       let d = $3;
-      let e = $4;
       return new Error(
         concat(
-          toList([
-            all_errors(a2),
-            all_errors(b),
-            all_errors(c),
-            all_errors(d),
-            all_errors(e)
-          ])
+          toList([all_errors(a2), all_errors(b), all_errors(c), all_errors(d)])
         )
       );
     }
@@ -1062,21 +1078,21 @@ function bitcount(x) {
 function index(bitmap, bit) {
   return bitcount(bitmap & bit - 1);
 }
-function cloneAndSet(arr, at, val) {
+function cloneAndSet(arr, at2, val) {
   const len = arr.length;
   const out = new Array(len);
   for (let i = 0; i < len; ++i) {
     out[i] = arr[i];
   }
-  out[at] = val;
+  out[at2] = val;
   return out;
 }
-function spliceIn(arr, at, val) {
+function spliceIn(arr, at2, val) {
   const len = arr.length;
   const out = new Array(len + 1);
   let i = 0;
   let g = 0;
-  while (i < at) {
+  while (i < at2) {
     out[g++] = arr[i++];
   }
   out[g++] = val;
@@ -1085,12 +1101,12 @@ function spliceIn(arr, at, val) {
   }
   return out;
 }
-function spliceOut(arr, at) {
+function spliceOut(arr, at2) {
   const len = arr.length;
   const out = new Array(len - 1);
   let i = 0;
   let g = 0;
-  while (i < at) {
+  while (i < at2) {
     out[g++] = arr[i++];
   }
   ++i;
@@ -1823,23 +1839,14 @@ function decode_string(data) {
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
 }
+function decode_bool(data) {
+  return typeof data === "boolean" ? new Ok(data) : decoder_error("Bool", data);
+}
 function decode_list(data) {
   if (Array.isArray(data)) {
     return new Ok(List.fromArray(data));
   }
   return data instanceof List ? new Ok(data) : decoder_error("List", data);
-}
-function decode_option(data, decoder) {
-  if (data === null || data === void 0 || data instanceof None)
-    return new Ok(new None());
-  if (data instanceof Some)
-    data = data[0];
-  const result = decoder(data);
-  if (result.isOk()) {
-    return new Ok(new Some(result[0]));
-  } else {
-    return result;
-  }
 }
 function decode_field(value, name) {
   const not_a_map_error = () => decoder_error("Dict", value);
@@ -1885,13 +1892,13 @@ function reverse_and_concat(loop$remaining, loop$accumulator) {
 }
 function do_keys_acc(loop$list, loop$acc) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let acc = loop$acc;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return reverse_and_concat(acc, toList([]));
     } else {
-      let x = list2.head;
-      let xs = list2.tail;
+      let x = list3.head;
+      let xs = list3.tail;
       loop$list = xs;
       loop$acc = prepend(x[0], acc);
     }
@@ -1905,79 +1912,131 @@ function keys(dict2) {
   return do_keys(dict2);
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function length2(string4) {
-  return string_length(string4);
+// build/dev/javascript/decode/decode_ffi.mjs
+function index2(data, key) {
+  const int4 = Number.isInteger(key);
+  if (data instanceof Dict || data instanceof WeakMap || data instanceof Map) {
+    const entry = data.get(key, void 0);
+    return new Ok(entry);
+  }
+  if (int4 && Array.isArray(data) || data && typeof data === "object" || data && Object.getPrototypeOf(data) === Object.prototype) {
+    return new Ok(data[key]);
+  }
+  return new Error(int4 ? "Indexable" : "Dict");
 }
-function lowercase2(string4) {
-  return lowercase(string4);
+
+// build/dev/javascript/decode/decode.mjs
+var Decoder = class extends CustomType {
+  constructor(continuation) {
+    super();
+    this.continuation = continuation;
+  }
+};
+function into(constructor) {
+  return new Decoder((_) => {
+    return new Ok(constructor);
+  });
 }
-function starts_with2(string4, prefix) {
-  return starts_with(string4, prefix);
+function parameter(body2) {
+  return body2;
 }
-function concat3(strings) {
-  let _pipe = strings;
-  let _pipe$1 = from_strings(_pipe);
-  return to_string3(_pipe$1);
+function from2(decoder, data) {
+  return decoder.continuation(data);
 }
-function pop_grapheme2(string4) {
-  return pop_grapheme(string4);
+var string2 = /* @__PURE__ */ new Decoder(string);
+var int2 = /* @__PURE__ */ new Decoder(int);
+function list2(item) {
+  return new Decoder(list(item.continuation));
 }
-function do_slice(string4, idx, len) {
-  let _pipe = string4;
-  let _pipe$1 = graphemes(_pipe);
-  let _pipe$2 = drop(_pipe$1, idx);
-  let _pipe$3 = take(_pipe$2, len);
-  return concat3(_pipe$3);
-}
-function slice(string4, idx, len) {
-  let $ = len < 0;
-  if ($) {
-    return "";
-  } else {
-    let $1 = idx < 0;
-    if ($1) {
-      let translated_idx = length2(string4) + idx;
-      let $2 = translated_idx < 0;
-      if ($2) {
-        return "";
-      } else {
-        return do_slice(string4, translated_idx, len);
+function push_path2(errors, key) {
+  let key$1 = from(key);
+  let decoder = any(
+    toList([
+      string,
+      (x) => {
+        return map3(int(x), to_string2);
       }
+    ])
+  );
+  let key$2 = (() => {
+    let $ = decoder(key$1);
+    if ($.isOk()) {
+      let key$22 = $[0];
+      return key$22;
     } else {
-      return do_slice(string4, idx, len);
+      return "<" + classify(key$1) + ">";
     }
+  })();
+  return map2(
+    errors,
+    (error) => {
+      return error.withFields({ path: prepend(key$2, error.path) });
+    }
+  );
+}
+function index3(key, inner, data) {
+  let $ = index2(data, key);
+  if ($.isOk()) {
+    let data$1 = $[0];
+    let $1 = inner(data$1);
+    if ($1.isOk()) {
+      let data$2 = $1[0];
+      return new Ok(data$2);
+    } else {
+      let errors = $1[0];
+      return new Error(push_path2(errors, key));
+    }
+  } else {
+    let kind = $[0];
+    return new Error(
+      toList([new DecodeError(kind, classify(data), toList([]))])
+    );
   }
 }
-function drop_left(string4, num_graphemes) {
-  let $ = num_graphemes < 0;
-  if ($) {
-    return string4;
-  } else {
-    return slice(string4, num_graphemes, length2(string4) - num_graphemes);
-  }
+function at(path, inner) {
+  return new Decoder(
+    (data) => {
+      let decoder = fold_right(
+        path,
+        inner.continuation,
+        (dyn_decoder, segment) => {
+          return (_capture) => {
+            return index3(segment, dyn_decoder, _capture);
+          };
+        }
+      );
+      return decoder(data);
+    }
+  );
 }
-function split3(x, substring) {
-  if (substring === "") {
-    return graphemes(x);
-  } else {
-    let _pipe = x;
-    let _pipe$1 = from_string(_pipe);
-    let _pipe$2 = split2(_pipe$1, substring);
-    return map2(_pipe$2, to_string3);
-  }
+function subfield(decoder, field_path, field_decoder) {
+  return new Decoder(
+    (data) => {
+      let constructor = decoder.continuation(data);
+      let data$1 = from2(at(field_path, field_decoder), data);
+      if (constructor.isOk() && data$1.isOk()) {
+        let constructor$1 = constructor[0];
+        let data$2 = data$1[0];
+        return new Ok(constructor$1(data$2));
+      } else if (!constructor.isOk() && !data$1.isOk()) {
+        let e1 = constructor[0];
+        let e2 = data$1[0];
+        return new Error(append(e1, e2));
+      } else if (!data$1.isOk()) {
+        let errors = data$1[0];
+        return new Error(errors);
+      } else {
+        let errors = constructor[0];
+        return new Error(errors);
+      }
+    }
+  );
+}
+function field2(decoder, field_name, field_decoder) {
+  return subfield(decoder, toList([field_name]), field_decoder);
 }
 
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
-function json_to_string(json) {
-  return JSON.stringify(json);
-}
-function object(entries) {
-  return Object.fromEntries(entries);
-}
-function identity2(x) {
-  return x;
-}
 function decode(string4) {
   try {
     const result = JSON.parse(string4);
@@ -2095,20 +2154,8 @@ function do_decode(json, decoder) {
     }
   );
 }
-function decode3(json, decoder) {
+function decode2(json, decoder) {
   return do_decode(json, decoder);
-}
-function to_string5(json) {
-  return json_to_string(json);
-}
-function string2(input) {
-  return identity2(input);
-}
-function bool(input) {
-  return identity2(input);
-}
-function object2(entries) {
-  return object(entries);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
@@ -2165,24 +2212,24 @@ function noneify_empty_string(x) {
 }
 function extra_required(loop$list, loop$remaining) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let remaining = loop$remaining;
     if (remaining === 0) {
       return 0;
-    } else if (list2.hasLength(0)) {
+    } else if (list3.hasLength(0)) {
       return remaining;
     } else {
-      let xs = list2.tail;
+      let xs = list3.tail;
       loop$list = xs;
       loop$remaining = remaining - 1;
     }
   }
 }
-function pad_list(list2, size) {
-  let _pipe = list2;
+function pad_list(list3, size) {
+  let _pipe = list3;
   return append(
     _pipe,
-    repeat(new None(), extra_required(list2, size))
+    repeat(new None(), extra_required(list3, size))
   );
 }
 function split_authority(authority) {
@@ -2310,7 +2357,7 @@ function remove_dot_segments(input) {
 function path_segments(path) {
   return remove_dot_segments(split3(path, "/"));
 }
-function to_string6(uri) {
+function to_string5(uri) {
   let parts = (() => {
     let $ = uri.fragment;
     if ($ instanceof Some) {
@@ -2417,7 +2464,7 @@ function custom(run3) {
     ])
   );
 }
-function from2(effect) {
+function from3(effect) {
   return custom((dispatch, _, _1) => {
     return effect(dispatch);
   });
@@ -2485,8 +2532,8 @@ function do_element_list_handlers(elements2, handlers2, key) {
   return index_fold(
     elements2,
     handlers2,
-    (handlers3, element2, index4) => {
-      let key$1 = key + "-" + to_string2(index4);
+    (handlers3, element2, index5) => {
+      let key$1 = key + "-" + to_string2(index5);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -3277,6 +3324,9 @@ function start2(app, selector, flags) {
 function text2(content) {
   return text(content);
 }
+function body(attrs, children2) {
+  return element("body", attrs, children2);
+}
 function h1(attrs, children2) {
   return element("h1", attrs, children2);
 }
@@ -3387,11 +3437,11 @@ function scheme_from_string(scheme) {
 
 // build/dev/javascript/gleam_http/gleam/http/request.mjs
 var Request = class extends CustomType {
-  constructor(method, headers, body5, scheme, host, port, path, query) {
+  constructor(method, headers, body2, scheme, host, port, path, query) {
     super();
     this.method = method;
     this.headers = headers;
-    this.body = body5;
+    this.body = body2;
     this.scheme = scheme;
     this.host = host;
     this.port = port;
@@ -3440,23 +3490,6 @@ function from_uri(uri) {
     }
   );
 }
-function set_header(request, key, value) {
-  let headers = key_set(request.headers, lowercase2(key), value);
-  return request.withFields({ headers });
-}
-function set_body(req, body5) {
-  let method = req.method;
-  let headers = req.headers;
-  let scheme = req.scheme;
-  let host = req.host;
-  let port = req.port;
-  let path = req.path;
-  let query = req.query;
-  return new Request(method, headers, body5, scheme, host, port, path, query);
-}
-function set_method(req, method) {
-  return req.withFields({ method });
-}
 function to(url) {
   let _pipe = url;
   let _pipe$1 = parse2(_pipe);
@@ -3465,11 +3498,11 @@ function to(url) {
 
 // build/dev/javascript/gleam_http/gleam/http/response.mjs
 var Response = class extends CustomType {
-  constructor(status, headers, body5) {
+  constructor(status, headers, body2) {
     super();
     this.status = status;
     this.headers = headers;
-    this.body = body5;
+    this.body = body2;
   }
 };
 
@@ -3543,7 +3576,7 @@ function from_fetch_response(response) {
   );
 }
 function to_fetch_request(request) {
-  let url = to_string6(to_uri(request));
+  let url = to_string5(to_uri(request));
   let method = method_to_string(request.method).toUpperCase();
   let options = {
     headers: make_headers(request.headers),
@@ -3560,13 +3593,13 @@ function make_headers(headersList) {
   return headers;
 }
 async function read_text_body(response) {
-  let body5;
+  let body2;
   try {
-    body5 = await response.body.text();
+    body2 = await response.body.text();
   } catch (error) {
     return new Error(new UnableToReadBody());
   }
-  return new Ok(response.withFields({ body: body5 }));
+  return new Ok(response.withFields({ body: body2 }));
 }
 
 // build/dev/javascript/gleam_fetch/gleam/fetch.mjs
@@ -3652,7 +3685,7 @@ function do_send(req, expect, dispatch) {
   return void 0;
 }
 function get2(url, expect) {
-  return from2(
+  return from3(
     (dispatch) => {
       let $ = to(url);
       if ($.isOk()) {
@@ -3664,43 +3697,22 @@ function get2(url, expect) {
     }
   );
 }
-function post(url, body5, expect) {
-  return from2(
-    (dispatch) => {
-      let $ = to(url);
-      if ($.isOk()) {
-        let req = $[0];
-        let _pipe = req;
-        let _pipe$1 = set_method(_pipe, new Post());
-        let _pipe$2 = set_header(
-          _pipe$1,
-          "Content-Type",
-          "application/json"
-        );
-        let _pipe$3 = set_body(_pipe$2, to_string5(body5));
-        return do_send(_pipe$3, expect, dispatch);
-      } else {
-        return dispatch(expect.run(new Error(new BadUrl(url))));
-      }
-    }
-  );
-}
 function response_to_result(response) {
   if (response instanceof Response && (200 <= response.status && response.status <= 299)) {
     let status = response.status;
-    let body5 = response.body;
-    return new Ok(body5);
+    let body2 = response.body;
+    return new Ok(body2);
   } else if (response instanceof Response && response.status === 401) {
     return new Error(new Unauthorized());
   } else if (response instanceof Response && response.status === 404) {
     return new Error(new NotFound());
   } else if (response instanceof Response && response.status === 500) {
-    let body5 = response.body;
-    return new Error(new InternalServerError(body5));
+    let body2 = response.body;
+    return new Error(new InternalServerError(body2));
   } else {
     let code = response.status;
-    let body5 = response.body;
-    return new Error(new OtherError(code, body5));
+    let body2 = response.body;
+    return new Error(new OtherError(code, body2));
   }
 }
 function expect_json(decoder, to_msg) {
@@ -3710,8 +3722,8 @@ function expect_json(decoder, to_msg) {
       let _pipe$1 = then$(_pipe, response_to_result);
       let _pipe$2 = then$(
         _pipe$1,
-        (body5) => {
-          let $ = decode3(body5, decoder);
+        (body2) => {
+          let $ = decode2(body2, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -3807,7 +3819,7 @@ var uri_from_url = (url) => {
 
 // build/dev/javascript/modem/modem.mjs
 function init2(handler) {
-  return from2(
+  return from3(
     (dispatch) => {
       return guard(
         !is_browser(),
@@ -3826,71 +3838,118 @@ function init2(handler) {
   );
 }
 
-// build/dev/javascript/shared/shared/gift.mjs
+// build/dev/javascript/shared/shared.mjs
 var Gift = class extends CustomType {
-  constructor(id2, name, pic, link, selected_by) {
+  constructor(gift_id, name, pic, link, selected_by) {
     super();
-    this.id = id2;
+    this.gift_id = gift_id;
     this.name = name;
     this.pic = pic;
     this.link = link;
     this.selected_by = selected_by;
   }
 };
+var Guest = class extends CustomType {
+  constructor(guest_id, name, email, confirmed) {
+    super();
+    this.guest_id = guest_id;
+    this.name = name;
+    this.email = email;
+    this.confirmed = confirmed;
+  }
+};
+var Photo = class extends CustomType {
+  constructor(photo_id, src2) {
+    super();
+    this.photo_id = photo_id;
+    this.src = src2;
+  }
+};
 
-// build/dev/javascript/client/client/components/navigation_bar.mjs
-function navigation_bar() {
-  return nav(
-    toList([class$("w-full bg-white shadow-md py-4 px-8 flex justify-center")]),
+// build/dev/javascript/client/client/pages/event.mjs
+function event_view() {
+  return main(
     toList([
-      ul(
-        toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
+      attribute("data-aos", "fade-up"),
+      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+    ]),
+    toList([
+      h1(
         toList([
-          li(
-            toList([]),
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class$("text-5xl text-white font-bold mb-12")
+        ]),
+        toList([text("Detalhes do Evento")])
+      ),
+      div(
+        toList([class$("w-full flex flex-col lg:flex-row gap-8")]),
+        toList([
+          div(
+            toList([class$("flex-1")]),
             toList([
-              a(
+              img(
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
-                  href("/")
-                ]),
-                toList([text2("Home")])
+                  class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
+                  alt("Local da Festa"),
+                  src("/priv/static/paiol.jpg")
+                ])
               )
             ])
           ),
-          li(
-            toList([]),
+          div(
             toList([
-              a(
-                toList([
-                  class$("hover:text-pink-800 transition duration-300"),
-                  href("/event")
-                ]),
-                toList([text2("Evento")])
-              )
-            ])
-          ),
-          li(
-            toList([]),
+              class$("flex-1 bg-white text-gray-800 rounded-lg shadow-lg p-6")
+            ]),
             toList([
-              a(
+              h2(
+                toList([class$("text-3xl font-bold text-pink-700 mb-4")]),
+                toList([text("Anivers\xE1rio de 15 Anos da Laura")])
+              ),
+              p(
+                toList([class$("text-lg text-gray-700 mb-4")]),
+                toList([text("Pomp\xE9u, MG - 14 de Dezembro de 2024")])
+              ),
+              p(
+                toList([class$("text-lg text-gray-700 mb-8")]),
+                toList([text("Hor\xE1rio: 19:00")])
+              ),
+              h2(
+                toList([class$("text-2xl font-semibold text-pink-700 mb-4")]),
+                toList([text("Detalhes do Evento")])
+              ),
+              p(
+                toList([class$("text-lg text-gray-700 mb-2")]),
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
-                  href("/gifts")
-                ]),
-                toList([text2("Presentes")])
-              )
-            ])
-          ),
-          li(
-            toList([]),
-            toList([
-              a(
+                  strong(toList([]), toList([text("Endere\xE7o:")])),
+                  text("R. Padre Jo\xE3o Porto, 579 - Centro, Pomp\xE9u")
+                ])
+              ),
+              p(
+                toList([class$("text-lg text-gray-700 mb-4")]),
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
-                  href("/photos")
-                ]),
-                toList([text2("Fotos")])
+                  text(
+                    'O evento ser\xE1 realizado no sal\xE3o de festas do "Paiol\n					Mineiro", um ambiente requintado e aconchegante, perfeito para uma noite\n					inesquec\xEDvel.'
+                  )
+                ])
+              ),
+              h2(
+                toList([class$("text-2xl font-semibold text-pink-700 mb-4")]),
+                toList([text("Traje")])
+              ),
+              p(
+                toList([class$("text-lg text-gray-700 mb-2")]),
+                toList([
+                  strong(toList([]), toList([text("Traje:")])),
+                  text("Esporte Fino")
+                ])
+              ),
+              p(
+                toList([class$("text-lg text-gray-700")]),
+                toList([
+                  text(
+                    "Sugerimos aos convidados vestirem-se confortavelmente para uma noite de muita divers\xE3o."
+                  )
+                ])
               )
             ])
           )
@@ -3900,102 +3959,7 @@ function navigation_bar() {
   );
 }
 
-// build/dev/javascript/client/client/pages/event_page.mjs
-function body() {
-  return toList([
-    main(
-      toList([
-        attribute("data-aos", "fade-up"),
-        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-      ]),
-      toList([
-        h1(
-          toList([
-            attribute("style", "font-family: 'Pacifico', cursive;"),
-            class$("text-5xl text-white font-bold mb-12")
-          ]),
-          toList([text("Detalhes do Evento")])
-        ),
-        div(
-          toList([class$("w-full flex flex-col lg:flex-row gap-8")]),
-          toList([
-            div(
-              toList([class$("flex-1")]),
-              toList([
-                img(
-                  toList([
-                    class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
-                    alt("Local da Festa"),
-                    src("/priv/static/paiol.jpg")
-                  ])
-                )
-              ])
-            ),
-            div(
-              toList([
-                class$("flex-1 bg-white text-gray-800 rounded-lg shadow-lg p-6")
-              ]),
-              toList([
-                h2(
-                  toList([class$("text-3xl font-bold text-pink-700 mb-4")]),
-                  toList([text("Anivers\xE1rio de 15 Anos da Laura")])
-                ),
-                p(
-                  toList([class$("text-lg text-gray-700 mb-4")]),
-                  toList([text("Pomp\xE9u, MG - 14 de Dezembro de 2024")])
-                ),
-                p(
-                  toList([class$("text-lg text-gray-700 mb-8")]),
-                  toList([text("Hor\xE1rio: 19:00")])
-                ),
-                h2(
-                  toList([class$("text-2xl font-semibold text-pink-700 mb-4")]),
-                  toList([text("Detalhes do Evento")])
-                ),
-                p(
-                  toList([class$("text-lg text-gray-700 mb-2")]),
-                  toList([
-                    strong(toList([]), toList([text("Endere\xE7o:")])),
-                    text("R. Padre Jo\xE3o Porto, 579 - Centro, Pomp\xE9u")
-                  ])
-                ),
-                p(
-                  toList([class$("text-lg text-gray-700 mb-4")]),
-                  toList([
-                    text(
-                      'O evento ser\xE1 realizado no sal\xE3o de festas do "Paiol\n					Mineiro", um ambiente requintado e aconchegante, perfeito para uma noite\n					inesquec\xEDvel.'
-                    )
-                  ])
-                ),
-                h2(
-                  toList([class$("text-2xl font-semibold text-pink-700 mb-4")]),
-                  toList([text("Traje")])
-                ),
-                p(
-                  toList([class$("text-lg text-gray-700 mb-2")]),
-                  toList([
-                    strong(toList([]), toList([text("Traje:")])),
-                    text("Esporte Fino")
-                  ])
-                ),
-                p(
-                  toList([class$("text-lg text-gray-700")]),
-                  toList([
-                    text(
-                      "Sugerimos aos convidados vestirem-se confortavelmente para uma noite de muita divers\xE3o."
-                    )
-                  ])
-                )
-              ])
-            )
-          ])
-        )
-      ])
-    )
-  ]);
-}
-
-// build/dev/javascript/client/client/pages/gifts_page.mjs
+// build/dev/javascript/client/client/pages/gifts.mjs
 function empty_gifts(n) {
   let _pipe = range(1, n);
   return map2(
@@ -4042,7 +4006,7 @@ function gift_widget(gift) {
           img(
             toList([
               class$("w-full h-auto rounded-lg grayscale z-0"),
-              alt("Presente " + to_string2(gift.id)),
+              alt("Presente " + to_string2(gift.gift_id)),
               src(gift.pic)
             ])
           ),
@@ -4078,7 +4042,7 @@ function gift_widget(gift) {
               img(
                 toList([
                   class$("w-full h-auto rounded-lg"),
-                  alt("Presente " + to_string2(gift.id)),
+                  alt("Presente " + to_string2(gift.gift_id)),
                   src(gift.pic)
                 ])
               ),
@@ -4108,32 +4072,28 @@ function gift_widget(gift) {
     })()
   );
 }
-function body2() {
-  return toList([
-    main(
-      toList([
-        attribute("data-aos", "fade-up"),
-        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-      ]),
-      toList([
-        h1(
-          toList([
-            attribute("style", "font-family: 'Pacifico', cursive;"),
-            class$("text-5xl text-white font-bold mb-12")
-          ]),
-          toList([text("Lista de Presentes")])
-        ),
-        div(
-          toList([
-            class$(
-              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full"
-            )
-          ]),
-          map2(empty_gifts(10), gift_widget)
-        )
-      ])
-    )
-  ]);
+function gifts_view() {
+  return main(
+    toList([
+      attribute("data-aos", "fade-up"),
+      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+    ]),
+    toList([
+      h1(
+        toList([
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class$("text-5xl text-white font-bold mb-12")
+        ]),
+        toList([text("Lista de Presentes")])
+      ),
+      div(
+        toList([
+          class$("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")
+        ]),
+        map2(empty_gifts(10), gift_widget)
+      )
+    ])
+  );
 }
 
 // build/dev/javascript/rada/rada_ffi.mjs
@@ -4445,7 +4405,7 @@ function diff2(unit, date1, date2) {
   }
 }
 
-// build/dev/javascript/client/client/pages/home_page.mjs
+// build/dev/javascript/client/client/pages/home.mjs
 function countdown() {
   return diff2(
     new Days(),
@@ -4453,154 +4413,133 @@ function countdown() {
     from_calendar_date(2024, new Dec(), 14)
   );
 }
-function body3() {
-  return toList([
-    main(
-      toList([
-        attribute("data-aos", "fade-up"),
-        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-      ]),
-      toList([
-        h1(
-          toList([
-            attribute("style", "font-family: 'Pacifico', cursive;"),
-            class$("text-5xl text-white font-bold mb-12")
-          ]),
-          toList([text("Laura 15 Anos")])
-        ),
-        h3(
-          toList([class$("text-xl text-white mt-4")]),
-          toList([text("14 de Dezembro de 2024")])
-        ),
-        div(
-          toList([attribute("data-aos", "zoom-in"), class$("text-center mt-6")]),
-          toList([
-            p(
-              toList([class$("text-3xl text-white font-bold")]),
-              toList([
-                text("Faltam "),
-                span(
-                  toList([class$("text-yellow-300"), id("countdown")]),
-                  toList([text(to_string2(countdown()))])
-                ),
-                text(" dias para a festa!")
-              ])
-            )
-          ])
-        ),
-        div(
-          toList([
-            attribute("data-aos", "fade-right"),
-            id("evento"),
-            class$(
-              "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
-            )
-          ]),
-          toList([
-            div(
-              toList([class$("flex items-center justify-between mb-8")]),
-              toList([
-                img(
-                  toList([
-                    class$(
-                      "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
-                    ),
-                    alt("Laura's Birthday"),
-                    src("/priv/static/profile.jpeg")
-                  ])
-                ),
-                div(
-                  toList([class$("flex-1 ml-12")]),
-                  toList([
-                    h1(
-                      toList([class$("text-5xl font-bold text-pink-600 mb-4")]),
-                      toList([text("Anivers\xE1rio de 15 Anos de Laura")])
-                    ),
-                    p(
-                      toList([class$("text-gray-600 text-lg mb-6")]),
-                      toList([
-                        text(
-                          "Lhe convido para celebrar esse dia t\xE3o especial em minha vida, meus 15 anos! Confirme sua presen\xE7a at\xE9 o dia 06/12 para receber seu convite individual."
-                        )
-                      ])
-                    ),
-                    div(
-                      toList([class$("space-x-4")]),
-                      toList([
-                        button(
-                          toList([
-                            class$(
-                              "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
-                            )
-                          ]),
-                          toList([text("Confirmar Presen\xE7a")])
-                        ),
-                        button(
-                          toList([
-                            class$(
-                              "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
-                            )
-                          ]),
-                          toList([text("Lista de Presentes")])
-                        )
-                      ])
-                    )
-                  ])
-                )
-              ])
-            ),
-            div(
-              toList([
-                attribute("data-aos", "fade-up"),
-                class$("bg-gray-100 p-6 rounded-lg shadow-inner")
-              ]),
-              toList([
-                h2(
-                  toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
-                  toList([text("Sobre Laura")])
-                ),
-                p(
-                  toList([class$("text-gray-700 text-lg")]),
-                  toList([
-                    text(
-                      "Laura est\xE1 completando 15 anos e queremos celebrar com todos que fazem parte de sua vida. A festa ser\xE1 cheia de alegria, m\xFAsica, e muita divers\xE3o. N\xE3o perca!"
-                    )
-                  ])
-                )
-              ])
-            ),
-            div(
-              toList([
-                attribute("data-aos", "zoom-in"),
-                class$("mt-8 text-center")
-              ]),
-              toList([
-                a(
-                  toList([
-                    class$(
-                      "text-pink-600 hover:text-pink-800 font-semibold underline"
-                    ),
-                    href("/event")
-                  ]),
-                  toList([text("Log In")])
-                )
-              ])
-            )
-          ])
-        )
-      ])
-    )
-  ]);
+function home_view() {
+  return main(
+    toList([
+      attribute("data-aos", "fade-up"),
+      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+    ]),
+    toList([
+      h1(
+        toList([
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class$("text-5xl text-white font-bold mb-12")
+        ]),
+        toList([text("Laura 15 Anos")])
+      ),
+      h3(
+        toList([class$("text-xl text-white mt-4")]),
+        toList([text("14 de Dezembro de 2024")])
+      ),
+      div(
+        toList([attribute("data-aos", "zoom-in"), class$("text-center mt-6")]),
+        toList([
+          p(
+            toList([class$("text-3xl text-white font-bold")]),
+            toList([
+              text("Faltam "),
+              span(
+                toList([class$("text-yellow-300"), id("countdown")]),
+                toList([text(to_string2(countdown()))])
+              ),
+              text(" dias para a festa!")
+            ])
+          )
+        ])
+      ),
+      div(
+        toList([
+          attribute("data-aos", "fade-right"),
+          id("evento"),
+          class$(
+            "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
+          )
+        ]),
+        toList([
+          div(
+            toList([class$("flex items-center justify-between mb-8")]),
+            toList([
+              img(
+                toList([
+                  class$(
+                    "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
+                  ),
+                  alt("Laura's Birthday"),
+                  src("/priv/static/profile.jpeg")
+                ])
+              ),
+              div(
+                toList([class$("flex-1 ml-12")]),
+                toList([
+                  h1(
+                    toList([class$("text-5xl font-bold text-pink-600 mb-4")]),
+                    toList([text("Anivers\xE1rio de 15 Anos de Laura")])
+                  ),
+                  p(
+                    toList([class$("text-gray-600 text-lg mb-6")]),
+                    toList([
+                      text(
+                        "Lhe convido para celebrar esse dia t\xE3o especial em minha vida, meus 15 anos! Confirme sua presen\xE7a at\xE9 o dia 06/12 para receber seu convite individual."
+                      )
+                    ])
+                  ),
+                  div(
+                    toList([class$("space-x-4")]),
+                    toList([
+                      button(
+                        toList([
+                          class$(
+                            "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                          )
+                        ]),
+                        toList([text("Confirmar Presen\xE7a")])
+                      ),
+                      button(
+                        toList([
+                          class$(
+                            "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                          )
+                        ]),
+                        toList([text("Lista de Presentes")])
+                      )
+                    ])
+                  )
+                ])
+              )
+            ])
+          ),
+          div(
+            toList([
+              attribute("data-aos", "fade-up"),
+              class$("bg-gray-100 p-6 rounded-lg shadow-inner")
+            ]),
+            toList([
+              h2(
+                toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
+                toList([text("Sobre Laura")])
+              ),
+              p(
+                toList([class$("text-gray-700 text-lg")]),
+                toList([
+                  text(
+                    "Laura est\xE1 completando 15 anos e queremos celebrar com todos que fazem parte de sua vida. A festa ser\xE1 cheia de alegria, m\xFAsica, e muita divers\xE3o. N\xE3o perca!"
+                  )
+                ])
+              )
+            ])
+          )
+        ])
+      )
+    ])
+  );
 }
 
-// build/dev/javascript/client/client/pages/photos_page.mjs
-var Photo = class extends CustomType {
-  constructor(n, src2) {
-    super();
-    this.n = n;
-    this.src = src2;
-  }
-};
+// build/dev/javascript/client/client/pages/not_found.mjs
+function not_found_view() {
+  return div(toList([]), toList([text2("404 Not Found")]));
+}
+
+// build/dev/javascript/client/client/pages/photos.mjs
 function empty_photos(n) {
   let _pipe = range(1, n);
   return map2(
@@ -4610,72 +4549,97 @@ function empty_photos(n) {
     }
   );
 }
-function body4() {
-  return toList([
-    main(
-      toList([
-        attribute("data-aos", "fade-up"),
-        class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
-      ]),
-      toList([
-        h1(
-          toList([
-            attribute("style", "font-family: 'Pacifico', cursive;"),
-            class$("text-5xl text-white font-bold mb-12")
-          ]),
-          toList([text("Fotos do Evento")])
-        ),
-        div(
-          toList([
-            class$(
-              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full"
-            )
-          ]),
-          map2(
-            empty_photos(10),
-            (photo) => {
-              return img(
-                toList([
-                  attribute("data-aos", "zoom-in"),
-                  class$("w-full h-auto rounded-lg shadow-lg"),
-                  alt("Foto " + to_string2(photo.n)),
-                  src(photo.src)
-                ])
-              );
-            }
-          )
-        )
-      ])
-    )
-  ]);
+function photo_widget(photo) {
+  return img(
+    toList([
+      attribute("data-aos", "zoom-in"),
+      class$("w-full h-auto rounded-lg shadow-lg"),
+      alt("Foto " + to_string2(photo.photo_id)),
+      src(photo.src)
+    ])
+  );
+}
+function photos_view() {
+  return main(
+    toList([
+      attribute("data-aos", "fade-up"),
+      class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")
+    ]),
+    toList([
+      h1(
+        toList([
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class$("text-5xl text-white font-bold mb-12")
+        ]),
+        toList([text("Fotos do Evento")])
+      ),
+      div(
+        toList([
+          class$("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")
+        ]),
+        map2(empty_photos(10), photo_widget)
+      )
+    ])
+  );
 }
 
 // build/dev/javascript/client/client/state.mjs
 var Home = class extends CustomType {
 };
-var Event3 = class extends CustomType {
+var Login = class extends CustomType {
 };
-var Gifts = class extends CustomType {
+var Signup = class extends CustomType {
+  constructor(auth_code) {
+    super();
+    this.auth_code = auth_code;
+  }
 };
-var ShowGift = class extends CustomType {
+var ForgotPassword = class extends CustomType {
+};
+var ChangePassword = class extends CustomType {
+  constructor(token2) {
+    super();
+    this.token = token2;
+  }
+};
+var ConfirmPresence = class extends CustomType {
+  constructor(guest_id) {
+    super();
+    this.guest_id = guest_id;
+  }
+};
+var GiftsPage = class extends CustomType {
+};
+var SelectGift = class extends CustomType {
   constructor(gift_id) {
     super();
     this.gift_id = gift_id;
   }
 };
-var Photos = class extends CustomType {
+var EventPage = class extends CustomType {
+};
+var PhotosPage = class extends CustomType {
 };
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, gifts, name, pic, link, selected) {
+  constructor(route, guest, sign_up_name, sign_up_email, sign_up_password, sign_up_error, login_email, login_password, login_error, confirm_presence, gifts, select_gift, photos, forgot_password_response, change_password_target) {
     super();
     this.route = route;
+    this.guest = guest;
+    this.sign_up_name = sign_up_name;
+    this.sign_up_email = sign_up_email;
+    this.sign_up_password = sign_up_password;
+    this.sign_up_error = sign_up_error;
+    this.login_email = login_email;
+    this.login_password = login_password;
+    this.login_error = login_error;
+    this.confirm_presence = confirm_presence;
     this.gifts = gifts;
-    this.name = name;
-    this.pic = pic;
-    this.link = link;
-    this.selected = selected;
+    this.select_gift = select_gift;
+    this.photos = photos;
+    this.forgot_password_response = forgot_password_response;
+    this.change_password_target = change_password_target;
   }
 };
 var OnRouteChange = class extends CustomType {
@@ -4684,43 +4648,22 @@ var OnRouteChange = class extends CustomType {
     this[0] = x0;
   }
 };
-var GotGifts = class extends CustomType {
+var GuestRecieved = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
   }
 };
-var NameUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var PicUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var LinkUpdated = class extends CustomType {
-  constructor(value) {
-    super();
-    this.value = value;
-  }
-};
-var RequestCreateGift = class extends CustomType {
-};
-var CreateGiftResponded = class extends CustomType {
+var GiftsRecieved = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
   }
 };
-var MessageErrorResponse = class extends CustomType {
-  constructor(message, error) {
+var GetGiftsResponse = class extends CustomType {
+  constructor(gifts) {
     super();
-    this.message = message;
-    this.error = error;
+    this.gifts = gifts;
   }
 };
 
@@ -4730,6 +4673,14 @@ function get_route() {
 }
 
 // build/dev/javascript/client/client.mjs
+function update(model, msg) {
+  if (msg instanceof OnRouteChange) {
+    let route = msg[0];
+    return [model.withFields({ route }), none()];
+  } else {
+    return [model, none()];
+  }
+}
 function get_route2() {
   let uri = (() => {
     let $2 = (() => {
@@ -4740,7 +4691,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 100, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 102, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4749,27 +4700,34 @@ function get_route2() {
   })();
   if ($.hasLength(0)) {
     return new Home();
-  } else if ($.hasLength(1) && $.head === "event") {
-    return new Event3();
-  } else if ($.hasLength(1) && $.head === "photos") {
-    return new Photos();
+  } else if ($.hasLength(2) && $.head === "auth" && $.tail.head === "login") {
+    return new Login();
+  } else if ($.hasLength(3) && $.head === "auth" && $.tail.head === "signup") {
+    let auth_code = $.tail.tail.head;
+    return new Signup(auth_code);
+  } else if ($.hasLength(2) && $.head === "auth" && $.tail.head === "forgot-password") {
+    return new ForgotPassword();
+  } else if ($.hasLength(3) && $.head === "auth" && $.tail.head === "forgot-password") {
+    let token2 = $.tail.tail.head;
+    return new ChangePassword(token2);
+  } else if ($.hasLength(2) && $.head === "confirm-presence") {
+    let guest_id = $.tail.head;
+    return new ConfirmPresence(guest_id);
   } else if ($.hasLength(1) && $.head === "gifts") {
-    return new Gifts();
-  } else if ($.hasLength(2) && $.head === "gift") {
-    let gift_id_string = $.tail.head;
-    let $1 = parse(gift_id_string);
-    if (!$1.isOk()) {
-      throw makeError(
-        "assignment_no_match",
-        "client",
-        111,
-        "get_route",
-        "Assignment pattern did not match",
-        { value: $1 }
-      );
+    return new GiftsPage();
+  } else if ($.hasLength(3) && $.head === "api" && $.tail.head === "gifts") {
+    let gift_id = $.tail.tail.head;
+    let $1 = parse(gift_id);
+    if ($1.isOk()) {
+      let id$1 = $1[0];
+      return new SelectGift(id$1);
+    } else {
+      return new NotFound2();
     }
-    let gift_id = $1[0];
-    return new ShowGift(gift_id);
+  } else if ($.hasLength(1) && $.head === "event") {
+    return new EventPage();
+  } else if ($.hasLength(1) && $.head === "photos") {
+    return new PhotosPage();
   } else {
     return new NotFound2();
   }
@@ -4777,122 +4735,207 @@ function get_route2() {
 function on_url_change(uri) {
   return new OnRouteChange(get_route2());
 }
+function gift_decoder() {
+  let _pipe = into(
+    parameter(
+      (gift_id) => {
+        return parameter(
+          (name) => {
+            return parameter(
+              (pic) => {
+                return parameter(
+                  (link) => {
+                    return parameter(
+                      (selected_by) => {
+                        return new Gift(gift_id, name, pic, link, selected_by);
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    )
+  );
+  let _pipe$1 = field2(_pipe, "gift_id", int2);
+  let _pipe$2 = field2(_pipe$1, "name", string2);
+  let _pipe$3 = field2(_pipe$2, "pic", string2);
+  let _pipe$4 = field2(_pipe$3, "link", string2);
+  return field2(_pipe$4, "selected_by", int2);
+}
 function view(model) {
-  return div(
+  return body(
     toList([
       class$(
         "bg-gradient-to-r from-pink-400 to-pink-200 min-h-screen flex flex-col items-center justify-start"
-      )
+      ),
+      id("app")
     ]),
     toList([
-      navigation_bar(),
-      div(
-        toList([]),
-        (() => {
-          let $ = model.route;
-          if ($ instanceof Home) {
-            return body3();
-          } else if ($ instanceof Event3) {
-            return body();
-          } else if ($ instanceof Photos) {
-            return body4();
-          } else if ($ instanceof Gifts) {
-            return body2();
-          } else if ($ instanceof NotFound2) {
-            return toList([text2("not found")]);
-          } else {
-            return toList([text2("testing ")]);
-          }
-        })()
-      )
+      nav(
+        toList([
+          class$(
+            "w-full bg-white shadow-md py-4 px-8 flex justify-between items-center"
+          )
+        ]),
+        toList([
+          div(toList([]), toList([])),
+          ul(
+            toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
+            toList([
+              li(
+                toList([]),
+                toList([
+                  a(
+                    toList([
+                      class$("hover:text-pink-800 transition duration-300"),
+                      href("/")
+                    ]),
+                    toList([text2("Home")])
+                  )
+                ])
+              ),
+              li(
+                toList([]),
+                toList([
+                  a(
+                    toList([
+                      class$("hover:text-pink-800 transition duration-300"),
+                      href("/event")
+                    ]),
+                    toList([text2("Evento")])
+                  )
+                ])
+              ),
+              li(
+                toList([]),
+                toList([
+                  a(
+                    toList([
+                      class$("hover:text-pink-800 transition duration-300"),
+                      href("/gifts")
+                    ]),
+                    toList([text2("Presentes")])
+                  )
+                ])
+              ),
+              li(
+                toList([]),
+                toList([
+                  a(
+                    toList([
+                      class$("hover:text-pink-800 transition duration-300"),
+                      href("/photos")
+                    ]),
+                    toList([text2("Fotos")])
+                  )
+                ])
+              )
+            ])
+          ),
+          nav(
+            toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
+            toList([
+              a(
+                toList([
+                  class$("hover:text-pink-800 transition duration-300"),
+                  href("/auth/login")
+                ]),
+                toList([text2("Login")])
+              )
+            ])
+          )
+        ])
+      ),
+      (() => {
+        let $ = model.route;
+        if ($ instanceof Home) {
+          return home_view();
+        } else if ($ instanceof EventPage) {
+          return event_view();
+        } else if ($ instanceof PhotosPage) {
+          return photos_view();
+        } else if ($ instanceof GiftsPage) {
+          return gifts_view();
+        } else if ($ instanceof NotFound2) {
+          return not_found_view();
+        } else {
+          return not_found_view();
+        }
+      })()
     ])
   );
 }
-function get_gifts() {
-  let decoder = list(
-    decode5(
-      (var0, var1, var2, var3, var4) => {
-        return new Gift(var0, var1, var2, var3, var4);
-      },
-      field("id", int),
-      field("name", string),
-      field("pic", string),
-      field("link", string),
-      field("selected_by", int)
-    )
+var api_url = "http://localhost:8000";
+function get_auth_guest() {
+  let url = api_url + "/api/auth/validate";
+  let decoder = decode4(
+    (var0, var1, var2, var3) => {
+      return new Guest(var0, var1, var2, var3);
+    },
+    field("id", int),
+    field("name", string),
+    field("email", string),
+    field("confirmed", bool)
   );
   return get2(
-    "http://localhost:8000/gifts",
-    expect_json(decoder, (var0) => {
-      return new GotGifts(var0);
-    })
-  );
-}
-function init3(_) {
-  return [
-    new Model2(get_route2(), toList([]), "", "", "", false),
-    batch(toList([init2(on_url_change), get_gifts()]))
-  ];
-}
-function create_gift(model) {
-  return post(
-    "http://localhost:8000/gifts",
-    object2(
-      toList([
-        ["name", string2(model.name)],
-        ["pic", string2(model.pic)],
-        ["link", string2(model.link)],
-        ["selected", bool(model.selected)]
-      ])
-    ),
+    url,
     expect_json(
-      decode2(
-        (var0, var1) => {
-          return new MessageErrorResponse(var0, var1);
-        },
-        optional_field("message", string),
-        optional_field("error", string)
-      ),
+      decoder,
       (var0) => {
-        return new CreateGiftResponded(var0);
+        return new GuestRecieved(var0);
       }
     )
   );
 }
-function update(model, msg) {
-  if (msg instanceof OnRouteChange) {
-    let route = msg[0];
-    return [model.withFields({ route }), none()];
-  } else if (msg instanceof GotGifts) {
-    let gifts_result = msg[0];
-    if (gifts_result.isOk()) {
-      let gifts = gifts_result[0];
-      return [model.withFields({ gifts }), none()];
-    } else {
-      throw makeError(
-        "panic",
-        "client",
-        66,
-        "update",
-        "panic expression evaluated",
-        {}
-      );
-    }
-  } else if (msg instanceof NameUpdated) {
-    let value = msg.value;
-    return [model.withFields({ name: value }), none()];
-  } else if (msg instanceof PicUpdated) {
-    let value = msg.value;
-    return [model.withFields({ pic: value }), none()];
-  } else if (msg instanceof LinkUpdated) {
-    let value = msg.value;
-    return [model.withFields({ link: value }), none()];
-  } else if (msg instanceof RequestCreateGift) {
-    return [model, create_gift(model)];
-  } else {
-    let response = msg[0];
-    return [model, get_gifts()];
-  }
+function get_gifts() {
+  let url = api_url + "/api/posts";
+  let response_decoder = (() => {
+    let _pipe = into(
+      parameter((gifts) => {
+        return new GetGiftsResponse(gifts);
+      })
+    );
+    return field2(_pipe, "gifts", list2(gift_decoder()));
+  })();
+  return get2(
+    url,
+    expect_json(
+      (data) => {
+        let _pipe = response_decoder;
+        return from2(_pipe, data);
+      },
+      (var0) => {
+        return new GiftsRecieved(var0);
+      }
+    )
+  );
+}
+function init3(_) {
+  return [
+    new Model2(
+      get_route2(),
+      new None(),
+      "",
+      "",
+      "",
+      new None(),
+      "",
+      "",
+      new None(),
+      0,
+      toList([]),
+      0,
+      toList([]),
+      new None(),
+      ""
+    ),
+    batch(
+      toList([init2(on_url_change), get_gifts(), get_auth_guest()])
+    )
+  ];
 }
 function main2() {
   let _pipe = application(init3, update, view);

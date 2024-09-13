@@ -1,3 +1,7 @@
+import client/state.{
+  type Route, ChangePassword, ConfirmPresence, EventPage, ForgotPassword,
+  GiftsPage, Home, Login, Model, NotFound, PhotosPage, SelectGift, Signup,
+}
 import cors_builder as cors
 import decode
 import gleam/dynamic
@@ -31,41 +35,15 @@ pub fn handle_request(req: Request) -> Response {
 
 fn api_routes(req: Request, route_segments: List(String)) -> Response {
   case route_segments {
-    ["api", "gifts"] -> posts.posts(req)
-    ["api", "guests", post_id] ->
-      case int.parse(post_id) {
-        Ok(id) -> post.post(req, id)
-        Error(_) -> response.error("Invalid post_id for post, must be int")
-      }
-    ["api", "posts", post_id, "likes"] ->
-      case int.parse(post_id) {
-        Ok(post_id) -> post_likes.post_likes(req, post_id)
-        Error(_) -> response.error("Invalid post_id for post, must be int")
-      }
-    ["api", "posts", post_id, "comments"] ->
-      case int.parse(post_id) {
-        Ok(id) -> comment.comment(req, id)
-        Error(_) -> response.error("Invalid post_id for post, must be int")
-      }
-    ["api", "posts", "comments", post_comment_id, "likes"] ->
-      case int.parse(post_comment_id) {
-        Ok(post_comment_id) ->
-          post_comment_likes.post_comment_likes(req, post_comment_id)
-        Error(_) ->
-          response.error("Invalid post_comment_id for comment, must be int")
-      }
-    ["api", "users"] -> users.users(req)
-    ["api", "tags"] -> tags.tags(req)
-    ["api", "auth-code"] -> auth_code.auth_code(req, "")
-    ["api", "auth-code", token] -> auth_code.auth_code(req, token)
-    ["api", "auth", "validate"] -> validate.validate(req)
-    ["api", "auth", "login"] -> login.login(req)
-    ["api", "auth", "logout"] -> logout.logout(req)
-    ["api", "auth", "forgot-password"] ->
-      forgot_password.forgot_password(req, "")
-    ["api", "auth", "forgot-password", token] ->
+    [_, "gifts"] -> gifts.gifts(req)
+    [_, "photos"] -> photos.photos(req)
+    [_, "auth", "validate"] -> validate.validate(req)
+    [_, "auth", "login"] -> login.login(req)
+    [_, "auth", "logout"] -> logout.logout(req)
+    [_, "auth", "forgot-password"] -> forgot_password.forgot_password(req, "")
+    [_, "auth", "forgot-password", token] ->
       forgot_password.forgot_password(req, token)
-    ["api", "auth", "change-password", token] ->
+    [_, "auth", "change-password", token] ->
       change_password.change_password(req, token)
     _ -> wisp.not_found()
   }
@@ -73,74 +51,33 @@ fn api_routes(req: Request, route_segments: List(String)) -> Response {
 
 fn page_routes(req: Request, route_segments: List(String)) -> Response {
   let route: Route = case route_segments {
-    [] -> Active
+    [] -> Home
     ["auth", "login"] -> Login
     ["auth", "signup", auth_code] -> Signup(auth_code: auth_code)
-    ["create-post"] -> CreatePost
-    ["user", username] -> UserPage(username)
-    ["post", post_id] ->
-      case int.parse(post_id) {
-        Ok(id) -> ShowPost(id)
-        Error(_) -> NotFound
-      }
+    ["auth", "forgot-password"] -> ForgotPassword
+    ["auth", "forgot-password", token] -> ChangePassword(token)
+    ["confirm-presence", guest_id] -> ConfirmPresence(guest_id: guest_id)
+    ["gifts"] -> GiftsPage
+    ["event"] -> EventPage
+    ["Photos"] -> PhotosPage
     _ -> NotFound
   }
 
   let model =
     Model(
-      route,
-      inviter: "",
-      auth_user: case user_session.get_user_id_from_session(req) {
-        Ok(user_id) ->
-          case user.get_user_by_id(user_id) {
-            Ok(user) ->
-              Some(state.AuthUser(
-                is_admin: user.is_user_admin(user.id),
-                user_id: user_id,
-                username: user.username,
-              ))
-            Error(_) -> None
-          }
-        Error(_) -> None
-      },
-      sign_up_username: "",
+      route: get_route(),
+      guest: None,
+      sign_up_name: "",
       sign_up_email: "",
       sign_up_password: "",
       sign_up_error: None,
-      login_email_username: "",
+      login_email: "",
       login_password: "",
       login_error: None,
-      create_post_title: "",
-      create_post_href: "",
-      create_post_body: "",
-      create_post_original_creator: False,
-      create_post_tags: [],
-      create_post_use_body: False,
-      create_post_error: None,
-      posts: {
-        case posts.list_posts(req) {
-          Ok(posts) -> posts
-          Error(_) -> []
-        }
-      },
-      show_post: {
-        case route {
-          ShowPost(id) ->
-            case post.show_post(req, id) {
-              Ok(post) -> Some(post)
-              Error(_) -> None
-            }
-          _ -> None
-        }
-      },
-      create_comment_body: "",
-      create_comment_parent_id: None,
-      create_comment_error: None,
-      tags: case tags.list_tags() {
-        Ok(tags) -> tags
-        Error(_) -> []
-      },
-      invite_link: None,
+      confirm_presence: 0,
+      gifts: [],
+      select_gift: 0,
+      photos: [],
       forgot_password_response: None,
       change_password_target: "",
     )
