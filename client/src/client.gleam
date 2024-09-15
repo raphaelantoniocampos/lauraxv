@@ -1,26 +1,20 @@
-import client/state.{
-  type Model, type Msg, type Route, ChangePassword, ChangePasswordResponded,
-  ChangePasswordTargetRecieved, ConfirmPresence, CreateAuthCodeResponded,
-  EmailResponse, EventPage, ForgotPassword, ForgotPasswordResponded,
-  GetGiftsResponse, GiftsPage, GiftsRecieved, GuestRecieved, Home, Login,
-  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdateName,
-  LoginUpdatePassword, LogoutResponded, Model, NotFound, OnRouteChange,
-  PhotosPage, PhotosRecieved, RequestChangePassword, RequestCreateAuthCode,
-  RequestForgotPassword, RequestLogin, RequestLogout, RequestSelectGift,
-  RequestSignUp, SelectGift, SelectGiftResponded, SelectGiftUpdateError,
-  SignUpResponded, SignUpUpdateEmail, SignUpUpdateError, SignUpUpdateName,
-  SignUpUpdatePassword, Signup, message_error_decoder,
-}
-
 import client/pages/event.{event_view}
 import client/pages/gifts.{gifts_view}
 import client/pages/home.{home_view}
 import client/pages/login.{login, login_view}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
+import client/state.{
+  type Model, type Msg, type Route, ConfirmPresence, EventPage, GiftsPage,
+  GiftsRecieved, Home, Login, LoginUpdateEmail, LoginUpdateError,
+  LoginUpdateName, LoginUpdatePassword, Model, NotFound, OnRouteChange,
+  PhotosPage, PhotosRecieved, RequestChangePassword, RequestLogin, RequestLogout,
+  RequestSelectGift, RequestSignUp, SelectGift, SignUpUpdateEmail,
+  SignUpUpdateError, SignUpUpdateName, SignUpUpdatePassword, UserRecieved,
+}
 import decode
 import gleam/dynamic.{type DecodeError, type Dynamic}
-import gleam/int
+import gleam/io
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/uri.{type Uri}
@@ -31,7 +25,7 @@ import lustre/element.{type Element}
 import lustre/element/html.{a, body, div, li, nav, text, ul}
 import lustre_http
 import modem
-import shared.{type Gift, type Guest, Gift, Guest, Photo, api_url}
+import shared.{type Gift, type User, Gift, User, server_url}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -39,31 +33,34 @@ pub fn main() {
   |> lustre.start("#app", Nil)
 }
 
+const photos = [
+  "/priv/static/photo1.jpeg", "/priv/static/photo2.jpeg",
+  "/priv/static/photo3.jpeg",
+]
+
 // // Create our model initialization
 fn init(_) -> #(Model, Effect(Msg)) {
   #(
     Model(
       route: get_route(),
-      guest: None,
-      sign_up_name: "",
-      sign_up_email: "",
-      sign_up_password: "",
-      sign_up_error: None,
+      user: None,
+      gifts: [],
+      select_gift: [],
+      photos: photos,
       login_name: "",
       login_email: "",
       login_password: "",
       login_error: None,
       confirm_presence: 0,
-      gifts: [],
-      select_gift: 0,
-      photos: [],
-      forgot_password_response: None,
-      change_password_target: "",
+      sign_up_name: "",
+      sign_up_email: "",
+      sign_up_password: "",
+      sign_up_error: None,
     ),
-    effect.batch([modem.init(on_url_change), get_gifts(), get_auth_guest()]),
+    effect.batch([modem.init(on_url_change), get_gifts()]),
   )
   //   effect.batch(
-  //     [modem.init(on_url_change), get_auth_guest(), get_posts()]
+  //     [modem.init(on_url_change), get_auth(), get_posts()]
   //     |> list.append(case get_route() {
   //       ShowPost(_) -> [get_show_post()]
   //       Signup(_) -> [get_inviter(get_auth_code())]
@@ -79,37 +76,26 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
     OnRouteChange(route) -> #(Model(..model, route: route), effect.none())
 
-    LoginResponded(resp_result) ->
-      case resp_result {
-        Ok(resp) ->
-          case resp.error {
-            Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
-            )
-            None -> #(
-              Model(
-                ..model,
-                login_email: "",
-                login_password: "",
-                login_error: None,
-              ),
-              effect.batch([get_auth_guest()]),
-            )
-          }
-        Error(_) -> #(
-          model,
-          effect.from(fn(dispatch) {
-            dispatch(LoginUpdateError(Some("HTTP Error")))
-          }),
-        )
-      }
-
-    GuestRecieved(guest_result) ->
-      case guest_result {
-        Ok(guest) -> #(Model(..model, guest: Some(guest)), effect.none())
+    UserRecieved(user_result) ->
+      case user_result {
+        Ok(user) -> {
+          #(Model(..model, user: Some(user)), effect.none())
+        }
         Error(_) -> #(model, effect.none())
       }
+
+    GiftsRecieved(gifts_result) ->
+      case gifts_result {
+        Ok(gifts) -> #(Model(..model, gifts: gifts), effect.none())
+        Error(_) -> #(model, effect.none())
+      }
+
+    PhotosRecieved(photos_result) ->
+      case photos_result {
+        Ok(photos) -> #(Model(..model, photos: photos), effect.none())
+        Error(_) -> #(model, effect.none())
+      }
+
     RequestLogin -> #(model, login(model))
 
     LoginUpdateEmail(value) -> #(
@@ -129,13 +115,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
-// Define our function for handling when the route changes
 fn on_url_change(uri: Uri) -> Msg {
   OnRouteChange(get_route())
-  // When the url changes dispatch the message for when the route changes with the new route that we get from our get_route() function
 }
 
-// Gleam doesn't expose any functions for getting the current url so we will use the ffi functionality to import this function from javascript later. In laymans terms this makes Gleam be able to import any javascript and use it as a function.
 @external(javascript, "./ffi.mjs", "get_route")
 fn do_get_route() -> String
 
@@ -147,11 +130,7 @@ fn get_route() -> Route {
 
   case uri.path |> uri.path_segments {
     [] -> Home
-    ["auth", "login"] -> Login
-    ["auth", "signup", auth_code] -> Signup(auth_code: auth_code)
-    ["auth", "forgot-password"] -> ForgotPassword
-    ["auth", "forgot-password", token] -> ChangePassword(token)
-    ["confirm-presence", guest_id] -> ConfirmPresence(guest_id: guest_id)
+    ["login"] -> Login
     ["gifts"] -> GiftsPage
     ["event"] -> EventPage
     ["photos"] -> PhotosPage
@@ -159,149 +138,69 @@ fn get_route() -> Route {
   }
 }
 
-fn request_forgot_password(model: Model) {
-  lustre_http.post(
-    api_url <> "/api/auth/forgot-password",
-    json.object([#("email", json.string(model.login_email))]),
-    lustre_http.expect_json(message_error_decoder(), ForgotPasswordResponded),
-  )
-}
+// fn get_gift_id() -> String {
+//   let uri = case do_get_route() |> uri.parse {
+//     Ok(uri) -> uri
+//     _ -> panic as "Invalid uri"
+//   }
+//
+//   case uri.path |> uri.path_segments {
+//     ["gift", gift_id] -> gift_id
+//     _ -> ""
+//   }
+// }
 
-fn create_auth_code() {
-  lustre_http.post(
-    api_url <> "/api/auth-code",
-    json.object([]),
-    lustre_http.expect_json(message_error_decoder(), CreateAuthCodeResponded),
-  )
-}
-
-fn get_auth_code() -> String {
-  let uri = case do_get_route() |> uri.parse {
-    Ok(uri) -> uri
-    _ -> panic as "Invalid uri"
-  }
-
-  case uri.path |> uri.path_segments {
-    ["auth", "signup", auth_code] -> auth_code
-    _ -> "1"
-  }
-}
-
-fn get_forgot_password_token() -> String {
-  let uri = case do_get_route() |> uri.parse {
-    Ok(uri) -> uri
-    _ -> panic as "Invalid uri"
-  }
-
-  case uri.path |> uri.path_segments {
-    ["auth", "forgot-password", token] -> token
-    _ -> "1"
-  }
-}
-
-fn get_gift_id() -> String {
-  let uri = case do_get_route() |> uri.parse {
-    Ok(uri) -> uri
-    _ -> panic as "Invalid uri"
-  }
-
-  case uri.path |> uri.path_segments {
-    ["gift", gift_id] -> gift_id
-    _ -> ""
-  }
-}
-
-pub fn get_change_password_target(token: String) -> Effect(Msg) {
-  let url = api_url <> "/api/auth/forgot-password/" <> token
-  let decoder =
-    dynamic.decode1(EmailResponse, dynamic.field("email", dynamic.string))
-
-  lustre_http.get(
-    url,
-    lustre_http.expect_json(decoder, ChangePasswordTargetRecieved),
-  )
-}
-
-pub fn get_auth_guest() -> Effect(Msg) {
-  let url = api_url <> "/api/auth/validate"
+pub fn get_user() -> Effect(Msg) {
+  let url = server_url <> "/api/auth/"
 
   let decoder =
-    dynamic.decode4(
-      Guest,
+    dynamic.decode5(
+      User,
       dynamic.field("id", dynamic.int),
       dynamic.field("name", dynamic.string),
       dynamic.field("email", dynamic.string),
+      dynamic.field("password", dynamic.string),
       dynamic.field("confirmed", dynamic.bool),
     )
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, GuestRecieved))
+  lustre_http.get(url, lustre_http.expect_json(decoder, UserRecieved))
 }
 
-pub fn gift_decoder() {
-  decode.into({
-    use gift_id <- decode.parameter
-    use name <- decode.parameter
-    use pic <- decode.parameter
-    use link <- decode.parameter
-    use selected_by <- decode.parameter
+fn get_gifts() {
+  let url = server_url <> "/gifts"
+  let decoder =
+    dynamic.list(dynamic.decode5(
+      Gift,
+      dynamic.field("id", dynamic.int),
+      dynamic.field("name", dynamic.string),
+      dynamic.field("pic", dynamic.string),
+      dynamic.field("link", dynamic.string),
+      dynamic.field("selected_by", dynamic.int),
+    ))
 
-    Gift(gift_id, name, pic, link, selected_by)
-  })
-  |> decode.field("gift_id", decode.int)
-  |> decode.field("name", decode.string)
-  |> decode.field("pic", decode.string)
-  |> decode.field("link", decode.string)
-  |> decode.field("selected_by", decode.int)
+  lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
 }
 
-pub fn get_gifts() -> Effect(Msg) {
-  let url = api_url <> "/api/posts"
-
-  let response_decoder =
-    decode.into({
-      use gifts <- decode.parameter
-
-      GetGiftsResponse(gifts)
-    })
-    |> decode.field("gifts", decode.list(gift_decoder()))
-
-  lustre_http.get(
-    url,
-    lustre_http.expect_json(
-      fn(data) { response_decoder |> decode.from(data) },
-      GiftsRecieved,
-    ),
-  )
-}
-
-fn signup(model: Model) {
-  lustre_http.post(
-    api_url <> "/api/users",
-    json.object([
-      #("name", json.string(model.sign_up_name)),
-      #("email", json.string(model.sign_up_email)),
-      #("password", json.string(model.sign_up_password)),
-      #("auth_code", json.string(get_auth_code())),
-    ]),
-    lustre_http.expect_json(message_error_decoder(), SignUpResponded),
-  )
-}
-
-fn logout(model _: Model) {
-  lustre_http.post(
-    api_url <> "/api/auth/logout",
-    json.object([]),
-    lustre_http.expect_json(message_error_decoder(), LogoutResponded),
-  )
-}
-
-fn send_password_change(model: Model) {
-  lustre_http.post(
-    api_url <> "/api/auth/change-password/" <> get_forgot_password_token(),
-    json.object([#("password", json.string(model.login_password))]),
-    lustre_http.expect_json(message_error_decoder(), ChangePasswordResponded),
-  )
-}
+// fn signup(model: Model) {
+//   lustre_http.post(
+//     server_url <> "/api/users",
+//     json.object([
+//       #("name", json.string(model.sign_up_name)),
+//       #("email", json.string(model.sign_up_email)),
+//       #("password", json.string(model.sign_up_password)),
+//       #("auth_code", json.string(get_auth_code())),
+//     ]),
+//     lustre_http.expect_json(message_error_decoder(), SignUpResponded),
+//   )
+// }
+//
+// fn logout(model _: Model) {
+//   lustre_http.post(
+//     server_url <> "/api/auth/logout",
+//     json.object([]),
+//     lustre_http.expect_json(message_error_decoder(), LogoutResponded),
+//   )
+// }
 
 fn view(model: Model) -> Element(Msg) {
   body(
@@ -359,19 +258,19 @@ fn view(model: Model) -> Element(Msg) {
             ]),
           ]),
           nav([class("flex space-x-8 text-pink-600 font-semibold")], [
-            case model.guest {
+            case model.user {
               None -> {
                 a(
                   [
                     class("hover:text-pink-800 transition duration-300"),
-                    href("/auth/login"),
+                    href("/login"),
                   ],
                   [text("Login")],
                 )
               }
-              Some(guest) -> {
+              Some(user) -> {
                 a([class("hover:text-pink-800 transition duration-300")], [
-                  text(guest.name),
+                  text("Olá " <> user.name),
                 ])
               }
             },
@@ -382,8 +281,8 @@ fn view(model: Model) -> Element(Msg) {
         // Here we match the current route in the state and return different html based on what route is recieved
         Home -> home_view()
         EventPage -> event_view()
-        PhotosPage -> photos_view()
-        GiftsPage -> gifts_view()
+        PhotosPage -> photos_view(model)
+        GiftsPage -> gifts_view(model)
         Login -> login_view(model)
         // Gifts -> {
         //   list.append(

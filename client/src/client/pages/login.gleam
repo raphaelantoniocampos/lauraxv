@@ -1,7 +1,8 @@
 import client/state.{
-  type Model, type Msg, LoginResponded, LoginUpdateEmail, LoginUpdateName,
-  LoginUpdatePassword, RequestLogin, message_error_decoder,
+  type Model, type Msg, LoginUpdateEmail, LoginUpdateName, LoginUpdatePassword,
+  RequestLogin, UserRecieved,
 }
+import gleam/dynamic
 import gleam/json
 import gleam/option.{None, Some}
 import lustre/attribute.{
@@ -11,16 +12,26 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, form, h1, input, label, main, p}
 import lustre/event
 import lustre_http
-import shared.{api_url}
+import shared.{type User, User, server_url}
 
 pub fn login(model: Model) {
+  let decoder = {
+    dynamic.decode5(
+      User,
+      dynamic.field("id", dynamic.int),
+      dynamic.field("name", dynamic.string),
+      dynamic.field("email", dynamic.string),
+      dynamic.field("password", dynamic.string),
+      dynamic.field("confirmed", dynamic.bool),
+    )
+  }
   lustre_http.post(
-    api_url <> "/api/auth/login",
+    server_url <> "/auth/login",
     json.object([
       #("email", json.string(model.login_email)),
       #("password", json.string(model.login_password)),
     ]),
-    lustre_http.expect_json(message_error_decoder(), LoginResponded),
+    lustre_http.expect_json(decoder, UserRecieved),
   )
 }
 
@@ -32,7 +43,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
           attribute("style", "font-family: 'Pacifico', cursive;"),
           class("text-4xl text-pink-700 font-bold mb-12 text-center"),
         ],
-        [text("Entrar")],
+        [text("Entrar ou Cadastrar")],
       ),
       form([class("space-y-6"), event.on_submit(RequestLogin)], [
         div([], [
