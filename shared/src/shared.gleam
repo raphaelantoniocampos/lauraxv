@@ -5,5 +5,12 @@ pub type Gift {
 }
 
 pub type User {
-  User(id: Int, name: String, email: String, password: String, confirmed: Bool)
+  User(
+    id: Int,
+    name: String,
+    email: String,
+    password: String,
+    confirmed: Bool,
+    is_admin: Bool,
+  )
 }

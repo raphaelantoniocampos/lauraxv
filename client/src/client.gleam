@@ -5,12 +5,11 @@ import client/pages/login.{login, login_view}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import client/state.{
-  type Model, type Msg, type Route, ConfirmPresence, EventPage, GiftsPage,
-  GiftsRecieved, Home, Login, LoginUpdateEmail, LoginUpdateError,
-  LoginUpdateName, LoginUpdatePassword, Model, NotFound, OnRouteChange,
-  PhotosPage, PhotosRecieved, RequestChangePassword, RequestLogin, RequestLogout,
-  RequestSelectGift, RequestSignUp, SelectGift, SignUpUpdateEmail,
-  SignUpUpdateError, SignUpUpdateName, SignUpUpdatePassword, UserRecieved,
+  type Model, type Msg, type Route, AuthUser, AuthUserRecieved, ConfirmPresence,
+  EventPage, GiftsPage, GiftsRecieved, Home, Login, LoginResponded,
+  LoginUpdateEmail, LoginUpdateError, LoginUpdateName, LoginUpdatePassword,
+  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, RequestLogin,
+  RequestLogout, RequestSelectGift, RequestSignUp, SelectGift,
 }
 import decode
 import gleam/dynamic.{type DecodeError, type Dynamic}
@@ -33,29 +32,19 @@ pub fn main() {
   |> lustre.start("#app", Nil)
 }
 
-const photos = [
-  "/priv/static/photo1.jpeg", "/priv/static/photo2.jpeg",
-  "/priv/static/photo3.jpeg",
-]
-
 // // Create our model initialization
 fn init(_) -> #(Model, Effect(Msg)) {
   #(
     Model(
       route: get_route(),
-      user: None,
+      auth_user: None,
       gifts: [],
       select_gift: [],
-      photos: photos,
+      photos: [],
       login_name: "",
       login_email: "",
       login_password: "",
       login_error: None,
-      confirm_presence: 0,
-      sign_up_name: "",
-      sign_up_email: "",
-      sign_up_password: "",
-      sign_up_error: None,
     ),
     effect.batch([modem.init(on_url_change), get_gifts()]),
   )
@@ -76,10 +65,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
     OnRouteChange(route) -> #(Model(..model, route: route), effect.none())
 
-    UserRecieved(user_result) ->
+    AuthUserRecieved(user_result) ->
       case user_result {
         Ok(user) -> {
-          #(Model(..model, user: Some(user)), effect.none())
+          #(Model(..model, auth_user: Some(user)), effect.none())
         }
         Error(_) -> #(model, effect.none())
       }
@@ -96,7 +85,38 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
+    LoginResponded(resp_result) ->
+      case resp_result {
+        Ok(resp) ->
+          case resp.error {
+            Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+            )
+            None -> #(
+              Model(
+                ..model,
+                login_email: "",
+                login_password: "",
+                login_error: None,
+              ),
+              effect.batch([modem.push("/", None, None), get_auth_user()]),
+            )
+          }
+        Error(_) -> #(
+          model,
+          effect.from(fn(dispatch) {
+            dispatch(LoginUpdateError(Some("HTTP Error")))
+          }),
+        )
+      }
+
     RequestLogin -> #(model, login(model))
+
+    LoginUpdateName(value) -> #(
+      Model(..model, login_name: value),
+      effect.none(),
+    )
 
     LoginUpdateEmail(value) -> #(
       Model(..model, login_email: value),
@@ -150,20 +170,19 @@ fn get_route() -> Route {
 //   }
 // }
 
-pub fn get_user() -> Effect(Msg) {
-  let url = server_url <> "/api/auth/"
+pub fn get_auth_user() -> Effect(Msg) {
+  let url = server_url <> "/auth/validate"
 
   let decoder =
-    dynamic.decode5(
-      User,
-      dynamic.field("id", dynamic.int),
+    dynamic.decode4(
+      AuthUser,
+      dynamic.field("user_id", dynamic.int),
       dynamic.field("name", dynamic.string),
-      dynamic.field("email", dynamic.string),
-      dynamic.field("password", dynamic.string),
       dynamic.field("confirmed", dynamic.bool),
+      dynamic.field("is_admin", dynamic.bool),
     )
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, UserRecieved))
+  lustre_http.get(url, lustre_http.expect_json(decoder, AuthUserRecieved))
 }
 
 fn get_gifts() {
@@ -202,7 +221,7 @@ fn get_gifts() {
 //   )
 // }
 
-fn view(model: Model) -> Element(Msg) {
+pub fn view(model: Model) -> Element(Msg) {
   body(
     [
       class(
@@ -258,7 +277,7 @@ fn view(model: Model) -> Element(Msg) {
             ]),
           ]),
           nav([class("flex space-x-8 text-pink-600 font-semibold")], [
-            case model.user {
+            case model.auth_user {
               None -> {
                 a(
                   [
@@ -278,55 +297,11 @@ fn view(model: Model) -> Element(Msg) {
         ],
       ),
       case model.route {
-        // Here we match the current route in the state and return different html based on what route is recieved
         Home -> home_view()
         EventPage -> event_view()
         PhotosPage -> photos_view(model)
         GiftsPage -> gifts_view(model)
         Login -> login_view(model)
-        // Gifts -> {
-        //   list.append(
-        //     [
-        //       form([event.on_submit(RequestCreateGift)], [
-        //         // If the user submits the form by clicking on the button we request gleam to create our post
-        //         text("Name"),
-        //         input([event.on_input(NameUpdated)]),
-        //         // event.on_input sends the message TitleUpdated each time the user updates the input
-        //         text("Pic"),
-        //         input([event.on_input(PicUpdated)]),
-        //         // Same here but for BodyUpdated
-        //         text("Link"),
-        //         input([event.on_input(LinkUpdated)]),
-        //         // Same here but for BodyUpdated
-        //         br([]),
-        //         button([type_("submit")], [text("Create Gift")]),
-        //       ]),
-        //     ],
-        //     list.map(model.gifts, fn(gift) {
-        //       // Loop over all posts in our model
-        //       ul([], [
-        //         li([], [
-        //           a([href("/gift/" <> int.to_string(gift.id))], [
-        //             // Return a link to /post/(post_id)
-        //             text(gift.name),
-        //             // With the post title as the link value
-        //           ]),
-        //         ]),
-        //       ])
-        //     }),
-        //   )
-        // }
-        // ShowGift(gift_id) -> {
-        //   // If we are on the post page with a valid gift_id
-        //   let assert Ok(gift) =
-        //     list.find(model.gifts, fn(gift) { gift.id == gift_id })
-        //   // We find the gift matching our gift_id. Same as the gift_id parsing but we only care if the value is valid so we don't care about error handling.
-        //   [
-        //     // Show our target gift
-        //     h1([], [text(gift.name)]),
-        //     text(gift.pic),
-        //   ]
-        // }
         NotFound -> not_found_view()
         _ -> not_found_view()
       },

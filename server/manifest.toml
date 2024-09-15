@@ -5,6 +5,7 @@ packages = [
   { name = "bcrypt", version = "1.2.2", build_tools = ["rebar3"], requirements = ["poolboy"], otp_app = "bcrypt", source = "hex", outer_checksum = "6428D68BB2608490E150BE406A7AB75B5BCE4A2B5A3B0C3F36A12E367A141561" },
   { name = "beecrypt", version = "0.3.1", build_tools = ["gleam"], requirements = ["bcrypt", "gleam_crypto", "gleam_erlang", "gleam_stdlib"], otp_app = "beecrypt", source = "hex", outer_checksum = "9698221A179C4D823DE2F00954D7A10BBC2B577B6C40A269BD676C308A788C15" },
   { name = "birl", version = "1.7.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "ranger"], otp_app = "birl", source = "hex", outer_checksum = "5C66647D62BCB11FE327E7A6024907C4A17954EF22865FE0940B54A852446D01" },
+  { name = "cake", version = "1.1.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "cake", source = "hex", outer_checksum = "E94EAD4800A3CAE0B426E7093F8D82C10C3638D3D400CB95B5C6EF1FF9C3B4A4" },
   { name = "client", version = "1.0.0", build_tools = ["gleam"], requirements = ["decode", "gleam_json", "gleam_stdlib", "lustre", "lustre_http", "lustre_ui", "modem", "rada", "shared"], source = "local", path = "../client" },
   { name = "cors_builder", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_stdlib", "mist", "wisp"], otp_app = "cors_builder", source = "hex", outer_checksum = "E4634D1CAD89BC26B4FE986B45D55268BA5369E9224C2FD7872C0DB5AC028E47" },
   { name = "decode", version = "0.2.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "decode", source = "hex", outer_checksum = "4727FC627B803E4F4FF0075B5F93BC022F9293A19B03BF44B5A4C64BF9E8EAE1" },
@@ -47,6 +48,7 @@ packages = [
 
 [requirements]
 beecrypt = { version = ">= 0.3.1 and < 1.0.0" }
+cake = { version = ">= 1.1.2 and < 2.0.0" }
 client = { path = "../client" }
 cors_builder = { version = ">= 2.0.0 and < 3.0.0" }
 decode = { version = ">= 0.2.1 and < 1.0.0" }
@@ -55,6 +57,7 @@ gleam_http = { version = ">= 3.6.0 and < 4.0.0" }
 gleam_json = { version = ">= 1.0.1 and < 2.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 0.40.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
+lustre = { version = ">= 4.4.3 and < 5.0.0" }
 mist = { version = ">= 1.2.0 and < 2.0.0" }
 prng = { version = ">= 3.0.3 and < 4.0.0" }
 shared = { path = "../shared" }

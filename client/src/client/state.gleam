@@ -1,3 +1,4 @@
+import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
@@ -17,7 +18,7 @@ pub type Route {
 pub type Model {
   Model(
     route: Route,
-    user: Option(User),
+    auth_user: Option(AuthUser),
     gifts: List(Gift),
     select_gift: List(Int),
     photos: List(String),
@@ -25,36 +26,43 @@ pub type Model {
     login_email: String,
     login_password: String,
     login_error: Option(String),
-    confirm_presence: Int,
-    sign_up_name: String,
-    sign_up_email: String,
-    sign_up_password: String,
-    sign_up_error: Option(String),
   )
 }
 
 pub type Msg {
   OnRouteChange(Route)
-  UserRecieved(Result(User, lustre_http.HttpError))
+  AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
   PhotosRecieved(Result(List(String), lustre_http.HttpError))
 
-  SignUpUpdateName(value: String)
-  SignUpUpdateEmail(value: String)
-  SignUpUpdatePassword(value: String)
-  SignUpUpdateError(value: Option(String))
   RequestSignUp
 
   LoginUpdateName(value: String)
   LoginUpdateEmail(value: String)
   LoginUpdatePassword(value: String)
   LoginUpdateError(value: Option(String))
+
   RequestLogin
+  LoginResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
 
   RequestLogout
-
   RequestSelectGift(value: Int)
+}
 
-  RequestForgotPassword
-  RequestChangePassword
+pub type MessageErrorResponse {
+  MessageErrorResponse(message: Option(String), error: Option(String))
+}
+
+pub fn message_error_decoder() {
+  dynamic.decode2(
+    MessageErrorResponse,
+    dynamic.optional_field("message", dynamic.string),
+    dynamic.optional_field("error", dynamic.string),
+  )
+}
+
+pub type AuthUser {
+  AuthUser(user_id: Int, name: String, confirmed: Bool, is_admin: Bool)
 }

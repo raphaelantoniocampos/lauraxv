@@ -26,6 +26,8 @@ shared = { path = "../shared" }
 client = { path = "../client" }
 beecrypt = ">= 0.3.1 and < 1.0.0"
 prng = ">= 3.0.3 and < 4.0.0"
+cake = ">= 1.1.2 and < 2.0.0"
+lustre = ">= 4.4.3 and < 5.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

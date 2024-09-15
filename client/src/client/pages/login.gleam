@@ -1,6 +1,6 @@
 import client/state.{
-  type Model, type Msg, LoginUpdateEmail, LoginUpdateName, LoginUpdatePassword,
-  RequestLogin, UserRecieved,
+  type Model, type Msg, AuthUserRecieved, LoginResponded, LoginUpdateEmail,
+  LoginUpdateName, LoginUpdatePassword, RequestLogin, message_error_decoder,
 }
 import gleam/dynamic
 import gleam/json
@@ -15,23 +15,13 @@ import lustre_http
 import shared.{type User, User, server_url}
 
 pub fn login(model: Model) {
-  let decoder = {
-    dynamic.decode5(
-      User,
-      dynamic.field("id", dynamic.int),
-      dynamic.field("name", dynamic.string),
-      dynamic.field("email", dynamic.string),
-      dynamic.field("password", dynamic.string),
-      dynamic.field("confirmed", dynamic.bool),
-    )
-  }
   lustre_http.post(
     server_url <> "/auth/login",
     json.object([
       #("email", json.string(model.login_email)),
       #("password", json.string(model.login_password)),
     ]),
-    lustre_http.expect_json(decoder, UserRecieved),
+    lustre_http.expect_json(message_error_decoder(), LoginResponded),
   )
 }
 
@@ -46,23 +36,6 @@ pub fn login_view(model: Model) -> Element(Msg) {
         [text("Entrar ou Cadastrar")],
       ),
       form([class("space-y-6"), event.on_submit(RequestLogin)], [
-        div([], [
-          label(
-            [class("block text-sm font-medium text-gray-700"), for("email")],
-            [text("Nome")],
-          ),
-          input([
-            class(
-              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-            ),
-            event.on_input(LoginUpdateName),
-            id("name"),
-            type_("name"),
-            autocomplete("name"),
-            required(True),
-            value(model.login_name),
-          ]),
-        ]),
         div([], [
           label(
             [class("block text-sm font-medium text-gray-700"), for("email")],
@@ -94,6 +67,21 @@ pub fn login_view(model: Model) -> Element(Msg) {
             type_("password"),
             required(True),
             value(model.login_password),
+          ]),
+        ]),
+        div([], [
+          label(
+            [class("block text-sm font-medium text-gray-700"), for("name")],
+            [text("Nome")],
+          ),
+          input([
+            class(
+              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+            ),
+            event.on_input(LoginUpdateName),
+            id("name"),
+            type_("name"),
+            value(model.login_name),
           ]),
         ]),
         div([class("flex items-center justify-center")], [

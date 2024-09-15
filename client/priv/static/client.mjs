@@ -852,6 +852,68 @@ function field(name, inner_type) {
     );
   };
 }
+function optional_field(name, inner_type) {
+  return (value3) => {
+    return try$(
+      decode_field(value3, name),
+      (maybe_inner) => {
+        if (maybe_inner instanceof None) {
+          return new Ok(new None());
+        } else {
+          let dynamic_inner = maybe_inner[0];
+          let _pipe = dynamic_inner;
+          let _pipe$1 = decode_option(_pipe, inner_type);
+          return map_errors(
+            _pipe$1,
+            (_capture) => {
+              return push_path(_capture, name);
+            }
+          );
+        }
+      }
+    );
+  };
+}
+function decode2(constructor, t1, t2) {
+  return (value3) => {
+    let $ = t1(value3);
+    let $1 = t2(value3);
+    if ($.isOk() && $1.isOk()) {
+      let a2 = $[0];
+      let b = $1[0];
+      return new Ok(constructor(a2, b));
+    } else {
+      let a2 = $;
+      let b = $1;
+      return new Error(concat(toList([all_errors(a2), all_errors(b)])));
+    }
+  };
+}
+function decode4(constructor, t1, t2, t3, t4) {
+  return (x) => {
+    let $ = t1(x);
+    let $1 = t2(x);
+    let $2 = t3(x);
+    let $3 = t4(x);
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk()) {
+      let a2 = $[0];
+      let b = $1[0];
+      let c = $2[0];
+      let d = $3[0];
+      return new Ok(constructor(a2, b, c, d));
+    } else {
+      let a2 = $;
+      let b = $1;
+      let c = $2;
+      let d = $3;
+      return new Error(
+        concat(
+          toList([all_errors(a2), all_errors(b), all_errors(c), all_errors(d)])
+        )
+      );
+    }
+  };
+}
 function decode5(constructor, t1, t2, t3, t4, t5) {
   return (x) => {
     let $ = t1(x);
@@ -1780,6 +1842,18 @@ function decode_list(data) {
   }
   return data instanceof List ? new Ok(data) : decoder_error("List", data);
 }
+function decode_option(data, decoder) {
+  if (data === null || data === void 0 || data instanceof None)
+    return new Ok(new None());
+  if (data instanceof Some)
+    data = data[0];
+  const result = decoder(data);
+  if (result.isOk()) {
+    return new Ok(new Some(result[0]));
+  } else {
+    return result;
+  }
+}
 function decode_field(value3, name) {
   const not_a_map_error = () => decoder_error("Dict", value3);
   if (value3 instanceof Dict || value3 instanceof WeakMap || value3 instanceof Map) {
@@ -1971,7 +2045,7 @@ function do_decode(json, decoder) {
     }
   );
 }
-function decode2(json, decoder) {
+function decode3(json, decoder) {
   return do_decode(json, decoder);
 }
 function to_string5(json) {
@@ -3625,7 +3699,7 @@ function expect_json(decoder, to_msg) {
       let _pipe$2 = then$(
         _pipe$1,
         (body2) => {
-          let $ = decode2(body2, decoder);
+          let $ = decode3(body2, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -3691,6 +3765,15 @@ var do_init = (dispatch, options = defaults) => {
     dispatch(detail);
   });
 };
+var do_push = (uri) => {
+  window.history.pushState({}, "", to_string6(uri));
+  window.requestAnimationFrame(() => {
+    if (uri.fragment[0]) {
+      document.getElementById(uri.fragment[0])?.scrollIntoView();
+    }
+  });
+  window.dispatchEvent(new CustomEvent("modem-push", { detail: uri }));
+};
 var find_anchor = (el2) => {
   if (!el2 || el2.tagName === "BODY") {
     return null;
@@ -3739,6 +3822,30 @@ function init2(handler) {
     }
   );
 }
+var relative = /* @__PURE__ */ new Uri(
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  "",
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None()
+);
+function push(path, query, fragment) {
+  return from2(
+    (_) => {
+      return guard(
+        !is_browser(),
+        void 0,
+        () => {
+          return do_push(
+            relative.withFields({ path, query, fragment })
+          );
+        }
+      );
+    }
+  );
+}
 
 // build/dev/javascript/shared/shared.mjs
 var Gift = class extends CustomType {
@@ -3749,16 +3856,6 @@ var Gift = class extends CustomType {
     this.pic = pic;
     this.link = link;
     this.selected_by = selected_by;
-  }
-};
-var User = class extends CustomType {
-  constructor(id2, name, email, password, confirmed) {
-    super();
-    this.id = id2;
-    this.name = name;
-    this.email = email;
-    this.password = password;
-    this.confirmed = confirmed;
   }
 };
 var server_url = "http://localhost:8000";
@@ -3867,22 +3964,17 @@ var PhotosPage = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, user, gifts, select_gift, photos2, login_name, login_email, login_password, login_error, confirm_presence, sign_up_name, sign_up_email, sign_up_password, sign_up_error) {
+  constructor(route, auth_user, gifts, select_gift, photos, login_name, login_email, login_password, login_error) {
     super();
     this.route = route;
-    this.user = user;
+    this.auth_user = auth_user;
     this.gifts = gifts;
     this.select_gift = select_gift;
-    this.photos = photos2;
+    this.photos = photos;
     this.login_name = login_name;
     this.login_email = login_email;
     this.login_password = login_password;
     this.login_error = login_error;
-    this.confirm_presence = confirm_presence;
-    this.sign_up_name = sign_up_name;
-    this.sign_up_email = sign_up_email;
-    this.sign_up_password = sign_up_password;
-    this.sign_up_error = sign_up_error;
   }
 };
 var OnRouteChange = class extends CustomType {
@@ -3891,7 +3983,7 @@ var OnRouteChange = class extends CustomType {
     this[0] = x0;
   }
 };
-var UserRecieved = class extends CustomType {
+var AuthUserRecieved = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
@@ -3935,6 +4027,37 @@ var LoginUpdateError = class extends CustomType {
 };
 var RequestLogin = class extends CustomType {
 };
+var LoginResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var MessageErrorResponse = class extends CustomType {
+  constructor(message, error) {
+    super();
+    this.message = message;
+    this.error = error;
+  }
+};
+var AuthUser = class extends CustomType {
+  constructor(user_id, name, confirmed, is_admin) {
+    super();
+    this.user_id = user_id;
+    this.name = name;
+    this.confirmed = confirmed;
+    this.is_admin = is_admin;
+  }
+};
+function message_error_decoder() {
+  return decode2(
+    (var0, var1) => {
+      return new MessageErrorResponse(var0, var1);
+    },
+    optional_field("message", string),
+    optional_field("error", string)
+  );
+}
 
 // build/dev/javascript/client/client/pages/gifts.mjs
 function gift_widget(gift) {
@@ -4510,16 +4633,6 @@ function home_view() {
 
 // build/dev/javascript/client/client/pages/login.mjs
 function login(model) {
-  let decoder = decode5(
-    (var0, var1, var2, var3, var4) => {
-      return new User(var0, var1, var2, var3, var4);
-    },
-    field("id", int),
-    field("name", string),
-    field("email", string),
-    field("password", string),
-    field("confirmed", bool)
-  );
   return post(
     server_url + "/auth/login",
     object2(
@@ -4529,9 +4642,9 @@ function login(model) {
       ])
     ),
     expect_json(
-      decoder,
+      message_error_decoder(),
       (var0) => {
-        return new UserRecieved(var0);
+        return new LoginResponded(var0);
       }
     )
   );
@@ -4553,35 +4666,6 @@ function login_view(model) {
           form(
             toList([class$("space-y-6"), on_submit(new RequestLogin())]),
             toList([
-              div(
-                toList([]),
-                toList([
-                  label(
-                    toList([
-                      class$("block text-sm font-medium text-gray-700"),
-                      for$("email")
-                    ]),
-                    toList([text("Nome")])
-                  ),
-                  input(
-                    toList([
-                      class$(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
-                      ),
-                      on_input(
-                        (var0) => {
-                          return new LoginUpdateName(var0);
-                        }
-                      ),
-                      id("name"),
-                      type_("name"),
-                      autocomplete("name"),
-                      required(true),
-                      value(model.login_name)
-                    ])
-                  )
-                ])
-              ),
               div(
                 toList([]),
                 toList([
@@ -4635,6 +4719,33 @@ function login_view(model) {
                       type_("password"),
                       required(true),
                       value(model.login_password)
+                    ])
+                  )
+                ])
+              ),
+              div(
+                toList([]),
+                toList([
+                  label(
+                    toList([
+                      class$("block text-sm font-medium text-gray-700"),
+                      for$("name")
+                    ]),
+                    toList([text("Nome")])
+                  ),
+                  input(
+                    toList([
+                      class$(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                      ),
+                      on_input(
+                        (var0) => {
+                          return new LoginUpdateName(var0);
+                        }
+                      ),
+                      id("name"),
+                      type_("name"),
+                      value(model.login_name)
                     ])
                   )
                 ])
@@ -4718,49 +4829,6 @@ function get_route() {
 }
 
 // build/dev/javascript/client/client.mjs
-function update(model, msg) {
-  if (msg instanceof OnRouteChange) {
-    let route = msg[0];
-    return [model.withFields({ route }), none()];
-  } else if (msg instanceof UserRecieved) {
-    let user_result = msg[0];
-    if (user_result.isOk()) {
-      let user = user_result[0];
-      return [model.withFields({ user: new Some(user) }), none()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof GiftsRecieved) {
-    let gifts_result = msg[0];
-    if (gifts_result.isOk()) {
-      let gifts = gifts_result[0];
-      return [model.withFields({ gifts }), none()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof PhotosRecieved) {
-    let photos_result = msg[0];
-    if (photos_result.isOk()) {
-      let photos$1 = photos_result[0];
-      return [model.withFields({ photos: photos$1 }), none()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof RequestLogin) {
-    return [model, login(model)];
-  } else if (msg instanceof LoginUpdateEmail) {
-    let value3 = msg.value;
-    return [model.withFields({ login_email: value3 }), none()];
-  } else if (msg instanceof LoginUpdatePassword) {
-    let value3 = msg.value;
-    return [model.withFields({ login_password: value3 }), none()];
-  } else if (msg instanceof LoginUpdateError) {
-    let value3 = msg.value;
-    return [model.withFields({ login_error: value3 }), none()];
-  } else {
-    return [model, none()];
-  }
-}
 function get_route2() {
   let uri = (() => {
     let $2 = (() => {
@@ -4771,7 +4839,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 128, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 148, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4794,6 +4862,110 @@ function get_route2() {
 }
 function on_url_change(uri) {
   return new OnRouteChange(get_route2());
+}
+function get_auth_user() {
+  let url = server_url + "/auth/validate";
+  let decoder = decode4(
+    (var0, var1, var2, var3) => {
+      return new AuthUser(var0, var1, var2, var3);
+    },
+    field("user_id", int),
+    field("name", string),
+    field("confirmed", bool),
+    field("is_admin", bool)
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new AuthUserRecieved(var0);
+      }
+    )
+  );
+}
+function update(model, msg) {
+  if (msg instanceof OnRouteChange) {
+    let route = msg[0];
+    return [model.withFields({ route }), none()];
+  } else if (msg instanceof AuthUserRecieved) {
+    let user_result = msg[0];
+    if (user_result.isOk()) {
+      let user = user_result[0];
+      return [model.withFields({ auth_user: new Some(user) }), none()];
+    } else {
+      return [model, none()];
+    }
+  } else if (msg instanceof GiftsRecieved) {
+    let gifts_result = msg[0];
+    if (gifts_result.isOk()) {
+      let gifts = gifts_result[0];
+      return [model.withFields({ gifts }), none()];
+    } else {
+      return [model, none()];
+    }
+  } else if (msg instanceof PhotosRecieved) {
+    let photos_result = msg[0];
+    if (photos_result.isOk()) {
+      let photos = photos_result[0];
+      return [model.withFields({ photos }), none()];
+    } else {
+      return [model, none()];
+    }
+  } else if (msg instanceof LoginResponded) {
+    let resp_result = msg.resp_result;
+    if (resp_result.isOk()) {
+      let resp = resp_result[0];
+      let $ = resp.error;
+      if ($ instanceof Some) {
+        let err = $[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new LoginUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else {
+        return [
+          model.withFields({
+            login_email: "",
+            login_password: "",
+            login_error: new None()
+          }),
+          batch(
+            toList([push("/", new None(), new None()), get_auth_user()])
+          )
+        ];
+      }
+    } else {
+      return [
+        model,
+        from2(
+          (dispatch) => {
+            return dispatch(new LoginUpdateError(new Some("HTTP Error")));
+          }
+        )
+      ];
+    }
+  } else if (msg instanceof RequestLogin) {
+    return [model, login(model)];
+  } else if (msg instanceof LoginUpdateName) {
+    let value3 = msg.value;
+    return [model.withFields({ login_name: value3 }), none()];
+  } else if (msg instanceof LoginUpdateEmail) {
+    let value3 = msg.value;
+    return [model.withFields({ login_email: value3 }), none()];
+  } else if (msg instanceof LoginUpdatePassword) {
+    let value3 = msg.value;
+    return [model.withFields({ login_password: value3 }), none()];
+  } else if (msg instanceof LoginUpdateError) {
+    let value3 = msg.value;
+    return [model.withFields({ login_error: value3 }), none()];
+  } else {
+    return [model, none()];
+  }
 }
 function get_gifts() {
   let url = server_url + "/gifts";
@@ -4818,6 +4990,22 @@ function get_gifts() {
       }
     )
   );
+}
+function init3(_) {
+  return [
+    new Model2(
+      get_route2(),
+      new None(),
+      toList([]),
+      toList([]),
+      toList([]),
+      "",
+      "",
+      "",
+      new None()
+    ),
+    batch(toList([init2(on_url_change), get_gifts()]))
+  ];
 }
 function view(model) {
   return body(
@@ -4893,7 +5081,7 @@ function view(model) {
             toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
             toList([
               (() => {
-                let $ = model.user;
+                let $ = model.auth_user;
                 if ($ instanceof None) {
                   return a(
                     toList([
@@ -4936,32 +5124,6 @@ function view(model) {
       })()
     ])
   );
-}
-var photos = /* @__PURE__ */ toList([
-  "/priv/static/photo1.jpeg",
-  "/priv/static/photo2.jpeg",
-  "/priv/static/photo3.jpeg"
-]);
-function init3(_) {
-  return [
-    new Model2(
-      get_route2(),
-      new None(),
-      toList([]),
-      toList([]),
-      photos,
-      "",
-      "",
-      "",
-      new None(),
-      0,
-      "",
-      "",
-      "",
-      new None()
-    ),
-    batch(toList([init2(on_url_change), get_gifts()]))
-  ];
 }
 function main2() {
   let _pipe = application(init3, update, view);
