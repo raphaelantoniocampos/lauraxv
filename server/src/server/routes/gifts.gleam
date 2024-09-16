@@ -3,9 +3,9 @@ import gleam/json
 import gleam/result
 import shared.{type Gift, Gift}
 import simplifile
-import wisp.{type Response}
+import wisp.{type Request, type Response}
 
-pub fn get_gifts() -> Response {
+pub fn get() -> Response {
   let result = {
     use file_data <- result.try(
       simplifile.read(from: "./data/gifts.json")
@@ -44,4 +44,8 @@ pub fn get_gifts() -> Response {
     Ok(json) -> wisp.json_response(json |> json.to_string_builder, 200)
     Error(_) -> wisp.unprocessable_entity()
   }
+}
+
+pub fn post(req: Request, gift_id: String) {
+  todo
 }
