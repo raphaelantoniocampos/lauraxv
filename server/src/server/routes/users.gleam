@@ -1,19 +1,12 @@
-import beecrypt
-import cake/insert as i
-import cake/select as s
-import cake/where as w
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/json
-import gleam/list
 import gleam/regex
 import gleam/result
 import gleam/string
-import server/db
-import server/db/user.{get_user_by_email}
+import server/db/user
 import server/db/user_session.{create_user_session}
-import sqlight
 import wisp.{type Request, type Response}
 
 pub fn users(req: Request) -> Response {
@@ -25,78 +18,15 @@ pub fn users(req: Request) -> Response {
   }
 }
 
-type CreateUser {
-  CreateUser(name: String, email: String, password: String)
-}
-
-fn decode_create_user(
-  json: dynamic.Dynamic,
-) -> Result(CreateUser, dynamic.DecodeErrors) {
-  let decoder =
-    dynamic.decode3(
-      CreateUser,
-      dynamic.field("name", dynamic.string),
-      dynamic.field("email", dynamic.string),
-      dynamic.field("password", dynamic.string),
-    )
-  case decoder(json) {
-    Ok(create_user) ->
-      Ok(CreateUser(
-        name: string.lowercase(create_user.name),
-        email: string.lowercase(create_user.email),
-        password: beecrypt.hash(create_user.password),
-      ))
-    Error(error) -> Error(error)
-  }
-}
-
-fn does_user_with_same_email_exist(create_user: CreateUser) {
-  case
-    s.new()
-    |> s.selects([s.col("user.email")])
-    |> s.from_table("user")
-    |> s.where(w.eq(w.col("user.email"), w.string(create_user.email)))
-    |> s.to_query
-    |> db.execute_read(
-      [sqlight.text(create_user.email), sqlight.text(create_user.name)],
-      dynamic.tuple2(dynamic.string, dynamic.string),
-    )
-  {
-    Ok(users) -> Ok(list.length(users) > 0)
-    Error(_) -> Error("Problem selecting users with same email")
-  }
-}
-
-fn insert_user_to_db(create_user: CreateUser) {
-  [
-    i.row([
-      i.string(create_user.name),
-      i.string(create_user.email),
-      i.string(create_user.password),
-    ]),
-  ]
-  |> i.from_values(table_name: "user", columns: [
-    "name", "email", "password", "confirmed", "is_admin",
-  ])
-  |> i.to_query
-  |> db.execute_write([
-    sqlight.text(create_user.name),
-    sqlight.text(create_user.email),
-    sqlight.text(create_user.password),
-    sqlight.bool(False),
-    sqlight.bool(False),
-  ])
-}
-
 fn create_user(req: Request, body: dynamic.Dynamic) {
   let result = {
-    use user <- result.try(case decode_create_user(body) {
+    use user <- result.try(case user.decode_create_user(body) {
       Ok(val) -> Ok(val)
       Error(_) -> Error("Invalid body recieved")
     })
 
     use user_with_same_email_exists <- result.try(
-      does_user_with_same_email_exist(user),
+      user.does_user_with_same_email_exist(user),
     )
 
     use <- bool.guard(
@@ -125,12 +55,12 @@ fn create_user(req: Request, body: dynamic.Dynamic) {
       return: Error("Invalid email address"),
     )
 
-    use _ <- result.try(case insert_user_to_db(user) {
+    use _ <- result.try(case user.insert_user_to_db(user) {
       Ok(_) -> Ok(Nil)
       Error(_) -> Error("Problem creating user")
     })
 
-    use inserted_user <- result.try(get_user_by_email(user.email))
+    use inserted_user <- result.try(user.get_user_by_email(user.email))
 
     use session_token <- result.try(create_user_session(inserted_user.id))
 

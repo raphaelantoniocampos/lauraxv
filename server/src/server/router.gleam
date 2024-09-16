@@ -19,26 +19,17 @@ pub fn handle_request(req: Request) -> Response {
       |> cors.allow_header("Content-Type"),
   )
   case wisp.path_segments(req) {
-    ["auth", ..] -> auth_routes(req, wisp.path_segments(req))
-    [_] -> api_routes(req, wisp.path_segments(req))
-    _ -> wisp.not_found()
-  }
-}
-
-fn auth_routes(req: Request, route_segments: List(String)) -> Response {
-  case route_segments {
-    [_, "validate"] -> validate.validate(req)
-    [_, "login"] -> login.login(req)
-    // [_, "logout"] -> logout.logout(req)
+    ["auth", "validate"] -> validate.validate(req)
+    ["auth", "login"] -> login.login(req)
+    ["gifts"] -> gifts.gifts(req)
+    ["users"] -> users.users(req)
+    ["photos"] -> photos.photos(req)
     _ -> wisp.not_found()
   }
 }
 
 fn api_routes(req: Request, route_segments: List(String)) -> Response {
   case route_segments {
-    ["gifts"] -> gifts.gifts(req)
-    ["users"] -> users.users(req)
-    ["photos"] -> photos.photos(req)
     _ -> wisp.not_found()
   }
 }

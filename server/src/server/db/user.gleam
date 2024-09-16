@@ -1,11 +1,13 @@
 import beecrypt
+import cake/insert as i
 import cake/select as s
 import cake/update as u
 import cake/where as w
 import decode
+import gleam/dynamic
 import gleam/list
-import gleam/option.{type Option}
 import gleam/result
+import gleam/string
 import server/db.{list_to_tuple}
 import shared.{type User, User}
 import sqlight
@@ -40,7 +42,7 @@ fn user_db_decoder() {
     |> decode.field(2, decode.string)
     |> decode.field(3, decode.string)
     |> decode.field(4, decode.bool)
-    |> decode.field(4, decode.bool)
+    |> decode.field(5, decode.bool)
     |> decode.from(data |> list_to_tuple)
   }
 }
@@ -92,4 +94,66 @@ pub fn set_password_for_user(user_id: Int, password: String) {
     sqlight.int(user_id),
   ])
   |> result.replace_error("Problem with updating user password")
+}
+
+pub type CreateUser {
+  CreateUser(name: String, email: String, password: String)
+}
+
+pub fn decode_create_user(
+  json: dynamic.Dynamic,
+) -> Result(CreateUser, dynamic.DecodeErrors) {
+  let decoder =
+    dynamic.decode3(
+      CreateUser,
+      dynamic.field("name", dynamic.string),
+      dynamic.field("email", dynamic.string),
+      dynamic.field("password", dynamic.string),
+    )
+  case decoder(json) {
+    Ok(create_user) ->
+      Ok(CreateUser(
+        name: string.lowercase(create_user.name),
+        email: string.lowercase(create_user.email),
+        password: beecrypt.hash(create_user.password),
+      ))
+    Error(error) -> Error(error)
+  }
+}
+
+pub fn does_user_with_same_email_exist(create_user: CreateUser) {
+  case
+    s.new()
+    |> s.select(s.col("user.email"))
+    |> s.from_table("user")
+    |> s.where(w.eq(w.col("user.email"), w.string(create_user.email)))
+    |> s.to_query
+    |> db.execute_read([sqlight.text(create_user.email)], dynamic.dynamic)
+  {
+    Ok(users) -> Ok(list.length(users) > 0)
+    Error(_) -> Error("Problem selecting users with same email")
+  }
+}
+
+pub fn insert_user_to_db(create_user: CreateUser) {
+  [
+    i.row([
+      i.string(create_user.name),
+      i.string(create_user.email),
+      i.string(create_user.password),
+      i.bool(False),
+      i.bool(False),
+    ]),
+  ]
+  |> i.from_values(table_name: "user", columns: [
+    "name", "email", "password", "confirmed", "is_admin",
+  ])
+  |> i.to_query
+  |> db.execute_write([
+    sqlight.text(create_user.name),
+    sqlight.text(create_user.email),
+    sqlight.text(create_user.password),
+    sqlight.bool(False),
+    sqlight.bool(False),
+  ])
 }

@@ -28,8 +28,7 @@ pub fn get_user_id_from_session(req: Request) {
     )
   {
     Ok(users) -> Ok(list.first(users))
-    Error(err) -> {
-      io.debug(err)
+    Error(_) -> {
       Error("Problem getting user_session by token")
     }
   }

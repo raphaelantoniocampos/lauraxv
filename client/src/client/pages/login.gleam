@@ -3,7 +3,7 @@ import client/state.{
   LoginUpdateName, LoginUpdatePassword, RequestLogin, RequestSignUp,
   message_error_decoder,
 }
-import gleam/dynamic
+import gleam/io
 import gleam/json
 import gleam/option.{None, Some}
 import lustre/attribute.{
@@ -13,7 +13,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, form, h1, input, label, main, p}
 import lustre/event
 import lustre_http
-import shared.{type User, User, server_url}
+import shared.{server_url}
 
 pub fn login(model: Model) {
   lustre_http.post(
@@ -108,18 +108,18 @@ pub fn login_view(model: Model) -> Element(Msg) {
             [text("Entrar")],
           ),
         ]),
-        div([class("flex items-center justify-center")], [
-          text("Não tem conta?"),
-          button([class("p-1"), event.on_click(RequestSignUp)], [
-            text("Cadastre-se"),
-          ]),
-        ]),
-        case model.login_error {
-          Some(err) ->
-            p([class("text-red-500 text-center")], [text("Error: " <> err)])
-          None -> element.none()
-        },
       ]),
+      div([class("flex items-center justify-center")], [
+        text("Não tem conta?"),
+        button([class("p-1"), event.on_click(RequestSignUp)], [
+          text("Cadastre-se"),
+        ]),
+      ]),
+      case model.login_error {
+        Some(err) ->
+          p([class("text-red-500 text-center")], [text("Error: " <> err)])
+        None -> element.none()
+      },
     ]),
   ])
 }

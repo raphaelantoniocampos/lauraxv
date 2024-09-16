@@ -4788,31 +4788,31 @@ function login_view(model) {
                     toList([text("Entrar")])
                   )
                 ])
-              ),
-              div(
-                toList([class$("flex items-center justify-center")]),
-                toList([
-                  text("N\xE3o tem conta?"),
-                  button(
-                    toList([class$("p-1"), on_click(new RequestSignUp())]),
-                    toList([text("Cadastre-se")])
-                  )
-                ])
-              ),
-              (() => {
-                let $ = model.login_error;
-                if ($ instanceof Some) {
-                  let err = $[0];
-                  return p(
-                    toList([class$("text-red-500 text-center")]),
-                    toList([text("Error: " + err)])
-                  );
-                } else {
-                  return none2();
-                }
-              })()
+              )
             ])
-          )
+          ),
+          div(
+            toList([class$("flex items-center justify-center")]),
+            toList([
+              text("N\xE3o tem conta?"),
+              button(
+                toList([class$("p-1"), on_click(new RequestSignUp())]),
+                toList([text("Cadastre-se")])
+              )
+            ])
+          ),
+          (() => {
+            let $ = model.login_error;
+            if ($ instanceof Some) {
+              let err = $[0];
+              return p(
+                toList([class$("text-red-500 text-center")]),
+                toList([text("Error: " + err)])
+              );
+            } else {
+              return none2();
+            }
+          })()
         ])
       )
     ])

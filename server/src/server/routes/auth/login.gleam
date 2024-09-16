@@ -2,6 +2,7 @@ import beecrypt
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Post}
+import gleam/io
 import gleam/json
 import gleam/result
 import gleam/string
@@ -22,9 +23,7 @@ type Login {
   Login(email: String, password: String)
 }
 
-fn decode_create_user(
-  json: dynamic.Dynamic,
-) -> Result(Login, dynamic.DecodeErrors) {
+fn decode_login(json: dynamic.Dynamic) -> Result(Login, dynamic.DecodeErrors) {
   let decoder =
     dynamic.decode2(
       Login,
@@ -40,17 +39,20 @@ fn decode_create_user(
 
 fn do_login(req: Request, body: dynamic.Dynamic) {
   let result = {
-    use request_user <- result.try(case decode_create_user(body) {
+    use request_user <- result.try(case decode_login(body) {
       Ok(val) -> Ok(val)
       Error(_) -> Error("Invalid body recieved")
     })
 
+    io.debug(request_user)
     use user <- result.try({
       case get_user_by_email(request_user.email) {
         Ok(user) -> Ok(user)
         Error(_) -> Error("No user found with email")
       }
     })
+
+    io.debug(user)
 
     use <- bool.guard(
       when: !beecrypt.verify(request_user.password, user.password),
