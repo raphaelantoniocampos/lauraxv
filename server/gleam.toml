@@ -23,11 +23,11 @@ gleam_json = ">= 1.0.1 and < 2.0.0"
 cors_builder = ">= 2.0.0 and < 3.0.0"
 decode = ">= 0.2.1 and < 1.0.0"
 shared = { path = "../shared" }
-client = { path = "../client" }
 beecrypt = ">= 0.3.1 and < 1.0.0"
 prng = ">= 3.0.3 and < 4.0.0"
 cake = ">= 1.1.2 and < 2.0.0"
 lustre = ">= 4.4.3 and < 5.0.0"
+sqlight = ">= 0.9.1 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

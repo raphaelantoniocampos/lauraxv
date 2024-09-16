@@ -6,9 +6,9 @@ import decode
 import gleam/list
 import gleam/option.{type Option}
 import gleam/result
-import gmysql
 import server/db.{list_to_tuple}
-import shared.{type User}
+import shared.{type User, User}
+import sqlight
 
 fn get_user_base_query() {
   s.new()
@@ -50,7 +50,7 @@ pub fn get_user_by_email(email: String) -> Result(User, String) {
     get_user_base_query()
     |> s.where(w.eq(w.col("user.email"), w.string(email)))
     |> s.to_query
-    |> db.execute_read([gmysql.to_param(email)], user_db_decoder())
+    |> db.execute_read([sqlight.text(email)], user_db_decoder())
   {
     Ok(users) -> Ok(list.first(users))
     Error(_) -> Error("Problem getting user by email")
@@ -68,7 +68,7 @@ pub fn get_user_by_id(user_id: Int) -> Result(User, String) {
     get_user_base_query()
     |> s.where(w.eq(w.col("user.id"), w.int(user_id)))
     |> s.to_query
-    |> db.execute_read([gmysql.to_param(user_id)], user_db_decoder())
+    |> db.execute_read([sqlight.int(user_id)], user_db_decoder())
   {
     Ok(users) -> Ok(list.first(users))
     Error(_) -> Error("Problem getting user by id")
@@ -88,8 +88,8 @@ pub fn set_password_for_user(user_id: Int, password: String) {
   |> u.where(w.eq(w.col("user.id"), w.int(user_id)))
   |> u.to_query
   |> db.execute_write([
-    gmysql.to_param(beecrypt.hash(password)),
-    gmysql.to_param(user_id),
+    sqlight.text(beecrypt.hash(password)),
+    sqlight.int(user_id),
   ])
   |> result.replace_error("Problem with updating user password")
 }

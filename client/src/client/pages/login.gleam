@@ -1,6 +1,7 @@
 import client/state.{
   type Model, type Msg, AuthUserRecieved, LoginResponded, LoginUpdateEmail,
-  LoginUpdateName, LoginUpdatePassword, RequestLogin, message_error_decoder,
+  LoginUpdateName, LoginUpdatePassword, RequestLogin, RequestSignUp,
+  message_error_decoder,
 }
 import gleam/dynamic
 import gleam/json
@@ -25,6 +26,18 @@ pub fn login(model: Model) {
   )
 }
 
+pub fn signup(model: Model) {
+  lustre_http.post(
+    server_url <> "/users",
+    json.object([
+      #("name", json.string(model.login_name)),
+      #("email", json.string(model.login_email)),
+      #("password", json.string(model.login_password)),
+    ]),
+    lustre_http.expect_json(message_error_decoder(), LoginResponded),
+  )
+}
+
 pub fn login_view(model: Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     div([class("w-full max-w-md p-8 bg-white rounded-lg shadow-lg")], [
@@ -33,9 +46,24 @@ pub fn login_view(model: Model) -> Element(Msg) {
           attribute("style", "font-family: 'Pacifico', cursive;"),
           class("text-4xl text-pink-700 font-bold mb-12 text-center"),
         ],
-        [text("Entrar ou Cadastrar")],
+        [text("Entrar")],
       ),
       form([class("space-y-6"), event.on_submit(RequestLogin)], [
+        div([], [
+          label(
+            [class("block text-sm font-medium text-gray-700"), for("name")],
+            [text("Nome")],
+          ),
+          input([
+            class(
+              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+            ),
+            event.on_input(LoginUpdateName),
+            id("name"),
+            type_("name"),
+            value(model.login_name),
+          ]),
+        ]),
         div([], [
           label(
             [class("block text-sm font-medium text-gray-700"), for("email")],
@@ -69,21 +97,6 @@ pub fn login_view(model: Model) -> Element(Msg) {
             value(model.login_password),
           ]),
         ]),
-        div([], [
-          label(
-            [class("block text-sm font-medium text-gray-700"), for("name")],
-            [text("Nome")],
-          ),
-          input([
-            class(
-              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-            ),
-            event.on_input(LoginUpdateName),
-            id("name"),
-            type_("name"),
-            value(model.login_name),
-          ]),
-        ]),
         div([class("flex items-center justify-center")], [
           button(
             [
@@ -94,6 +107,12 @@ pub fn login_view(model: Model) -> Element(Msg) {
             ],
             [text("Entrar")],
           ),
+        ]),
+        div([class("flex items-center justify-center")], [
+          text("Não tem conta?"),
+          button([class("p-1"), event.on_click(RequestSignUp)], [
+            text("Cadastre-se"),
+          ]),
         ]),
         case model.login_error {
           Some(err) ->

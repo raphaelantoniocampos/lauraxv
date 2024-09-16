@@ -25,7 +25,7 @@ fn validate_session(req: Request) -> Response {
       json.object([
         #("user_id", json.int(user_id)),
         #("name", json.string(user.name)),
-        #("confirmed", json.bool(confirmed)),
+        #("confirmed", json.bool(user.confirmed)),
         #("is_admin", json.bool(is_admin)),
       ])
       |> json.to_string_builder,

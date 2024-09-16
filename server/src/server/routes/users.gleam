@@ -1,242 +1,138 @@
 import beecrypt
+import cake/insert as i
+import cake/select as s
+import cake/where as w
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
-import gleam/io
 import gleam/json
 import gleam/list
+import gleam/regex
 import gleam/result
 import gleam/string
-import server/generate_token.{generate_token}
-import server/response
-import shared.{type User, User}
-import simplifile
+import server/db
+import server/db/user.{get_user_by_email}
+import server/db/user_session.{create_user_session}
+import sqlight
 import wisp.{type Request, type Response}
 
-fn get_users() -> Result(List(User), String) {
-  use file_data <- result.try(
-    simplifile.read(from: "./data/users.json")
-    |> result.replace_error("Problem reading users.json"),
-  )
+pub fn users(req: Request) -> Response {
+  use body <- wisp.require_json(req)
 
-  let users_decoder =
-    dynamic.list(dynamic.decode6(
-      User,
-      dynamic.field("id", dynamic.int),
-      dynamic.field("name", dynamic.string),
-      dynamic.field("email", dynamic.string),
-      dynamic.field("password", dynamic.string),
-      dynamic.field("confirmed", dynamic.bool),
-      dynamic.field("is_admin", dynamic.bool),
-    ))
-
-  use users <- result.try(
-    json.decode(from: file_data, using: users_decoder)
-    |> result.replace_error("Problem decoding file_data to users"),
-  )
-  Ok(users)
+  case req.method {
+    Post -> create_user(req, body)
+    _ -> wisp.method_not_allowed([Get, Post])
+  }
 }
 
 type CreateUser {
   CreateUser(name: String, email: String, password: String)
 }
 
-pub fn create_user(req: Request) -> Response {
-  use body <- wisp.require_json(req)
-
-  let result = {
-    let create_user_decoder =
-      dynamic.decode3(
-        CreateUser,
-        dynamic.field("name", dynamic.string),
-        dynamic.field("email", dynamic.string),
-        dynamic.field("password", dynamic.string),
-      )
-
-    use parsed_request <- result.try(case create_user_decoder(body) {
-      Ok(parsed) -> Ok(parsed)
-      Error(_) -> Error("Invalid body recieved")
-    })
-
-    use users <- result.try(
-      get_users()
-      |> result.replace_error("Problem getting users from json file"),
-    )
-    let new_users =
-      list.append(users, [
-        User(
-          id: list.length(users),
-          name: parsed_request.name,
-          email: parsed_request.email,
-          password: parsed_request.password,
-          confirmed: False,
-          is_admin: False,
-        ),
-      ])
-
-    let new_users_as_json =
-      json.array(new_users, fn(user) {
-        json.object([
-          #("id", json.int(user.id)),
-          #("name", json.string(user.name)),
-          #("email", json.string(user.email)),
-          #("password", json.string(user.password)),
-          #("confirmed", json.bool(user.confirmed)),
-        ])
-      })
-
-    let _ =
-      new_users_as_json
-      |> json.to_string
-      |> simplifile.write(to: "./data/users.json")
-
-    Ok("Successfully created user")
-  }
-
-  case result {
-    Ok(message) ->
-      wisp.json_response(
-        json.object([#("message", json.string(message))])
-          |> json.to_string_builder,
-        200,
-      )
-    Error(_) -> wisp.unprocessable_entity()
-  }
-}
-
-type Login {
-  Login(email: String, password: String)
-}
-
 fn decode_create_user(
   json: dynamic.Dynamic,
-) -> Result(Login, dynamic.DecodeErrors) {
+) -> Result(CreateUser, dynamic.DecodeErrors) {
   let decoder =
-    dynamic.decode2(
-      Login,
+    dynamic.decode3(
+      CreateUser,
+      dynamic.field("name", dynamic.string),
       dynamic.field("email", dynamic.string),
       dynamic.field("password", dynamic.string),
     )
   case decoder(json) {
-    Ok(login) ->
-      Ok(Login(email: string.lowercase(login.email), password: login.password))
+    Ok(create_user) ->
+      Ok(CreateUser(
+        name: string.lowercase(create_user.name),
+        email: string.lowercase(create_user.email),
+        password: beecrypt.hash(create_user.password),
+      ))
     Error(error) -> Error(error)
   }
 }
 
-fn get_user_by_email(email: String) {
-  use users <- result.try(get_users())
-  let user_result = {
-    use user <- result.try(
-      list.find(users, fn(user) {
-        string.lowercase(user.email) == string.lowercase(email)
-      })
-      |> result.replace_error("Problem getting user by email"),
+fn does_user_with_same_email_exist(create_user: CreateUser) {
+  case
+    s.new()
+    |> s.selects([s.col("user.email")])
+    |> s.from_table("user")
+    |> s.where(w.eq(w.col("user.email"), w.string(create_user.email)))
+    |> s.to_query
+    |> db.execute_read(
+      [sqlight.text(create_user.email), sqlight.text(create_user.name)],
+      dynamic.tuple2(dynamic.string, dynamic.string),
     )
-    Ok(user)
-  }
-  case user_result {
-    Ok(user) -> Ok(user)
-    Error(_) -> Error("No user found when getting user by email")
+  {
+    Ok(users) -> Ok(list.length(users) > 0)
+    Error(_) -> Error("Problem selecting users with same email")
   }
 }
 
-fn get_user_by_id(id: Int) {
-  use users <- result.try(get_users())
-  let user_result = {
-    use user <- result.try(
-      list.find(users, fn(user) { user.id == id })
-      |> result.replace_error("Problem getting user by id"),
-    )
-    Ok(user)
-  }
-  case user_result {
-    Ok(user) -> Ok(user)
-    Error(_) -> Error("No user found when getting user by id")
-  }
+fn insert_user_to_db(create_user: CreateUser) {
+  [
+    i.row([
+      i.string(create_user.name),
+      i.string(create_user.email),
+      i.string(create_user.password),
+    ]),
+  ]
+  |> i.from_values(table_name: "user", columns: [
+    "name", "email", "password", "confirmed", "is_admin",
+  ])
+  |> i.to_query
+  |> db.execute_write([
+    sqlight.text(create_user.name),
+    sqlight.text(create_user.email),
+    sqlight.text(create_user.password),
+    sqlight.bool(False),
+    sqlight.bool(False),
+  ])
 }
 
-type UserSession {
-  UserSession(id: Int, token: String)
-}
-
-fn get_user_sessions() -> Result(List(UserSession), String) {
-  use file_data <- result.try(
-    simplifile.read(from: "./data/user_sessions.json")
-    |> result.replace_error("Problem reading user_sessions.json"),
-  )
-
-  let sessions_decoder =
-    dynamic.list(dynamic.decode2(
-      UserSession,
-      dynamic.field("id", dynamic.int),
-      dynamic.field("token", dynamic.string),
-    ))
-
-  use sessions <- result.try(
-    json.decode(from: file_data, using: sessions_decoder)
-    |> result.replace_error("Problem decoding file_data to users"),
-  )
-  Ok(sessions)
-}
-
-fn create_user_session(user_id: Int) {
-  let token = generate_token(64)
+fn create_user(req: Request, body: dynamic.Dynamic) {
   let result = {
-    use sessions <- result.try(
-      get_user_sessions()
-      |> result.replace_error("Problem getting users sessions from json file"),
-    )
-    let new_sessions =
-      list.append(sessions, [UserSession(id: user_id, token: token)])
-
-    let new_sessions_as_json =
-      json.array(new_sessions, fn(session) {
-        json.object([
-          #("id", json.int(session.id)),
-          #("token", json.string(session.token)),
-        ])
-      })
-
-    let _ =
-      new_sessions_as_json
-      |> json.to_string
-      |> simplifile.write(to: "./data/user_sessions.json")
-
-    Ok("Successfully created user session")
-  }
-  case result {
-    Ok(_) -> Ok(token)
-    Error(_) -> Error("Creating user session")
-  }
-}
-
-pub fn login(req: Request) {
-  use body <- wisp.require_json(req)
-  let result = {
-    use request_user <- result.try(case decode_create_user(body) {
+    use user <- result.try(case decode_create_user(body) {
       Ok(val) -> Ok(val)
       Error(_) -> Error("Invalid body recieved")
     })
 
-    use user <- result.try({
-      case get_user_by_email(request_user.email) {
-        Ok(user) -> Ok(user)
-        Error(_) -> Error("No user found with email")
-      }
-    })
-
-    // use <- bool.guard(
-    //   when: !beecrypt.verify(request_user.password, user.password),
-    //   return: Error("Passwords do not match"),
-    // )
-
-    use <- bool.guard(
-      when: user.password == request_user.password,
-      return: Error("Passwords do not match"),
+    use user_with_same_email_exists <- result.try(
+      does_user_with_same_email_exist(user),
     )
 
-    use session_token <- result.try(create_user_session(user.id))
+    use <- bool.guard(
+      when: user_with_same_email_exists,
+      return: Error("User with same email already exists"),
+    )
+
+    use <- bool.guard(
+      when: user.name == "" || user.email == "",
+      return: Error("Name or email can't be empty"),
+    )
+
+    use <- bool.guard(
+      when: string.length(user.password) < 8,
+      return: Error("Password must be more than 8 characters"),
+    )
+
+    use <- bool.guard(
+      when: {
+        let assert Ok(re) =
+          regex.from_string(
+            "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])",
+          )
+        !regex.check(with: re, content: user.email)
+      },
+      return: Error("Invalid email address"),
+    )
+
+    use _ <- result.try(case insert_user_to_db(user) {
+      Ok(_) -> Ok(Nil)
+      Error(_) -> Error("Problem creating user")
+    })
+
+    use inserted_user <- result.try(get_user_by_email(user.email))
+
+    use session_token <- result.try(create_user_session(inserted_user.id))
 
     Ok(session_token)
   }
@@ -244,7 +140,7 @@ pub fn login(req: Request) {
   case result {
     Ok(session_token) ->
       wisp.json_response(
-        json.object([#("message", json.string("Logged in"))])
+        json.object([#("message", json.string("Created account"))])
           |> json.to_string_builder,
         201,
       )
@@ -262,63 +158,4 @@ pub fn login(req: Request) {
         200,
       )
   }
-}
-
-pub fn validate(req: Request) -> Response {
-  // This handler for `/comments` can respond to both GET and POST requests,
-  // so we pattern match on the method here.
-  case req.method {
-    Get -> validate_session(req)
-    // Post -> create_comment(req)
-    _ -> wisp.method_not_allowed([Get])
-  }
-}
-
-pub fn get_user_id_from_session(req: Request) {
-  use session_token <- result.try(
-    wisp.get_cookie(req, "kk_session_token", wisp.PlainText)
-    |> result.replace_error("No session cookie found"),
-  )
-
-  use sessions <- result.try(get_user_sessions())
-
-  let session_token = case
-    sessions
-    |> list.find(fn(user_session) { user_session.token == session_token })
-  {
-    Ok(user) -> Ok(user)
-    Error(err) -> {
-      io.debug(err)
-      Error("Problem getting user_session by token")
-    }
-  }
-
-  use user_result <- result.try(
-    session_token
-    |> result.replace_error(
-      "No user_session found when getting user_session by token",
-    ),
-  )
-  Ok(user_result.id)
-}
-
-fn validate_session(req: Request) -> Response {
-  let result = {
-    use user_id <- result.try(get_user_id_from_session(req))
-
-    use user <- result.try(get_user_by_id(user_id))
-
-    Ok(
-      json.object([
-        #("id", json.int(user_id)),
-        #("name", json.string(user.name)),
-        #("email", json.string(user.email)),
-        #("password", json.string(user.password)),
-        #("confirmed", json.bool(user.confirmed)),
-      ])
-      |> json.to_string_builder,
-    )
-  }
-
-  response.generate_wisp_response(result)
 }

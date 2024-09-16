@@ -1,51 +1,11 @@
-import gleam/dynamic
-import gleam/json
-import gleam/result
-import shared.{type Gift, Gift}
-import simplifile
+import gleam/http.{Get, Post}
 import wisp.{type Request, type Response}
 
-pub fn get() -> Response {
-  let result = {
-    use file_data <- result.try(
-      simplifile.read(from: "./data/gifts.json")
-      |> result.replace_error("Problem reading gifts.json"),
-    )
+pub fn gifts(req: Request) -> Response {
+  use body <- wisp.require_json(req)
 
-    let gifts_decoder =
-      dynamic.list(dynamic.decode5(
-        Gift,
-        dynamic.field("id", dynamic.int),
-        dynamic.field("name", dynamic.string),
-        dynamic.field("pic", dynamic.string),
-        dynamic.field("link", dynamic.string),
-        dynamic.field("selected_by", dynamic.int),
-      ))
-
-    use gifts <- result.try(
-      json.decode(from: file_data, using: gifts_decoder)
-      |> result.replace_error("Problem decoding file_data to gifts"),
-    )
-
-    Ok(
-      json.array(gifts, fn(gift) {
-        json.object([
-          #("id", json.int(gift.id)),
-          #("name", json.string(gift.name)),
-          #("pic", json.string(gift.pic)),
-          #("link", json.string(gift.link)),
-          #("selected_by", json.int(gift.selected_by)),
-        ])
-      }),
-    )
+  case req.method {
+    // Post -> create_user(req, body)
+    _ -> wisp.method_not_allowed([Get, Post])
   }
-
-  case result {
-    Ok(json) -> wisp.json_response(json |> json.to_string_builder, 200)
-    Error(_) -> wisp.unprocessable_entity()
-  }
-}
-
-pub fn post(req: Request, gift_id: String) {
-  todo
 }

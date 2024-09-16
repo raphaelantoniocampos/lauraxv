@@ -1,7 +1,7 @@
 import client/pages/event.{event_view}
 import client/pages/gifts.{gifts_view}
 import client/pages/home.{home_view}
-import client/pages/login.{login, login_view}
+import client/pages/login.{login, login_view, signup}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import client/state.{
@@ -11,10 +11,7 @@ import client/state.{
   Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, RequestLogin,
   RequestLogout, RequestSelectGift, RequestSignUp, SelectGift,
 }
-import decode
-import gleam/dynamic.{type DecodeError, type Dynamic}
-import gleam/io
-import gleam/json
+import gleam/dynamic
 import gleam/option.{None, Some}
 import gleam/uri.{type Uri}
 import lustre
@@ -24,7 +21,7 @@ import lustre/element.{type Element}
 import lustre/element/html.{a, body, div, li, nav, text, ul}
 import lustre_http
 import modem
-import shared.{type Gift, type User, Gift, User, server_url}
+import shared.{type Gift, Gift, server_url}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -46,7 +43,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       login_password: "",
       login_error: None,
     ),
-    effect.batch([modem.init(on_url_change), get_gifts()]),
+    effect.batch([modem.init(on_url_change), get_gifts(), get_auth_user()]),
   )
   //   effect.batch(
   //     [modem.init(on_url_change), get_auth(), get_posts()]
@@ -112,6 +109,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
 
     RequestLogin -> #(model, login(model))
+    RequestSignUp -> #(model, signup(model))
 
     LoginUpdateName(value) -> #(
       Model(..model, login_name: value),

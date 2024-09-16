@@ -46,13 +46,9 @@ fn do_login(req: Request, body: dynamic.Dynamic) {
     })
 
     use user <- result.try({
-      case get_user_by_username(request_user.email_username) {
+      case get_user_by_email(request_user.email) {
         Ok(user) -> Ok(user)
-        Error(_) ->
-          case get_user_by_email(request_user.email_username) {
-            Ok(user) -> Ok(user)
-            Error(_) -> Error("No user found with email or username")
-          }
+        Error(_) -> Error("No user found with email")
       }
     })
 

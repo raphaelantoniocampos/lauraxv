@@ -1,7 +1,6 @@
 import gleam/io
 import gleeunit
 import gleeunit/should
-import server/db/users
 
 pub fn main() {
   gleeunit.main()

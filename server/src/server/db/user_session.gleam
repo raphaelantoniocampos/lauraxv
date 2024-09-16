@@ -5,9 +5,9 @@ import gleam/dynamic
 import gleam/io
 import gleam/list
 import gleam/result
-import gmysql
 import server/db
-import server/generatetoken.{generate_token}
+import server/generate_token.{generate_token}
+import sqlight
 import wisp.{type Request}
 
 pub fn get_user_id_from_session(req: Request) {
@@ -23,7 +23,7 @@ pub fn get_user_id_from_session(req: Request) {
     |> s.where(w.eq(w.col("user_session.token"), w.string(session_token)))
     |> s.to_query
     |> db.execute_read(
-      [gmysql.to_param(session_token)],
+      [sqlight.text(session_token)],
       dynamic.tuple2(dynamic.int, dynamic.int),
     )
   {
@@ -49,7 +49,7 @@ pub fn create_user_session(user_id: Int) {
     [i.row([i.int(user_id), i.string(token)])]
     |> i.from_values(table_name: "user_session", columns: ["user_id", "token"])
     |> i.to_query
-    |> db.execute_write([gmysql.to_param(user_id), gmysql.to_param(token)])
+    |> db.execute_write([sqlight.int(user_id), sqlight.text(token)])
 
   case result {
     Ok(_) -> Ok(token)
