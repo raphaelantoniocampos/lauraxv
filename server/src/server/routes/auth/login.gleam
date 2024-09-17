@@ -53,14 +53,18 @@ fn do_login(req: Request, body: dynamic.Dynamic) {
     })
 
     io.debug(user)
+    { !beecrypt.verify(request_user.password, user.password) }
+    |> io.debug
 
     use <- bool.guard(
-      when: !beecrypt.verify(request_user.password, user.password),
+      when: beecrypt.verify(request_user.password, user.password),
       return: Error("Passwords do not match"),
     )
 
+    io.debug(user)
+    io.debug(user.id)
     use session_token <- result.try(create_user_session(user.id))
-
+    io.debug(session_token)
     Ok(session_token)
   }
 

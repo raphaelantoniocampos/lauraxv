@@ -8,7 +8,7 @@ import gleam/dynamic
 import gleam/list
 import gleam/result
 import gleam/string
-import server/db.{list_to_tuple}
+import server/db.{erlang_list_to_tuple}
 import shared.{type User, User}
 import sqlight
 
@@ -43,7 +43,7 @@ fn user_db_decoder() {
     |> decode.field(3, decode.string)
     |> decode.field(4, decode.bool)
     |> decode.field(5, decode.bool)
-    |> decode.from(data |> list_to_tuple)
+    |> decode.from(data |> erlang_list_to_tuple)
   }
 }
 

@@ -37,7 +37,16 @@ pub fn execute_write(
 }
 
 pub fn list_to_tuple(list: List(a)) {
-  list.map(list, fn(a) { #(a) })
+  let tuple = #()
+  do_list_to_tuple(list, tuple)
+}
+
+fn do_list_to_tuple(list: List(a), tuple) {
+  case list {
+    [item, ..] -> #(tuple, item)
+    [item] -> #(tuple, item)
+    [] -> todo
+  }
 }
 
 @external(erlang, "erlang", "list_to_tuple")
