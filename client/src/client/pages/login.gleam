@@ -1,7 +1,7 @@
 import client/state.{
   type Model, type Msg, AuthUserRecieved, LoginResponded, LoginUpdateEmail,
   LoginUpdateName, LoginUpdatePassword, RequestLogin, RequestSignUp,
-  message_error_decoder,
+  SignUpResponded, message_error_decoder,
 }
 import gleam/io
 import gleam/json
@@ -34,7 +34,7 @@ pub fn signup(model: Model) {
       #("email", json.string(model.login_email)),
       #("password", json.string(model.login_password)),
     ]),
-    lustre_http.expect_json(message_error_decoder(), LoginResponded),
+    lustre_http.expect_json(message_error_decoder(), SignUpResponded),
   )
 }
 

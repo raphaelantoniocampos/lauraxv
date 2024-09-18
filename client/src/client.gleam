@@ -9,7 +9,7 @@ import client/state.{
   EventPage, GiftsPage, GiftsRecieved, Home, Login, LoginResponded,
   LoginUpdateEmail, LoginUpdateError, LoginUpdateName, LoginUpdatePassword,
   Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, RequestLogin,
-  RequestLogout, RequestSelectGift, RequestSignUp, SelectGift,
+  RequestLogout, RequestSelectGift, RequestSignUp, SelectGift, SignUpResponded,
 }
 import gleam/dynamic
 import gleam/option.{None, Some}
@@ -103,13 +103,39 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(
           model,
           effect.from(fn(dispatch) {
-            dispatch(LoginUpdateError(Some("HTTP Error")))
+            dispatch(LoginUpdateError(Some("Login Update Error")))
           }),
         )
       }
 
     RequestLogin -> #(model, login(model))
     RequestSignUp -> #(model, signup(model))
+    SignUpResponded(resp_result) ->
+      case resp_result {
+        Ok(resp) ->
+          case resp.error {
+            Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+            )
+            None -> #(
+              Model(
+                ..model,
+                login_name: "",
+                login_email: "",
+                login_password: "",
+                login_error: None,
+              ),
+              effect.batch([modem.push("/", None, None), get_auth_user()]),
+            )
+          }
+        Error(_) -> #(
+          model,
+          effect.from(fn(dispatch) {
+            dispatch(LoginUpdateError(Some("SignUp Update Error")))
+          }),
+        )
+      }
 
     LoginUpdateName(value) -> #(
       Model(..model, login_name: value),

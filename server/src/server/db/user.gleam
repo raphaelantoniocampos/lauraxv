@@ -8,6 +8,7 @@ import gleam/dynamic
 import gleam/list
 import gleam/result
 import gleam/string
+import gluple/reflect.{list_to_tuple}
 import server/db.{erlang_list_to_tuple}
 import shared.{type User, User}
 import sqlight
@@ -25,7 +26,19 @@ fn get_user_base_query() {
   |> s.from_table("user")
 }
 
-fn user_db_decoder() {
+pub fn user_db_decoder() {
+  dynamic.decode6(
+    User,
+    dynamic.element(0, dynamic.int),
+    dynamic.element(1, dynamic.string),
+    dynamic.element(2, dynamic.string),
+    dynamic.element(3, dynamic.string),
+    dynamic.element(4, sqlight.decode_bool),
+    dynamic.element(5, sqlight.decode_bool),
+  )
+}
+
+fn old_user_db_decoder() {
   fn(data) {
     decode.into({
       use id <- decode.parameter

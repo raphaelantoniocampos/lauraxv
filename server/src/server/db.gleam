@@ -1,7 +1,7 @@
 import cake
 import cake/dialect/sqlite_dialect
 import gleam/dynamic.{type Dynamic}
-import gleam/list
+import gleam/io
 import sqlight
 
 const conn_path = "file:db.sqlite3?mode=rw"
@@ -34,19 +34,6 @@ pub fn execute_write(
   let rows =
     sqlight.query(prepared_statement, connection, arguments, dynamic.int)
   rows
-}
-
-pub fn list_to_tuple(list: List(a)) {
-  let tuple = #()
-  do_list_to_tuple(list, tuple)
-}
-
-fn do_list_to_tuple(list: List(a), tuple) {
-  case list {
-    [item, ..] -> #(tuple, item)
-    [item] -> #(tuple, item)
-    [] -> todo
-  }
 }
 
 @external(erlang, "erlang", "list_to_tuple")

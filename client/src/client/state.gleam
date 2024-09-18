@@ -36,6 +36,9 @@ pub type Msg {
   PhotosRecieved(Result(List(String), lustre_http.HttpError))
 
   RequestSignUp
+  SignUpResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
 
   LoginUpdateName(value: String)
   LoginUpdateEmail(value: String)

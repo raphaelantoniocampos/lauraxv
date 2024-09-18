@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -254,6 +255,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
+  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -4003,6 +4005,12 @@ var PhotosRecieved = class extends CustomType {
 };
 var RequestSignUp = class extends CustomType {
 };
+var SignUpResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
 var LoginUpdateName = class extends CustomType {
   constructor(value3) {
     super();
@@ -4669,7 +4677,7 @@ function signup(model) {
     expect_json(
       message_error_decoder(),
       (var0) => {
-        return new LoginResponded(var0);
+        return new SignUpResponded(var0);
       }
     )
   );
@@ -4874,7 +4882,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 146, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 172, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4979,7 +4987,9 @@ function update(model, msg) {
         model,
         from2(
           (dispatch) => {
-            return dispatch(new LoginUpdateError(new Some("HTTP Error")));
+            return dispatch(
+              new LoginUpdateError(new Some("Login Update Error"))
+            );
           }
         )
       ];
@@ -4988,6 +4998,46 @@ function update(model, msg) {
     return [model, login(model)];
   } else if (msg instanceof RequestSignUp) {
     return [model, signup(model)];
+  } else if (msg instanceof SignUpResponded) {
+    let resp_result = msg.resp_result;
+    if (resp_result.isOk()) {
+      let resp = resp_result[0];
+      let $ = resp.error;
+      if ($ instanceof Some) {
+        let err = $[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new LoginUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else {
+        return [
+          model.withFields({
+            login_name: "",
+            login_email: "",
+            login_password: "",
+            login_error: new None()
+          }),
+          batch(
+            toList([push("/", new None(), new None()), get_auth_user()])
+          )
+        ];
+      }
+    } else {
+      return [
+        model,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(new Some("SignUp Update Error"))
+            );
+          }
+        )
+      ];
+    }
   } else if (msg instanceof LoginUpdateName) {
     let value3 = msg.value;
     return [model.withFields({ login_name: value3 }), none()];
