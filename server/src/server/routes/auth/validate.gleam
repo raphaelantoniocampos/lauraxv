@@ -18,7 +18,6 @@ fn validate_session(req: Request) -> Response {
     use user_id <- result.try(user_session.get_user_id_from_session(req))
 
     use user <- result.try(user.get_user_by_id(user_id))
-
     Ok(
       json.object([
         #("user_id", json.int(user_id)),

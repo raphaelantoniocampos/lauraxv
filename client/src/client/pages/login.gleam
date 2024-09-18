@@ -1,9 +1,8 @@
 import client/state.{
-  type Model, type Msg, AuthUserRecieved, LoginResponded, LoginUpdateEmail,
-  LoginUpdateName, LoginUpdatePassword, RequestLogin, RequestSignUp,
-  SignUpResponded, message_error_decoder,
+  type Model, type Msg, LoginResponded, LoginUpdateEmail, LoginUpdateName,
+  LoginUpdatePassword, RequestLogin, RequestSignUp, SignUpResponded,
+  message_error_decoder,
 }
-import gleam/io
 import gleam/json
 import gleam/option.{None, Some}
 import lustre/attribute.{

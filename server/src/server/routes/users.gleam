@@ -77,7 +77,7 @@ fn create_user(req: Request, body: dynamic.Dynamic) {
       )
       |> wisp.set_cookie(
         req,
-        "kk_session_token",
+        "session_token",
         session_token,
         wisp.PlainText,
         60 * 60 * 24 * 1000,

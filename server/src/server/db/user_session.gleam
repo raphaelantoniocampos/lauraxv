@@ -12,7 +12,7 @@ import wisp.{type Request}
 
 pub fn get_user_id_from_session(req: Request) {
   use session_token <- result.try(
-    wisp.get_cookie(req, "kk_session_token", wisp.PlainText)
+    wisp.get_cookie(req, "session_token", wisp.PlainText)
     |> result.replace_error("No session cookie found"),
   )
 
