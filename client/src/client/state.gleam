@@ -2,7 +2,7 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import shared.{type Gift, type User}
+import shared.{type Gift}
 
 pub type Route {
   Home
@@ -35,7 +35,7 @@ pub type Msg {
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
   PhotosRecieved(Result(List(String), lustre_http.HttpError))
 
-  RequestSignUp
+  RequestedSignUp
   SignUpResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
@@ -45,13 +45,15 @@ pub type Msg {
   LoginUpdatePassword(value: String)
   LoginUpdateError(value: Option(String))
 
-  RequestLogin
+  RequestedLogin
   LoginResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
-  RequestLogout
-  RequestSelectGift(value: Int)
+  RequestedLogout
+
+  RequestedGifts
+  RequestedSelectGift(value: Int)
 }
 
 pub type MessageErrorResponse {

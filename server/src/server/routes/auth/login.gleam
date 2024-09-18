@@ -2,7 +2,7 @@ import beecrypt
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Post}
-import gleam/io
+import gleam/int
 import gleam/json
 import gleam/result
 import gleam/string
@@ -57,20 +57,20 @@ fn do_login(req: Request, body: dynamic.Dynamic) {
     )
 
     use session_token <- result.try(create_user_session(user.id))
-    Ok(session_token)
+    Ok(#(session_token, int.to_string(user.id)))
   }
 
   case result {
-    Ok(session_token) ->
+    Ok(session) ->
       wisp.json_response(
-        json.object([#("message", json.string("Logged in"))])
+        json.object([#("message", json.string(session.1))])
           |> json.to_string_builder,
         201,
       )
       |> wisp.set_cookie(
         req,
         "session_token",
-        session_token,
+        session.0,
         wisp.PlainText,
         60 * 60 * 24 * 1000,
       )

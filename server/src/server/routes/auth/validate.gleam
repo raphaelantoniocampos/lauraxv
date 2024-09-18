@@ -1,4 +1,5 @@
 import gleam/http.{Get}
+import gleam/int
 import gleam/json
 import gleam/result
 import server/db/user
@@ -6,16 +7,23 @@ import server/db/user_session
 import server/response
 import wisp.{type Request, type Response}
 
-pub fn validate(req: Request) -> Response {
+pub fn validate(req: Request, id_string: String) -> Response {
   case req.method {
-    Get -> validate_session(req)
+    Get -> validate_session(req, id_string)
     _ -> wisp.method_not_allowed([Get])
   }
 }
 
-fn validate_session(req: Request) -> Response {
+fn validate_session(req: Request, id_string: String) -> Response {
   let result = {
-    use user_id <- result.try(user_session.get_user_id_from_session(req))
+    let user_id = case user_session.get_user_id_from_session(req) {
+      Ok(user_id) -> user_id
+      Error(_) ->
+        case int.parse(id_string) {
+          Ok(user_id) -> user_id
+          Error(_) -> -1
+        }
+    }
 
     use user <- result.try(user.get_user_by_id(user_id))
     Ok(

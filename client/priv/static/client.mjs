@@ -4882,7 +4882,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 172, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 191, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4906,8 +4906,8 @@ function get_route2() {
 function on_url_change(uri) {
   return new OnRouteChange(get_route2());
 }
-function get_auth_user() {
-  let url = server_url + "/auth/validate";
+function get_auth_user(id_string) {
+  let url = server_url + "/auth/validate/" + id_string;
   let decoder = decode4(
     (var0, var1, var2, var3) => {
       return new AuthUser(var0, var1, var2, var3);
@@ -4959,9 +4959,10 @@ function update(model, msg) {
     let resp_result = msg.resp_result;
     if (resp_result.isOk()) {
       let resp = resp_result[0];
-      let $ = resp.error;
-      if ($ instanceof Some) {
-        let err = $[0];
+      let $ = resp.message;
+      let $1 = resp.error;
+      if ($1 instanceof Some) {
+        let err = $1[0];
         return [
           model,
           from2(
@@ -4970,15 +4971,31 @@ function update(model, msg) {
             }
           )
         ];
-      } else {
+      } else if ($ instanceof Some && $1 instanceof None) {
+        let id_string = $[0];
         return [
           model.withFields({
+            login_name: "",
             login_email: "",
             login_password: "",
             login_error: new None()
           }),
           batch(
-            toList([push("/", new None(), new None()), get_auth_user()])
+            toList([
+              push("/", new None(), new None()),
+              get_auth_user(id_string)
+            ])
+          )
+        ];
+      } else {
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(
+                new LoginUpdateError(new Some("Login Update Error"))
+              );
+            }
           )
         ];
       }
@@ -5002,9 +5019,10 @@ function update(model, msg) {
     let resp_result = msg.resp_result;
     if (resp_result.isOk()) {
       let resp = resp_result[0];
-      let $ = resp.error;
-      if ($ instanceof Some) {
-        let err = $[0];
+      let $ = resp.message;
+      let $1 = resp.error;
+      if ($1 instanceof Some) {
+        let err = $1[0];
         return [
           model,
           from2(
@@ -5013,7 +5031,8 @@ function update(model, msg) {
             }
           )
         ];
-      } else {
+      } else if ($ instanceof Some && $1 instanceof None) {
+        let id_string = $[0];
         return [
           model.withFields({
             login_name: "",
@@ -5022,7 +5041,21 @@ function update(model, msg) {
             login_error: new None()
           }),
           batch(
-            toList([push("/", new None(), new None()), get_auth_user()])
+            toList([
+              push("/", new None(), new None()),
+              get_auth_user(id_string)
+            ])
+          )
+        ];
+      } else {
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(
+                new LoginUpdateError(new Some("Signup Update Error"))
+              );
+            }
           )
         ];
       }
@@ -5032,7 +5065,7 @@ function update(model, msg) {
         from2(
           (dispatch) => {
             return dispatch(
-              new LoginUpdateError(new Some("SignUp Update Error"))
+              new LoginUpdateError(new Some("Signup Update Error"))
             );
           }
         )
@@ -5091,9 +5124,7 @@ function init3(_) {
       "",
       new None()
     ),
-    batch(
-      toList([init2(on_url_change), get_gifts(), get_auth_user()])
-    )
+    batch(toList([init2(on_url_change), get_gifts()]))
   ];
 }
 function view(model) {

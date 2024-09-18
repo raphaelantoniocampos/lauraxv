@@ -1,5 +1,4 @@
 import client/state.{type Model}
-import gleam/int
 import gleam/list
 import lustre/attribute.{alt, attribute, class, src}
 import lustre/element.{type Element, text}

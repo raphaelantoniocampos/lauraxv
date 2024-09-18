@@ -37,28 +37,6 @@ pub fn user_db_decoder() {
   )
 }
 
-fn old_user_db_decoder() {
-  fn(data) {
-    decode.into({
-      use id <- decode.parameter
-      use name <- decode.parameter
-      use email <- decode.parameter
-      use password <- decode.parameter
-      use confirmed <- decode.parameter
-      use is_admin <- decode.parameter
-
-      User(id, name, email, password, confirmed, is_admin)
-    })
-    |> decode.field(0, decode.int)
-    |> decode.field(1, decode.string)
-    |> decode.field(2, decode.string)
-    |> decode.field(3, decode.string)
-    |> decode.field(4, decode.bool)
-    |> decode.field(5, decode.bool)
-    |> decode.from(data |> erlang_list_to_tuple)
-  }
-}
-
 pub fn get_user_by_email(email: String) -> Result(User, String) {
   let user = case
     get_user_base_query()

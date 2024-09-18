@@ -1,5 +1,6 @@
 import cors_builder as cors
 import gleam/http.{Get, Post}
+import gleam/io
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/gifts
@@ -19,17 +20,13 @@ pub fn handle_request(req: Request) -> Response {
       |> cors.allow_header("Content-Type"),
   )
   case wisp.path_segments(req) {
-    ["auth", "validate"] -> validate.validate(req)
-    ["auth", "login"] -> login.login(req)
-    ["gifts"] -> gifts.gifts(req)
+    ["gifts"] -> {
+      gifts.gifts(req) |> io.debug
+    }
     ["users"] -> users.users(req)
     ["photos"] -> photos.photos(req)
-    _ -> wisp.not_found()
-  }
-}
-
-fn api_routes(req: Request, route_segments: List(String)) -> Response {
-  case route_segments {
+    ["auth", "validate", id_string] -> validate.validate(req, id_string)
+    ["auth", "login"] -> login.login(req)
     _ -> wisp.not_found()
   }
 }

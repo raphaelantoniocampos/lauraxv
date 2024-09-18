@@ -1,3 +1,4 @@
+import client/navigation_bar.{navigation_bar}
 import client/pages/event.{event_view}
 import client/pages/gifts.{gifts_view}
 import client/pages/home.{home_view}
@@ -8,8 +9,9 @@ import client/state.{
   type Model, type Msg, type Route, AuthUser, AuthUserRecieved, ConfirmPresence,
   EventPage, GiftsPage, GiftsRecieved, Home, Login, LoginResponded,
   LoginUpdateEmail, LoginUpdateError, LoginUpdateName, LoginUpdatePassword,
-  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, RequestLogin,
-  RequestLogout, RequestSelectGift, RequestSignUp, SelectGift, SignUpResponded,
+  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, RequestGifts,
+  RequestLogin, RequestLogout, RequestSelectGift, RequestSignUp, SelectGift,
+  SignUpResponded,
 }
 import gleam/dynamic
 import gleam/option.{None, Some}
@@ -43,7 +45,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       login_password: "",
       login_error: None,
     ),
-    effect.batch([modem.init(on_url_change), get_gifts(), get_auth_user()]),
+    effect.batch([modem.init(on_url_change), get_gifts()]),
   )
   //   effect.batch(
   //     [modem.init(on_url_change), get_auth(), get_posts()]
@@ -85,19 +87,29 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     LoginResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
-          case resp.error {
-            Some(err) -> #(
+          case resp.message, resp.error {
+            _, Some(err) -> #(
               model,
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
             )
-            None -> #(
+            Some(id_string), None -> #(
               Model(
                 ..model,
+                login_name: "",
                 login_email: "",
                 login_password: "",
                 login_error: None,
               ),
-              effect.batch([modem.push("/", None, None), get_auth_user()]),
+              effect.batch([
+                modem.push("/", None, None),
+                get_auth_user(id_string),
+              ]),
+            )
+            _, _ -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(LoginUpdateError(Some("Login Update Error")))
+              }),
             )
           }
         Error(_) -> #(
@@ -113,12 +125,12 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     SignUpResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
-          case resp.error {
-            Some(err) -> #(
+          case resp.message, resp.error {
+            _, Some(err) -> #(
               model,
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
             )
-            None -> #(
+            Some(id_string), None -> #(
               Model(
                 ..model,
                 login_name: "",
@@ -126,13 +138,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
                 login_password: "",
                 login_error: None,
               ),
-              effect.batch([modem.push("/", None, None), get_auth_user()]),
+              effect.batch([
+                modem.push("/", None, None),
+                get_auth_user(id_string),
+              ]),
+            )
+            _, _ -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(LoginUpdateError(Some("Signup Update Error")))
+              }),
             )
           }
         Error(_) -> #(
           model,
           effect.from(fn(dispatch) {
-            dispatch(LoginUpdateError(Some("SignUp Update Error")))
+            dispatch(LoginUpdateError(Some("Signup Update Error")))
           }),
         )
       }
@@ -155,7 +176,9 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    _ -> #(model, effect.none())
+    RequestGifts -> #(model, effect.none())
+
+    _ -> #(model, get_gifts())
   }
 }
 
@@ -194,8 +217,8 @@ fn get_route() -> Route {
 //   }
 // }
 
-pub fn get_auth_user() -> Effect(Msg) {
-  let url = server_url <> "/auth/validate"
+pub fn get_auth_user(id_string: String) -> Effect(Msg) {
+  let url = server_url <> "/auth/validate/" <> id_string
 
   let decoder =
     dynamic.decode4(
@@ -254,72 +277,7 @@ pub fn view(model: Model) -> Element(Msg) {
       id("app"),
     ],
     [
-      nav(
-        [
-          class(
-            "w-full bg-white shadow-md py-4 px-8 flex justify-between items-center",
-          ),
-        ],
-        [
-          div([], []),
-          ul([class("flex space-x-8 text-pink-600 font-semibold")], [
-            li([], [
-              a(
-                [
-                  class("hover:text-pink-800 transition duration-300"),
-                  href("/"),
-                ],
-                [text("Home")],
-              ),
-            ]),
-            li([], [
-              a(
-                [
-                  class("hover:text-pink-800 transition duration-300"),
-                  href("/event"),
-                ],
-                [text("Evento")],
-              ),
-            ]),
-            li([], [
-              a(
-                [
-                  class("hover:text-pink-800 transition duration-300"),
-                  href("/gifts"),
-                ],
-                [text("Presentes")],
-              ),
-            ]),
-            li([], [
-              a(
-                [
-                  class("hover:text-pink-800 transition duration-300"),
-                  href("/photos"),
-                ],
-                [text("Fotos")],
-              ),
-            ]),
-          ]),
-          nav([class("flex space-x-8 text-pink-600 font-semibold")], [
-            case model.auth_user {
-              None -> {
-                a(
-                  [
-                    class("hover:text-pink-800 transition duration-300"),
-                    href("/login"),
-                  ],
-                  [text("Login")],
-                )
-              }
-              Some(user) -> {
-                a([class("hover:text-pink-800 transition duration-300")], [
-                  text("Olá " <> user.name),
-                ])
-              }
-            },
-          ]),
-        ],
-      ),
+      navigation_bar(),
       case model.route {
         Home -> home_view()
         EventPage -> event_view()

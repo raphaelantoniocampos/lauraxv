@@ -1,7 +1,6 @@
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
-import gleam/io
 import gleam/json
 import gleam/regex
 import gleam/result
