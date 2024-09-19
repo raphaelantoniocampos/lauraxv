@@ -20,14 +20,14 @@ pub fn event_view() -> Element(a) {
         ]),
       ]),
       div([class("flex-1 bg-white text-gray-800 rounded-lg shadow-lg p-6")], [
-        h2([class("text-3xl font-bold text-pink-700 mb-4")], [
+        h2([class("text-3xl font-bold text-pink-600 mb-4")], [
           text("Aniversário de 15 Anos da Laura"),
         ]),
         p([class("text-lg text-gray-700 mb-4")], [
           text("Pompéu, MG - 14 de Dezembro de 2024"),
         ]),
         p([class("text-lg text-gray-700 mb-8")], [text("Horário: 19:00")]),
-        h2([class("text-2xl font-semibold text-pink-700 mb-4")], [
+        h2([class("text-2xl font-semibold text-emerald-600 mb-4")], [
           text("Detalhes do Evento"),
         ]),
         p([class("text-lg text-gray-700 mb-2")], [
@@ -42,7 +42,9 @@ pub fn event_view() -> Element(a) {
         // p([class("text-lg text-gray-700 mb-8")], [
         //   text("Estacionamento disponível no local."),
         // ]),
-        h2([class("text-2xl font-semibold text-pink-700 mb-4")], [text("Traje")]),
+        h2([class("text-2xl font-semibold text-emerald-600 mb-4")], [
+          text("Traje"),
+        ]),
         p([class("text-lg text-gray-700 mb-2")], [
           strong([], [text("Traje:")]),
           text("Esporte Fino"),

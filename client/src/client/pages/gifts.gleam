@@ -1,120 +1,78 @@
-import client/state.{type Model}
+import client/components/button_class.{button_class}
+import client/state.{type Model, type Msg, UserRequestedSelectGift}
 import gleam/int
 import gleam/list
-import lustre/attribute.{alt, attribute, class, disabled, href, src}
+import lustre/attribute.{alt, attribute, class, disabled, href, rel, src, target}
 import lustre/element.{type Element, text}
-import lustre/element/html.{a, button, div, h1, h3, img, main, section, span}
+import lustre/element/html.{a, button, div, h1, h3, img, main, span}
+import lustre/event
 import shared.{type Gift, Gift}
 
-fn gift_widget() {
-  [
-    html.div([attribute.class("relative bg-white p-4 rounded-lg shadow-lg")], [
-      html.div(
-        [attribute.class("absolute inset-0 bg-black opacity-50 rounded-lg")],
-        [],
-      ),
-      html.div(
-        [attribute.class("absolute inset-0 flex items-center justify-center")],
-        [
-          html.span(
-            [attribute.class("bg-red-600 text-white px-4 py-1 rounded-full")],
-            [text("Selecionado")],
-          ),
-        ],
-      ),
-      html.img([
-        attribute.class("w-full h-auto rounded-lg grayscale"),
-        attribute.alt("Presente 1"),
-        attribute.src("https://via.placeholder.com/200x150"),
-      ]),
-      html.h3([attribute.class("text-xl font-semibold text-pink-700 mt-4")], [
-        text("Jogo de Panelas"),
-      ]),
-      html.a(
-        [
-          attribute.class("text-pink-600 hover:text-pink-800 underline"),
-          attribute.href("https://example.com/present-1"),
-        ],
-        [text("Ver referência")],
-      ),
-      html.button(
-        [
-          attribute.disabled(True),
-          attribute.class(
-            "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed",
-          ),
-        ],
-        [text("Escolher")],
-      ),
-    ]),
-    html.div([attribute.class("bg-white p-4 rounded-lg shadow-lg")], [
-      html.img([
-        attribute.class("w-full h-auto rounded-lg"),
-        attribute.alt("Presente 2"),
-        attribute.src("https://via.placeholder.com/200x150"),
-      ]),
-      html.h3([attribute.class("text-xl font-semibold text-pink-700 mt-4")], [
-        text("Máquina de Café"),
-      ]),
-      html.a(
-        [
-          attribute.class("text-pink-600 hover:text-pink-800 underline"),
-          attribute.href("https://example.com/present-2"),
-        ],
-        [text("Ver referência")],
-      ),
-      html.button(
-        [
-          attribute.class(
-            "mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
-          ),
-        ],
-        [text("Escolher")],
-      ),
-    ]),
-    html.div([attribute.class("relative bg-white p-4 rounded-lg shadow-lg")], [
-      html.div(
-        [attribute.class("absolute inset-0 bg-black opacity-50 rounded-lg")],
-        [],
-      ),
-      html.div(
-        [attribute.class("absolute inset-0 flex items-center justify-center")],
-        [
-          html.span(
-            [attribute.class("bg-red-600 text-white px-4 py-1 rounded-full")],
-            [text("Selecionado")],
-          ),
-        ],
-      ),
-      html.img([
-        attribute.class("w-full h-auto rounded-lg grayscale"),
-        attribute.alt("Presente 3"),
-        attribute.src("https://via.placeholder.com/200x150"),
-      ]),
-      html.h3([attribute.class("text-xl font-semibold text-pink-700 mt-4")], [
-        text("Aspirador de Pó"),
-      ]),
-      html.a(
-        [
-          attribute.class("text-pink-600 hover:text-pink-800 underline"),
-          attribute.href("https://example.com/present-3"),
-        ],
-        [text("Ver referência")],
-      ),
-      html.button(
-        [
-          attribute.disabled(True),
-          attribute.class(
-            "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed",
-          ),
-        ],
-        [text("Escolher")],
-      ),
-    ]),
-  ]
+fn gift_box(gift: Gift) {
+  case gift.selected_by {
+    0 ->
+      div([class("relative bg-white p-4 rounded-lg shadow-lg")], [
+        div([class("absolute inset-0 bg-black opacity-50 rounded-lg")], []),
+        div([class("absolute inset-0 flex items-center justify-center")], [
+          span([class("bg-red-600 text-white px-4 py-1 rounded-full")], [
+            text("Selecionado"),
+          ]),
+        ]),
+        img([
+          class("w-full h-80 rounded-lg grayscale opacity-50 object-cover z-0"),
+          alt("Presente" <> int.to_string(gift.id)),
+          src(gift.pic),
+        ]),
+        h3([class("text-xl font-semibold text-pink-700 mt-4")], [
+          text(gift.name),
+        ]),
+        a(
+          [
+            class(
+              "text-pink-600 hover:text-pink-800 underline cursor-not-allowed",
+            ),
+            href(gift.link),
+          ],
+          [text("Ver referência")],
+        ),
+        button(
+          [
+            disabled(True),
+            class(
+              "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed",
+            ),
+          ],
+          [text("Escolher")],
+        ),
+      ])
+    _ ->
+      div([class("bg-white p-4 rounded-lg shadow-lg")], [
+        img([
+          class("w-full h-80 rounded-lg object-cover"),
+          alt("Presente" <> int.to_string(gift.id)),
+          src(gift.pic),
+        ]),
+        h3([class("text-xl font-semibold text-pink-700 mt-4")], [
+          text(gift.name),
+        ]),
+        a(
+          [
+            class("text-pink-600 hover:text-pink-800 underline"),
+            rel("noopener noreferrer"),
+            target("_blank"),
+            href(gift.link),
+          ],
+          [text("Ver referência")],
+        ),
+        button(
+          [button_class(), event.on_click(UserRequestedSelectGift(gift.id))],
+          [text("Escolher")],
+        ),
+      ])
+  }
 }
 
-pub fn gifts_view(model: Model) -> Element(a) {
+pub fn gifts_view(model: Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -125,7 +83,7 @@ pub fn gifts_view(model: Model) -> Element(a) {
     ),
     div(
       [class("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")],
-      gift_widget(),
+      list.map(model.gifts, fn(gift) { gift_box(gift) }),
     ),
   ])
 }

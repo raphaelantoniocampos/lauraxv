@@ -1,6 +1,7 @@
+import client/components/button_class.{button_class}
 import client/state.{
   type Model, type Msg, LoginResponded, LoginUpdateEmail, LoginUpdateName,
-  LoginUpdatePassword, RequestedLogin, RequestedSignUp, SignUpResponded,
+  LoginUpdatePassword, SignUpResponded, UserRequestedLogin, UserRequestedSignUp,
   message_error_decoder,
 }
 import gleam/json
@@ -47,7 +48,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
         ],
         [text("Entrar")],
       ),
-      form([class("space-y-6"), event.on_submit(RequestedLogin)], [
+      form([class("space-y-6"), event.on_submit(UserRequestedLogin)], [
         div([], [
           label(
             [class("block text-sm font-medium text-gray-700"), for("name")],
@@ -97,20 +98,12 @@ pub fn login_view(model: Model) -> Element(Msg) {
           ]),
         ]),
         div([class("flex items-center justify-center")], [
-          button(
-            [
-              class(
-                "w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105",
-              ),
-              type_("submit"),
-            ],
-            [text("Entrar")],
-          ),
+          button([button_class(), type_("submit")], [text("Entrar")]),
         ]),
       ]),
       div([class("flex items-center justify-center")], [
         text("Não tem conta?"),
-        button([class("p-1"), event.on_click(RequestedSignUp)], [
+        button([class("p-1"), event.on_click(UserRequestedSignUp)], [
           text("Cadastre-se"),
         ]),
       ]),

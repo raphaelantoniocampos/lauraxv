@@ -1,4 +1,5 @@
-import client/navigation_bar.{navigation_bar}
+import client/components/navigation_bar.{navigation_bar}
+import client/pages/confirm_presence.{confirm_presence_view}
 import client/pages/event.{event_view}
 import client/pages/gifts.{gifts_view}
 import client/pages/home.{home_view}
@@ -6,12 +7,15 @@ import client/pages/login.{login, login_view, signup}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import client/state.{
-  type Model, type Msg, type Route, AuthUser, AuthUserRecieved, EventPage,
-  GiftsPage, GiftsRecieved, Home, Login, LoginResponded, LoginUpdateEmail,
-  LoginUpdateError, LoginUpdateName, LoginUpdatePassword, Model, NotFound,
-  OnRouteChange, PhotosPage, PhotosRecieved, RequestedGifts, RequestedLogin,
-  RequestedSignUp, SignUpResponded,
+  type Model, type Msg, type Route, AuthUser, AuthUserRecieved, ConfirmPresence,
+  CountdownUpdated, EventPage, GiftsPage, GiftsRecieved, Home, Login,
+  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdateName,
+  LoginUpdatePassword, Model, NotFound, OnRouteChange, PhotosPage,
+  PhotosRecieved, SignUpResponded, UserOpenedGiftsPage,
+  UserRequestedConfirmPresence, UserRequestedLogin, UserRequestedSelectGift,
+  UserRequestedSignUp,
 }
+import rada/date
 
 import gleam/dynamic
 import gleam/option.{None, Some}
@@ -44,19 +48,10 @@ fn init(_) -> #(Model, Effect(Msg)) {
       login_email: "",
       login_password: "",
       login_error: None,
+      countdown: 0,
     ),
-    effect.batch([modem.init(on_url_change), get_gifts()]),
+    effect.batch([modem.init(on_url_change), get_gifts(), update_countdown()]),
   )
-  //   effect.batch(
-  //     [modem.init(on_url_change), get_auth(), get_posts()]
-  //     |> list.append(case get_route() {
-  //       ShowPost(_) -> [get_show_post()]
-  //       Signup(_) -> [get_inviter(get_auth_code())]
-  //       ChangePassword(token) -> [get_change_password_target(token)]
-  //       _ -> []
-  //     }),
-  //   ),
-  // )
 }
 
 // Create our update method
@@ -83,6 +78,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Ok(photos) -> #(Model(..model, photos: photos), effect.none())
         Error(_) -> #(model, effect.none())
       }
+
+    UserRequestedLogin -> #(model, login(model))
+
+    UserRequestedSignUp -> #(model, signup(model))
 
     LoginResponded(resp_result) ->
       case resp_result {
@@ -120,16 +119,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    RequestedLogin -> #(model, login(model))
-    RequestedSignUp -> #(model, signup(model))
     SignUpResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
-            _, Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
-            )
             Some(id_string), None -> #(
               Model(
                 ..model,
@@ -142,6 +135,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
                 modem.push("/", None, None),
                 get_auth_user(id_string),
               ]),
+            )
+            _, Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
             )
             _, _ -> #(
               model,
@@ -176,10 +173,44 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    RequestedGifts -> #(model, effect.none())
+    CountdownUpdated(value) -> #(
+      Model(..model, countdown: value),
+      effect.none(),
+    )
 
-    _ -> #(model, get_gifts())
+    UserRequestedConfirmPresence -> #(model, effect.none())
+
+    UserRequestedSelectGift(_value) -> #(model, effect.none())
+
+    UserOpenedGiftsPage ->
+      case model.gifts {
+        [] -> #(model, get_gifts())
+        _ -> #(model, effect.none())
+      }
   }
+}
+
+pub fn view(model: Model) -> Element(Msg) {
+  body(
+    [
+      class(
+        "bg-gradient-to-r from-pink-400 to-pink-200 min-h-screen flex flex-col items-center justify-start",
+      ),
+      id("app"),
+    ],
+    [
+      navigation_bar(model),
+      case model.route {
+        Home -> home_view(model)
+        EventPage -> event_view()
+        PhotosPage -> photos_view(model)
+        GiftsPage -> gifts_view(model)
+        Login -> login_view(model)
+        ConfirmPresence -> confirm_presence_view(model)
+        NotFound -> not_found_view()
+      },
+    ],
+  )
 }
 
 fn on_url_change(uri: Uri) -> Msg {
@@ -201,21 +232,10 @@ fn get_route() -> Route {
     ["gifts"] -> GiftsPage
     ["event"] -> EventPage
     ["photos"] -> PhotosPage
+    ["confirm"] -> ConfirmPresence
     _ -> NotFound
   }
 }
-
-// fn get_gift_id() -> String {
-//   let uri = case do_get_route() |> uri.parse {
-//     Ok(uri) -> uri
-//     _ -> panic as "Invalid uri"
-//   }
-//
-//   case uri.path |> uri.path_segments {
-//     ["gift", gift_id] -> gift_id
-//     _ -> ""
-//   }
-// }
 
 pub fn get_auth_user(id_string: String) -> Effect(Msg) {
   let url = server_url <> "/auth/validate/" <> id_string
@@ -247,25 +267,13 @@ fn get_gifts() {
   lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
 }
 
-pub fn view(model: Model) -> Element(Msg) {
-  body(
-    [
-      class(
-        "bg-gradient-to-r from-pink-400 to-pink-200 min-h-screen flex flex-col items-center justify-start",
-      ),
-      id("app"),
-    ],
-    [
-      navigation_bar(model),
-      case model.route {
-        Home -> home_view()
-        EventPage -> event_view()
-        PhotosPage -> photos_view(model)
-        GiftsPage -> gifts_view(model)
-        Login -> login_view(model)
-        NotFound -> not_found_view()
-        _ -> not_found_view()
-      },
-    ],
-  )
+pub fn update_countdown() {
+  let countdown =
+    date.diff(
+      date.Days,
+      date.today(),
+      date.from_calendar_date(2024, date.Dec, 14),
+    )
+
+  effect.from(fn(dispatch) { dispatch(CountdownUpdated(countdown)) })
 }

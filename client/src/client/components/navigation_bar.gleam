@@ -1,8 +1,10 @@
-import client/state.{type Model, RequestedGifts}
+import client/components/button_class.{button_class}
+import client/state.{type Model, type Msg, UserOpenedGiftsPage}
 import gleam/option.{None, Some}
+import gleam/string
 import lustre/attribute.{class, href}
 import lustre/element.{text}
-import lustre/element/html.{a, div, li, nav, ul}
+import lustre/element/html.{a, button, div, li, nav, span, ul}
 import lustre/event
 
 pub fn navigation_bar(model: Model) {
@@ -13,7 +15,7 @@ pub fn navigation_bar(model: Model) {
       ),
     ],
     [
-      div([], []),
+      // div([class("flex grow")], []),
       ul([class("flex space-x-8 text-pink-600 font-semibold")], [
         li([], [
           a([class("hover:text-pink-800 transition duration-300"), href("/")], [
@@ -34,6 +36,7 @@ pub fn navigation_bar(model: Model) {
             [
               class("hover:text-pink-800 transition duration-300"),
               href("/gifts"),
+              event.on_click(UserOpenedGiftsPage),
             ],
             [text("Presentes")],
           ),
@@ -42,31 +45,42 @@ pub fn navigation_bar(model: Model) {
           a(
             [
               class("hover:text-pink-800 transition duration-300"),
-              event.on_click(RequestedGifts),
               href("/photos"),
             ],
             [text("Fotos")],
           ),
         ]),
       ]),
-      nav([class("flex space-x-8 text-pink-600 font-semibold")], [
-        case model.auth_user {
-          None -> {
+      case model.auth_user {
+        None -> {
+          span([class("text-pink-600 font-semibold")], [
             a(
               [
-                class("hover:text-pink-800 transition duration-300"),
+                class("hover:text-emerald-600 transition duration-300"),
                 href("/login"),
               ],
               [text("Login")],
-            )
-          }
-          Some(user) -> {
-            a([class("hover:text-pink-800 transition duration-300")], [
-              text("Olá " <> user.name),
-            ])
-          }
-        },
-      ]),
+            ),
+          ])
+        }
+        Some(user) -> {
+          div([class("flex items-center space-x-4")], [
+            span([class("text-pink-600 font-semibold")], [
+              text("Olá, " <> string.capitalise(user.name)),
+            ]),
+            case user.confirmed {
+              True ->
+                span([class("text-emerald-600 font-semibold")], [
+                  text("Presença Confirmada"),
+                ])
+              False ->
+                button([button_class()], [
+                  a([href("/confirm")], [text("Confirme sua presença")]),
+                ])
+            },
+          ])
+        }
+      },
     ],
   )
 }

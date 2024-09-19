@@ -1,12 +1,14 @@
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
+import gleam/int
 import gleam/json
 import gleam/regex
 import gleam/result
 import gleam/string
 import server/db/user
 import server/db/user_session.{create_user_session}
+import server/response
 import wisp.{type Request, type Response}
 
 pub fn users(req: Request) -> Response {
@@ -62,30 +64,15 @@ fn create_user(req: Request, body: dynamic.Dynamic) {
 
     use inserted_user <- result.try(user.get_user_by_email(user.email))
 
-    use session_token <- result.try(create_user_session(inserted_user.id))
-
-    Ok(session_token)
+    // use session_token <- result.try(create_user_session(inserted_user.id))
+    //
+    // Ok(session_token)
+    // Using user id for now
+    Ok(
+      json.object([#("message", json.string(int.to_string(inserted_user.id)))])
+      |> json.to_string_builder,
+    )
   }
 
-  case result {
-    Ok(session_token) ->
-      wisp.json_response(
-        json.object([#("message", json.string("Created account"))])
-          |> json.to_string_builder,
-        201,
-      )
-      |> wisp.set_cookie(
-        req,
-        "session_token",
-        session_token,
-        wisp.PlainText,
-        60 * 60 * 24 * 1000,
-      )
-    Error(error) ->
-      wisp.json_response(
-        json.object([#("error", json.string(error))])
-          |> json.to_string_builder,
-        200,
-      )
-  }
+  response.generate_wisp_response(result)
 }

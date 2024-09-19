@@ -57,24 +57,27 @@ fn do_login(req: Request, body: dynamic.Dynamic) {
       return: Error("Passwords do not match"),
     )
 
-    use session_token <- result.try(create_user_session(user.id))
-    Ok(#(session_token, int.to_string(user.id)))
+    // use session_token <- result.try(create_user_session(user.id))
+    // Ok(session_token)
+
+    // Using user id for now
+    Ok(int.to_string(user.id))
   }
 
   case result {
-    Ok(session) ->
+    Ok(id) ->
       wisp.json_response(
-        json.object([#("message", json.string(session.1))])
+        json.object([#("message", json.string(id))])
           |> json.to_string_builder,
         201,
       )
-      |> wisp.set_cookie(
-        req,
-        "session_token",
-        session.0,
-        wisp.PlainText,
-        60 * 60 * 24 * 1000,
-      )
+    // |> wisp.set_cookie(
+    //   req,
+    //   "session_token",
+    //   session_token,
+    //   wisp.PlainText,
+    //   60 * 60 * 24 * 1000,
+    // )
     Error(error) ->
       wisp.json_response(
         json.object([#("error", json.string(error))])

@@ -1,19 +1,13 @@
+import client/components/button_class.{button_class}
+import client/state.{type Model, type Msg, UserRequestedConfirmPresence}
 import gleam/int
+import gleam/option.{None, Some}
 import lustre/attribute.{alt, attribute, class, href, id, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p, span}
 import lustre/event
-import rada/date
 
-fn countdown() -> Int {
-  date.diff(
-    date.Days,
-    date.today(),
-    date.from_calendar_date(2024, date.Dec, 14),
-  )
-}
-
-pub fn home_view() -> Element(a) {
+pub fn home_view(model: Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -26,8 +20,8 @@ pub fn home_view() -> Element(a) {
     div([class("text-center mt-6")], [
       p([class("text-3xl text-white font-bold")], [
         text("Faltam "),
-        span([class("text-yellow-300"), id("countdown")], [
-          text(int.to_string(countdown())),
+        span([class("text-emerald-300"), id("countdown")], [
+          text(int.to_string(model.countdown)),
         ]),
         text(" dias para a festa!"),
       ]),
@@ -58,21 +52,16 @@ pub fn home_view() -> Element(a) {
               ),
             ]),
             div([class("space-x-4")], [
+              button([button_class()], [
+                a([href("/confirm")], [text("Confirmar Presença")]),
+              ]),
               button(
                 [
                   class(
                     "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
                   ),
                 ],
-                [text("Confirmar Presença")],
-              ),
-              button(
-                [
-                  class(
-                    "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
-                  ),
-                ],
-                [text("Lista de Presentes")],
+                [a([href("/gifts")], [text("Lista de Presentes")])],
               ),
             ]),
           ]),

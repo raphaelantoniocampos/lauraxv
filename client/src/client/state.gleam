@@ -8,10 +8,9 @@ pub type Route {
   Home
   Login
   GiftsPage
-  SelectGift(gift_id: Int)
   EventPage
   PhotosPage
-  ConfirmPresence(user_id: Int)
+  ConfirmPresence
   NotFound
 }
 
@@ -26,6 +25,7 @@ pub type Model {
     login_email: String,
     login_password: String,
     login_error: Option(String),
+    countdown: Int,
   )
 }
 
@@ -35,7 +35,7 @@ pub type Msg {
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
   PhotosRecieved(Result(List(String), lustre_http.HttpError))
 
-  RequestedSignUp
+  UserRequestedSignUp
   SignUpResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
@@ -45,15 +45,18 @@ pub type Msg {
   LoginUpdatePassword(value: String)
   LoginUpdateError(value: Option(String))
 
-  RequestedLogin
+  UserRequestedLogin
   LoginResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
-  RequestedLogout
+  UserOpenedGiftsPage
 
-  RequestedGifts
-  RequestedSelectGift(value: Int)
+  UserRequestedSelectGift(value: Int)
+
+  UserRequestedConfirmPresence
+
+  CountdownUpdated(value: Int)
 }
 
 pub type MessageErrorResponse {
