@@ -4,7 +4,7 @@ import wisp
 
 pub fn generate_wisp_response(result: Result(StringBuilder, String)) {
   case result {
-    Ok(json) -> wisp.json_response(json, 200)
+    Ok(json) -> wisp.json_response(json, 201)
     Error(error) ->
       wisp.json_response(
         json.object([#("error", json.string(error))])

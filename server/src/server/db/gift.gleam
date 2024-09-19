@@ -28,16 +28,9 @@ pub fn get_gifts() -> Result(List(Gift), String) {
     get_gifts_base_query()
     |> s.to_query
     |> db.execute_read([], gift_db_decoder())
-    |> result.replace_error("Problem getting gifts")
   {
-    Ok(gifts) -> {
-      io.debug(gifts)
-      Ok(gifts)
-    }
-    Error(err) -> {
-      io.debug(err)
-      Error("No gifts found")
-    }
+    Ok(gifts) -> Ok(gifts)
+    Error(_) -> Error("Problem getting gifts")
   }
 }
 

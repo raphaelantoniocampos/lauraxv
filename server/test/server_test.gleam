@@ -51,14 +51,8 @@ pub fn gift_db_decoder() {
 
 pub fn gift_test() {
   let result = {
-    use gifts <- result.try(case
-      get_gifts_base_query()
-      |> s.to_query
-      |> db.execute_read([], gift_db_decoder())
-    {
-      Ok(gifts) -> Ok(gifts)
-      Error(_) -> Error("Problem getting gifts")
-    })
+    use gifts <- result.try(gift.get_gifts())
+
     let decoder = fn() {
       json.array(gifts, fn(gift: Gift) {
         json.object([
@@ -74,6 +68,7 @@ pub fn gift_test() {
     use json_awway <- result.try(decoder())
     Ok(json_awway)
   }
+  io.debug(result)
   case result {
     Ok(jsn) ->
       wisp.json_response(

@@ -6,21 +6,21 @@ import client/pages/login.{login, login_view, signup}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import client/state.{
-  type Model, type Msg, type Route, AuthUser, AuthUserRecieved, ConfirmPresence,
-  EventPage, GiftsPage, GiftsRecieved, Home, Login, LoginResponded,
-  LoginUpdateEmail, LoginUpdateError, LoginUpdateName, LoginUpdatePassword,
-  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, RequestGifts,
-  RequestLogin, RequestLogout, RequestSelectGift, RequestSignUp, SelectGift,
-  SignUpResponded,
+  type Model, type Msg, type Route, AuthUser, AuthUserRecieved, EventPage,
+  GiftsPage, GiftsRecieved, Home, Login, LoginResponded, LoginUpdateEmail,
+  LoginUpdateError, LoginUpdateName, LoginUpdatePassword, Model, NotFound,
+  OnRouteChange, PhotosPage, PhotosRecieved, RequestedGifts, RequestedLogin,
+  RequestedSignUp, SignUpResponded,
 }
+
 import gleam/dynamic
 import gleam/option.{None, Some}
 import gleam/uri.{type Uri}
 import lustre
-import lustre/attribute.{class, href, id}
+import lustre/attribute.{class, id}
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
-import lustre/element/html.{a, body, div, li, nav, text, ul}
+import lustre/element/html.{body}
 import lustre_http
 import modem
 import shared.{type Gift, Gift, server_url}
@@ -120,8 +120,8 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    RequestLogin -> #(model, login(model))
-    RequestSignUp -> #(model, signup(model))
+    RequestedLogin -> #(model, login(model))
+    RequestedSignUp -> #(model, signup(model))
     SignUpResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
@@ -176,7 +176,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    RequestGifts -> #(model, effect.none())
+    RequestedGifts -> #(model, effect.none())
 
     _ -> #(model, get_gifts())
   }
@@ -247,27 +247,6 @@ fn get_gifts() {
   lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
 }
 
-// fn signup(model: Model) {
-//   lustre_http.post(
-//     server_url <> "/api/users",
-//     json.object([
-//       #("name", json.string(model.sign_up_name)),
-//       #("email", json.string(model.sign_up_email)),
-//       #("password", json.string(model.sign_up_password)),
-//       #("auth_code", json.string(get_auth_code())),
-//     ]),
-//     lustre_http.expect_json(message_error_decoder(), SignUpResponded),
-//   )
-// }
-//
-// fn logout(model _: Model) {
-//   lustre_http.post(
-//     server_url <> "/api/auth/logout",
-//     json.object([]),
-//     lustre_http.expect_json(message_error_decoder(), LogoutResponded),
-//   )
-// }
-
 pub fn view(model: Model) -> Element(Msg) {
   body(
     [
@@ -277,7 +256,7 @@ pub fn view(model: Model) -> Element(Msg) {
       id("app"),
     ],
     [
-      navigation_bar(),
+      navigation_bar(model),
       case model.route {
         Home -> home_view()
         EventPage -> event_view()

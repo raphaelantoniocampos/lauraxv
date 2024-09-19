@@ -20,19 +20,13 @@ import shared.{type Gift, Gift}
 import wisp.{type Request, type Response}
 
 pub fn gifts(req: Request) -> Response {
-  use body <- wisp.require_json(req)
-
   case req.method {
-    Get -> {
-      io.debug(req)
-      list_gifts(req)
-    }
-    // Post -> create_gift(req, body)
+    Get -> list_gifts()
     _ -> wisp.method_not_allowed([Get, Post])
   }
 }
 
-fn gifts_to_json(gifts: List(Gift)) -> json.Json {
+fn gifts_to_json(gifts: List(Gift)) {
   json.array(gifts, fn(gift) {
     json.object([
       #("id", json.int(gift.id)),
@@ -42,33 +36,20 @@ fn gifts_to_json(gifts: List(Gift)) -> json.Json {
       #("selected_by", json.int(gift.selected_by)),
     ])
   })
+  |> json.to_string_builder
 }
 
-fn list_gifts(req: Request) -> Response {
+fn list_gifts() -> Response {
   let result = {
     use gifts <- result.try(
       gift.get_gifts()
       |> result.replace_error("Problem listing gifts"),
     )
-    let gifts_json = gifts_to_json(gifts)
-    Ok(gifts_json)
+    gifts_to_json(gifts)
+    |> Ok
   }
 
-  case result {
-    Ok(jonson) -> {
-      wisp.json_response(
-        jonson
-          |> json.to_string_builder,
-        201,
-      )
-    }
-    Error(error) ->
-      wisp.json_response(
-        json.object([#("error", json.string(error))])
-          |> json.to_string_builder,
-        200,
-      )
-  }
+  response.generate_wisp_response(result)
 }
 // fn create_gift(req: Request, body: dynamic.Dynamic) {
 //   let result = {

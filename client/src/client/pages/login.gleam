@@ -1,6 +1,6 @@
 import client/state.{
   type Model, type Msg, LoginResponded, LoginUpdateEmail, LoginUpdateName,
-  LoginUpdatePassword, RequestLogin, RequestSignUp, SignUpResponded,
+  LoginUpdatePassword, RequestedLogin, RequestedSignUp, SignUpResponded,
   message_error_decoder,
 }
 import gleam/json
@@ -47,7 +47,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
         ],
         [text("Entrar")],
       ),
-      form([class("space-y-6"), event.on_submit(RequestLogin)], [
+      form([class("space-y-6"), event.on_submit(RequestedLogin)], [
         div([], [
           label(
             [class("block text-sm font-medium text-gray-700"), for("name")],
@@ -110,7 +110,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
       ]),
       div([class("flex items-center justify-center")], [
         text("Não tem conta?"),
-        button([class("p-1"), event.on_click(RequestSignUp)], [
+        button([class("p-1"), event.on_click(RequestedSignUp)], [
           text("Cadastre-se"),
         ]),
       ]),

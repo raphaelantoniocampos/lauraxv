@@ -8,6 +8,7 @@ import gleam/result
 import gleam/string
 import server/db/user.{get_user_by_email}
 import server/db/user_session.{create_user_session}
+import server/response
 import wisp.{type Request, type Response}
 
 pub fn login(req: Request) -> Response {

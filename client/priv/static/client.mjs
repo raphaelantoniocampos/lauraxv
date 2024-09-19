@@ -3862,6 +3862,250 @@ var Gift = class extends CustomType {
 };
 var server_url = "http://localhost:8000";
 
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name, handler) {
+  return on(name, handler);
+}
+function on_click(msg) {
+  return on2("click", (_) => {
+    return new Ok(msg);
+  });
+}
+function value2(event2) {
+  let _pipe = event2;
+  return field("target", field("value", string))(
+    _pipe
+  );
+}
+function on_input(msg) {
+  return on2(
+    "input",
+    (event2) => {
+      let _pipe = value2(event2);
+      return map3(_pipe, msg);
+    }
+  );
+}
+function on_submit(msg) {
+  return on2(
+    "submit",
+    (event2) => {
+      let $ = prevent_default(event2);
+      return new Ok(msg);
+    }
+  );
+}
+
+// build/dev/javascript/client/client/state.mjs
+var Home = class extends CustomType {
+};
+var Login = class extends CustomType {
+};
+var GiftsPage = class extends CustomType {
+};
+var EventPage = class extends CustomType {
+};
+var PhotosPage = class extends CustomType {
+};
+var NotFound2 = class extends CustomType {
+};
+var Model2 = class extends CustomType {
+  constructor(route, auth_user, gifts, select_gift, photos, login_name, login_email, login_password, login_error) {
+    super();
+    this.route = route;
+    this.auth_user = auth_user;
+    this.gifts = gifts;
+    this.select_gift = select_gift;
+    this.photos = photos;
+    this.login_name = login_name;
+    this.login_email = login_email;
+    this.login_password = login_password;
+    this.login_error = login_error;
+  }
+};
+var OnRouteChange = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var AuthUserRecieved = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var GiftsRecieved = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var PhotosRecieved = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var RequestedSignUp = class extends CustomType {
+};
+var SignUpResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var LoginUpdateName = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var LoginUpdateEmail = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var LoginUpdatePassword = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var LoginUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var RequestedLogin = class extends CustomType {
+};
+var LoginResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var RequestedGifts = class extends CustomType {
+};
+var MessageErrorResponse = class extends CustomType {
+  constructor(message, error) {
+    super();
+    this.message = message;
+    this.error = error;
+  }
+};
+var AuthUser = class extends CustomType {
+  constructor(user_id, name, confirmed, is_admin) {
+    super();
+    this.user_id = user_id;
+    this.name = name;
+    this.confirmed = confirmed;
+    this.is_admin = is_admin;
+  }
+};
+function message_error_decoder() {
+  return decode2(
+    (var0, var1) => {
+      return new MessageErrorResponse(var0, var1);
+    },
+    optional_field("message", string),
+    optional_field("error", string)
+  );
+}
+
+// build/dev/javascript/client/client/navigation_bar.mjs
+function navigation_bar(model) {
+  return nav(
+    toList([
+      class$(
+        "w-full bg-white shadow-md py-4 px-8 flex justify-between items-center"
+      )
+    ]),
+    toList([
+      div(toList([]), toList([])),
+      ul(
+        toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
+        toList([
+          li(
+            toList([]),
+            toList([
+              a(
+                toList([
+                  class$("hover:text-pink-800 transition duration-300"),
+                  href("/")
+                ]),
+                toList([text("Home")])
+              )
+            ])
+          ),
+          li(
+            toList([]),
+            toList([
+              a(
+                toList([
+                  class$("hover:text-pink-800 transition duration-300"),
+                  href("/event")
+                ]),
+                toList([text("Evento")])
+              )
+            ])
+          ),
+          li(
+            toList([]),
+            toList([
+              a(
+                toList([
+                  class$("hover:text-pink-800 transition duration-300"),
+                  href("/gifts")
+                ]),
+                toList([text("Presentes")])
+              )
+            ])
+          ),
+          li(
+            toList([]),
+            toList([
+              a(
+                toList([
+                  class$("hover:text-pink-800 transition duration-300"),
+                  on_click(new RequestedGifts()),
+                  href("/photos")
+                ]),
+                toList([text("Fotos")])
+              )
+            ])
+          )
+        ])
+      ),
+      nav(
+        toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
+        toList([
+          (() => {
+            let $ = model.auth_user;
+            if ($ instanceof None) {
+              return a(
+                toList([
+                  class$("hover:text-pink-800 transition duration-300"),
+                  href("/login")
+                ]),
+                toList([text("Login")])
+              );
+            } else {
+              let user = $[0];
+              return a(
+                toList([class$("hover:text-pink-800 transition duration-300")]),
+                toList([text("Ol\xE1 " + user.name)])
+              );
+            }
+          })()
+        ])
+      )
+    ])
+  );
+}
+
 // build/dev/javascript/client/client/pages/event.mjs
 function event_view() {
   return main(
@@ -3952,213 +4196,151 @@ function event_view() {
   );
 }
 
-// build/dev/javascript/client/client/state.mjs
-var Home = class extends CustomType {
-};
-var Login = class extends CustomType {
-};
-var GiftsPage = class extends CustomType {
-};
-var EventPage = class extends CustomType {
-};
-var PhotosPage = class extends CustomType {
-};
-var NotFound2 = class extends CustomType {
-};
-var Model2 = class extends CustomType {
-  constructor(route, auth_user, gifts, select_gift, photos, login_name, login_email, login_password, login_error) {
-    super();
-    this.route = route;
-    this.auth_user = auth_user;
-    this.gifts = gifts;
-    this.select_gift = select_gift;
-    this.photos = photos;
-    this.login_name = login_name;
-    this.login_email = login_email;
-    this.login_password = login_password;
-    this.login_error = login_error;
-  }
-};
-var OnRouteChange = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var AuthUserRecieved = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var GiftsRecieved = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var PhotosRecieved = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var RequestSignUp = class extends CustomType {
-};
-var SignUpResponded = class extends CustomType {
-  constructor(resp_result) {
-    super();
-    this.resp_result = resp_result;
-  }
-};
-var LoginUpdateName = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
-var LoginUpdateEmail = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
-var LoginUpdatePassword = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
-var LoginUpdateError = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
-var RequestLogin = class extends CustomType {
-};
-var LoginResponded = class extends CustomType {
-  constructor(resp_result) {
-    super();
-    this.resp_result = resp_result;
-  }
-};
-var MessageErrorResponse = class extends CustomType {
-  constructor(message, error) {
-    super();
-    this.message = message;
-    this.error = error;
-  }
-};
-var AuthUser = class extends CustomType {
-  constructor(user_id, name, confirmed, is_admin) {
-    super();
-    this.user_id = user_id;
-    this.name = name;
-    this.confirmed = confirmed;
-    this.is_admin = is_admin;
-  }
-};
-function message_error_decoder() {
-  return decode2(
-    (var0, var1) => {
-      return new MessageErrorResponse(var0, var1);
-    },
-    optional_field("message", string),
-    optional_field("error", string)
-  );
-}
-
 // build/dev/javascript/client/client/pages/gifts.mjs
-function gift_widget(gift) {
-  return div(
-    toList([class$("size-150 bg-white p-4 rounded-lg shadow-lg")]),
-    (() => {
-      let $ = gift.selected_by;
-      if ($ === 0) {
-        return toList([
-          div(
-            toList([class$("bg-white p-4 rounded-lg shadow-lg")]),
-            toList([
-              img(
-                toList([
-                  class$("w-200 h-150 rounded-lg"),
-                  alt("Presente " + to_string2(gift.id)),
-                  src(gift.pic)
-                ])
-              ),
-              h3(
-                toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
-                toList([text(gift.name)])
-              ),
-              a(
-                toList([
-                  class$("text-pink-600 hover:text-pink-800 underline"),
-                  href(gift.link)
-                ]),
-                toList([text("Ver refer\xEAncia")])
-              ),
-              button(
-                toList([
-                  class$(
-                    "mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
-                  )
-                ]),
-                toList([text("Escolher")])
-              )
-            ])
-          )
-        ]);
-      } else {
-        return toList([
-          div(
-            toList([
-              class$("absolute inset-0 bg-black opacity-50 rounded-lg z-10")
-            ]),
-            toList([])
-          ),
-          div(
-            toList([
-              class$("absolute inset-0 flex items-center justify-center z-20")
-            ]),
-            toList([
-              span(
-                toList([class$("bg-red-600 text-white px-4 py-1 rounded-full")]),
-                toList([text("Selecionado")])
-              )
-            ])
-          ),
-          img(
-            toList([
-              class$("w-200 h-150 rounded-lg grayscale z-0"),
-              alt("Presente " + to_string2(gift.id)),
-              src(gift.pic)
-            ])
-          ),
-          h3(
-            toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
-            toList([text(gift.name)])
-          ),
-          a(
-            toList([
-              class$("text-pink-600 hover:text-pink-800 underline"),
-              href(gift.link)
-            ]),
-            toList([text("Ver refer\xEAncia")])
-          ),
-          button(
-            toList([
-              disabled(true),
-              class$(
-                "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed"
-              )
-            ]),
-            toList([text("Escolher")])
-          )
-        ]);
-      }
-    })()
-  );
+function gift_widget() {
+  return toList([
+    div(
+      toList([class$("relative bg-white p-4 rounded-lg shadow-lg")]),
+      toList([
+        div(
+          toList([
+            class$("absolute inset-0 bg-black opacity-50 rounded-lg")
+          ]),
+          toList([])
+        ),
+        div(
+          toList([
+            class$(
+              "absolute inset-0 flex items-center justify-center"
+            )
+          ]),
+          toList([
+            span(
+              toList([
+                class$(
+                  "bg-red-600 text-white px-4 py-1 rounded-full"
+                )
+              ]),
+              toList([text("Selecionado")])
+            )
+          ])
+        ),
+        img(
+          toList([
+            class$("w-full h-auto rounded-lg grayscale"),
+            alt("Presente 1"),
+            src("https://via.placeholder.com/200x150")
+          ])
+        ),
+        h3(
+          toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
+          toList([text("Jogo de Panelas")])
+        ),
+        a(
+          toList([
+            class$("text-pink-600 hover:text-pink-800 underline"),
+            href("https://example.com/present-1")
+          ]),
+          toList([text("Ver refer\xEAncia")])
+        ),
+        button(
+          toList([
+            disabled(true),
+            class$(
+              "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed"
+            )
+          ]),
+          toList([text("Escolher")])
+        )
+      ])
+    ),
+    div(
+      toList([class$("bg-white p-4 rounded-lg shadow-lg")]),
+      toList([
+        img(
+          toList([
+            class$("w-full h-auto rounded-lg"),
+            alt("Presente 2"),
+            src("https://via.placeholder.com/200x150")
+          ])
+        ),
+        h3(
+          toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
+          toList([text("M\xE1quina de Caf\xE9")])
+        ),
+        a(
+          toList([
+            class$("text-pink-600 hover:text-pink-800 underline"),
+            href("https://example.com/present-2")
+          ]),
+          toList([text("Ver refer\xEAncia")])
+        ),
+        button(
+          toList([
+            class$(
+              "mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            )
+          ]),
+          toList([text("Escolher")])
+        )
+      ])
+    ),
+    div(
+      toList([class$("relative bg-white p-4 rounded-lg shadow-lg")]),
+      toList([
+        div(
+          toList([
+            class$("absolute inset-0 bg-black opacity-50 rounded-lg")
+          ]),
+          toList([])
+        ),
+        div(
+          toList([
+            class$(
+              "absolute inset-0 flex items-center justify-center"
+            )
+          ]),
+          toList([
+            span(
+              toList([
+                class$(
+                  "bg-red-600 text-white px-4 py-1 rounded-full"
+                )
+              ]),
+              toList([text("Selecionado")])
+            )
+          ])
+        ),
+        img(
+          toList([
+            class$("w-full h-auto rounded-lg grayscale"),
+            alt("Presente 3"),
+            src("https://via.placeholder.com/200x150")
+          ])
+        ),
+        h3(
+          toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
+          toList([text("Aspirador de P\xF3")])
+        ),
+        a(
+          toList([
+            class$("text-pink-600 hover:text-pink-800 underline"),
+            href("https://example.com/present-3")
+          ]),
+          toList([text("Ver refer\xEAncia")])
+        ),
+        button(
+          toList([
+            disabled(true),
+            class$(
+              "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed"
+            )
+          ]),
+          toList([text("Escolher")])
+        )
+      ])
+    )
+  ]);
 }
 function gifts_view(model) {
   return main(
@@ -4175,43 +4357,9 @@ function gifts_view(model) {
         toList([
           class$("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")
         ]),
-        map2(model.gifts, gift_widget)
+        gift_widget()
       )
     ])
-  );
-}
-
-// build/dev/javascript/lustre/lustre/event.mjs
-function on2(name, handler) {
-  return on(name, handler);
-}
-function on_click(msg) {
-  return on2("click", (_) => {
-    return new Ok(msg);
-  });
-}
-function value2(event2) {
-  let _pipe = event2;
-  return field("target", field("value", string))(
-    _pipe
-  );
-}
-function on_input(msg) {
-  return on2(
-    "input",
-    (event2) => {
-      let _pipe = value2(event2);
-      return map3(_pipe, msg);
-    }
-  );
-}
-function on_submit(msg) {
-  return on2(
-    "submit",
-    (event2) => {
-      let $ = prevent_default(event2);
-      return new Ok(msg);
-    }
   );
 }
 
@@ -4697,7 +4845,7 @@ function login_view(model) {
             toList([text("Entrar")])
           ),
           form(
-            toList([class$("space-y-6"), on_submit(new RequestLogin())]),
+            toList([class$("space-y-6"), on_submit(new RequestedLogin())]),
             toList([
               div(
                 toList([]),
@@ -4804,7 +4952,7 @@ function login_view(model) {
             toList([
               text("N\xE3o tem conta?"),
               button(
-                toList([class$("p-1"), on_click(new RequestSignUp())]),
+                toList([class$("p-1"), on_click(new RequestedSignUp())]),
                 toList([text("Cadastre-se")])
               )
             ])
@@ -4882,7 +5030,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 191, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 195, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -4926,6 +5074,46 @@ function get_auth_user(id_string) {
       }
     )
   );
+}
+function get_gifts() {
+  let url = server_url + "/gifts";
+  let decoder = list(
+    decode5(
+      (var0, var1, var2, var3, var4) => {
+        return new Gift(var0, var1, var2, var3, var4);
+      },
+      field("id", int),
+      field("name", string),
+      field("pic", string),
+      field("link", string),
+      field("selected_by", int)
+    )
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new GiftsRecieved(var0);
+      }
+    )
+  );
+}
+function init3(_) {
+  return [
+    new Model2(
+      get_route2(),
+      new None(),
+      toList([]),
+      toList([]),
+      toList([]),
+      "",
+      "",
+      "",
+      new None()
+    ),
+    batch(toList([init2(on_url_change), get_gifts()]))
+  ];
 }
 function update(model, msg) {
   if (msg instanceof OnRouteChange) {
@@ -5011,9 +5199,9 @@ function update(model, msg) {
         )
       ];
     }
-  } else if (msg instanceof RequestLogin) {
+  } else if (msg instanceof RequestedLogin) {
     return [model, login(model)];
-  } else if (msg instanceof RequestSignUp) {
+  } else if (msg instanceof RequestedSignUp) {
     return [model, signup(model)];
   } else if (msg instanceof SignUpResponded) {
     let resp_result = msg.resp_result;
@@ -5083,49 +5271,11 @@ function update(model, msg) {
   } else if (msg instanceof LoginUpdateError) {
     let value3 = msg.value;
     return [model.withFields({ login_error: value3 }), none()];
-  } else {
+  } else if (msg instanceof RequestedGifts) {
     return [model, none()];
+  } else {
+    return [model, get_gifts()];
   }
-}
-function get_gifts() {
-  let url = server_url + "/gifts";
-  let decoder = list(
-    decode5(
-      (var0, var1, var2, var3, var4) => {
-        return new Gift(var0, var1, var2, var3, var4);
-      },
-      field("id", int),
-      field("name", string),
-      field("pic", string),
-      field("link", string),
-      field("selected_by", int)
-    )
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new GiftsRecieved(var0);
-      }
-    )
-  );
-}
-function init3(_) {
-  return [
-    new Model2(
-      get_route2(),
-      new None(),
-      toList([]),
-      toList([]),
-      toList([]),
-      "",
-      "",
-      "",
-      new None()
-    ),
-    batch(toList([init2(on_url_change), get_gifts()]))
-  ];
 }
 function view(model) {
   return body(
@@ -5136,94 +5286,7 @@ function view(model) {
       id("app")
     ]),
     toList([
-      nav(
-        toList([
-          class$(
-            "w-full bg-white shadow-md py-4 px-8 flex justify-between items-center"
-          )
-        ]),
-        toList([
-          div(toList([]), toList([])),
-          ul(
-            toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
-            toList([
-              li(
-                toList([]),
-                toList([
-                  a(
-                    toList([
-                      class$("hover:text-pink-800 transition duration-300"),
-                      href("/")
-                    ]),
-                    toList([text2("Home")])
-                  )
-                ])
-              ),
-              li(
-                toList([]),
-                toList([
-                  a(
-                    toList([
-                      class$("hover:text-pink-800 transition duration-300"),
-                      href("/event")
-                    ]),
-                    toList([text2("Evento")])
-                  )
-                ])
-              ),
-              li(
-                toList([]),
-                toList([
-                  a(
-                    toList([
-                      class$("hover:text-pink-800 transition duration-300"),
-                      href("/gifts")
-                    ]),
-                    toList([text2("Presentes")])
-                  )
-                ])
-              ),
-              li(
-                toList([]),
-                toList([
-                  a(
-                    toList([
-                      class$("hover:text-pink-800 transition duration-300"),
-                      href("/photos")
-                    ]),
-                    toList([text2("Fotos")])
-                  )
-                ])
-              )
-            ])
-          ),
-          nav(
-            toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
-            toList([
-              (() => {
-                let $ = model.auth_user;
-                if ($ instanceof None) {
-                  return a(
-                    toList([
-                      class$("hover:text-pink-800 transition duration-300"),
-                      href("/login")
-                    ]),
-                    toList([text2("Login")])
-                  );
-                } else {
-                  let user = $[0];
-                  return a(
-                    toList([
-                      class$("hover:text-pink-800 transition duration-300")
-                    ]),
-                    toList([text2("Ol\xE1 " + user.name)])
-                  );
-                }
-              })()
-            ])
-          )
-        ])
-      ),
+      navigation_bar(model),
       (() => {
         let $ = model.route;
         if ($ instanceof Home) {
