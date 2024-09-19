@@ -26,7 +26,7 @@ pub fn event_view() -> Element(a) {
         p([class("text-lg text-gray-700 mb-4")], [
           text("Pompéu, MG - 14 de Dezembro de 2024"),
         ]),
-        p([class("text-lg text-gray-700 mb-8")], [text("Horário: 19:00")]),
+        p([class("text-lg text-gray-700 mb-8")], [text("Horário: 22:00")]),
         h2([class("text-2xl font-semibold text-emerald-600 mb-4")], [
           text("Detalhes do Evento"),
         ]),

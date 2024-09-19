@@ -48,41 +48,32 @@ fn do_login(req: Request, body: dynamic.Dynamic) {
     use user <- result.try({
       case get_user_by_email(request_user.email) {
         Ok(user) -> Ok(user)
-        Error(_) -> Error("No user found with email")
+        Error(_) -> Error("Usuário não encontrado")
       }
     })
 
     use <- bool.guard(
       when: !beecrypt.verify(request_user.password, user.password),
-      return: Error("Passwords do not match"),
+      return: Error("Senha incorreta"),
     )
 
     // use session_token <- result.try(create_user_session(user.id))
     // Ok(session_token)
 
     // Using user id for now
-    Ok(int.to_string(user.id))
+    let user_id = int.to_string(user.id)
+    Ok(
+      json.object([#("message", json.string(user_id))])
+      |> json.to_string_builder,
+    )
   }
 
-  case result {
-    Ok(id) ->
-      wisp.json_response(
-        json.object([#("message", json.string(id))])
-          |> json.to_string_builder,
-        201,
-      )
-    // |> wisp.set_cookie(
-    //   req,
-    //   "session_token",
-    //   session_token,
-    //   wisp.PlainText,
-    //   60 * 60 * 24 * 1000,
-    // )
-    Error(error) ->
-      wisp.json_response(
-        json.object([#("error", json.string(error))])
-          |> json.to_string_builder,
-        200,
-      )
-  }
+  response.generate_wisp_response(result)
+  // |> wisp.set_cookie(
+  //   req,
+  //   "session_token",
+  //   session_token,
+  //   wisp.PlainText,
+  //   60 * 60 * 24 * 1000,
+  // )
 }

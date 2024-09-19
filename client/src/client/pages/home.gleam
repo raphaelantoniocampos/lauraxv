@@ -52,7 +52,7 @@ pub fn home_view(model: Model) -> Element(Msg) {
               ),
             ]),
             div([class("space-x-4")], [
-              button([button_class()], [
+              button([button_class("40")], [
                 a([href("/confirm")], [text("Confirmar Presença")]),
               ]),
               button(
@@ -67,7 +67,7 @@ pub fn home_view(model: Model) -> Element(Msg) {
           ]),
         ]),
         div([class("bg-gray-100 p-6 rounded-lg shadow-inner")], [
-          h2([class("text-3xl font-semibold text-pink-700 mb-4")], [
+          h2([class("text-3xl font-semibold text-emerald-600 mb-4")], [
             text("Sobre Laura"),
           ]),
           p([class("text-gray-700 text-lg")], [

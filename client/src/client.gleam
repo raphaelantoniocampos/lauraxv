@@ -24,7 +24,7 @@ import lustre
 import lustre/attribute.{class, id}
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
-import lustre/element/html.{body}
+import lustre/element/html.{body, div}
 import lustre_http
 import modem
 import shared.{type Gift, Gift, server_url}
@@ -107,14 +107,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
             _, _ -> #(
               model,
               effect.from(fn(dispatch) {
-                dispatch(LoginUpdateError(Some("Login Update Error")))
+                dispatch(
+                  LoginUpdateError(Some(
+                    "Problemas no servidor, por favor tente mais tarde.",
+                  )),
+                )
               }),
             )
           }
         Error(_) -> #(
           model,
           effect.from(fn(dispatch) {
-            dispatch(LoginUpdateError(Some("Login Update Error")))
+            dispatch(
+              LoginUpdateError(Some(
+                "Problemas no servidor, por favor tente mais tarde.",
+              )),
+            )
           }),
         )
       }
@@ -143,14 +151,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
             _, _ -> #(
               model,
               effect.from(fn(dispatch) {
-                dispatch(LoginUpdateError(Some("Signup Update Error")))
+                dispatch(
+                  LoginUpdateError(Some(
+                    "Problemas no servidor, por favor tente mais tarde.",
+                  )),
+                )
               }),
             )
           }
         Error(_) -> #(
           model,
           effect.from(fn(dispatch) {
-            dispatch(LoginUpdateError(Some("Signup Update Error")))
+            dispatch(
+              LoginUpdateError(Some(
+                "Problemas no servidor, por favor tente mais tarde.",
+              )),
+            )
           }),
         )
       }
@@ -200,6 +216,7 @@ pub fn view(model: Model) -> Element(Msg) {
     ],
     [
       navigation_bar(model),
+      div([class("mt-10")], []),
       case model.route {
         Home -> home_view(model)
         EventPage -> event_view()

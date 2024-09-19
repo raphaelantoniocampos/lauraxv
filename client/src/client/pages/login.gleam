@@ -98,14 +98,20 @@ pub fn login_view(model: Model) -> Element(Msg) {
           ]),
         ]),
         div([class("flex items-center justify-center")], [
-          button([button_class(), type_("submit")], [text("Entrar")]),
+          button([button_class("80"), type_("submit")], [text("Entrar")]),
         ]),
       ]),
       div([class("flex items-center justify-center")], [
         text("Não tem conta?"),
-        button([class("p-1"), event.on_click(UserRequestedSignUp)], [
-          text("Cadastre-se"),
-        ]),
+        button(
+          [
+            class(
+              "p-1 text-emerald-600 hover:text-emerald-400 transition duration-300",
+            ),
+            event.on_click(UserRequestedSignUp),
+          ],
+          [text("Cadastre-se")],
+        ),
       ]),
       case model.login_error {
         Some(err) ->

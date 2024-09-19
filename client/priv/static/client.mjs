@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -254,6 +255,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
+  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -4262,9 +4264,9 @@ function on_submit(msg) {
 }
 
 // build/dev/javascript/client/client/components/button_class.mjs
-function button_class() {
+function button_class(min_w) {
   return class$(
-    "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+    "bg-emerald-600 hover:bg-emerald-700 min-w-" + min_w + " text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
   );
 }
 
@@ -4409,10 +4411,22 @@ function navigation_bar(model) {
   return nav(
     toList([
       class$(
-        "w-full bg-white shadow-md py-4 px-8 flex justify-between items-center"
+        "fixed z-50 w-full bg-white shadow-md py-4 px-8 flex justify-between items-center"
       )
     ]),
     toList([
+      div(
+        toList([class$("flex min-w-10 text-emerald-600 font-semibold")]),
+        toList([
+          a(
+            toList([
+              class$("hover:text-emerald-800 transition duration-300"),
+              href("../")
+            ]),
+            toList([text("\u21B6")])
+          )
+        ])
+      ),
       ul(
         toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
         toList([
@@ -4500,7 +4514,7 @@ function navigation_bar(model) {
                   );
                 } else {
                   return button(
-                    toList([button_class()]),
+                    toList([button_class("40")]),
                     toList([
                       a(
                         toList([href("/confirm")]),
@@ -4662,7 +4676,7 @@ function login_view(model) {
                 toList([class$("flex items-center justify-center")]),
                 toList([
                   button(
-                    toList([button_class(), type_("submit")]),
+                    toList([button_class("80"), type_("submit")]),
                     toList([text("Entrar")])
                   )
                 ])
@@ -4675,7 +4689,9 @@ function login_view(model) {
               text("N\xE3o tem conta?"),
               button(
                 toList([
-                  class$("p-1"),
+                  class$(
+                    "p-1 text-emerald-600 hover:text-emerald-400 transition duration-300"
+                  ),
                   on_click(new UserRequestedSignUp())
                 ]),
                 toList([text("Cadastre-se")])
@@ -4744,7 +4760,7 @@ function confirm_presence_view(model) {
     let user = $[0];
     return main(
       toList([
-        class$("w-full max-w-2xl p-8 mt-12 bg-white rounded-lg shadow-lg")
+        class$("w-full max-w-2xl p-8 mt-20 bg-white rounded-lg shadow-lg")
       ]),
       (() => {
         let $1 = user.confirmed;
@@ -4930,7 +4946,7 @@ function confirm_presence_view(model) {
                   toList([class$("flex items-center justify-center")]),
                   toList([
                     button(
-                      toList([button_class(), type_("submit")]),
+                      toList([button_class("60"), type_("submit")]),
                       toList([text("Enviar Confirma\xE7\xE3o")])
                     )
                   ])
@@ -4990,7 +5006,7 @@ function event_view() {
               ),
               p(
                 toList([class$("text-lg text-gray-700 mb-8")]),
-                toList([text("Hor\xE1rio: 19:00")])
+                toList([text("Hor\xE1rio: 22:00")])
               ),
               h2(
                 toList([class$("text-2xl font-semibold text-emerald-600 mb-4")]),
@@ -5108,7 +5124,7 @@ function gift_box(gift) {
         ),
         a(
           toList([
-            class$("text-pink-600 hover:text-pink-800 underline"),
+            class$("text-pink-500 hover:text-pink-800 underline"),
             rel("noopener noreferrer"),
             target("_blank"),
             href(gift.link)
@@ -5117,7 +5133,9 @@ function gift_box(gift) {
         ),
         button(
           toList([
-            button_class(),
+            class$(
+              "mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            ),
             on_click(new UserRequestedSelectGift(gift.id))
           ]),
           toList([text("Escolher")])
@@ -5220,7 +5238,7 @@ function home_view(model) {
                     toList([class$("space-x-4")]),
                     toList([
                       button(
-                        toList([button_class()]),
+                        toList([button_class("40")]),
                         toList([
                           a(
                             toList([href("/confirm")]),
@@ -5251,7 +5269,7 @@ function home_view(model) {
             toList([class$("bg-gray-100 p-6 rounded-lg shadow-inner")]),
             toList([
               h2(
-                toList([class$("text-3xl font-semibold text-pink-700 mb-4")]),
+                toList([class$("text-3xl font-semibold text-emerald-600 mb-4")]),
                 toList([text("Sobre Laura")])
               ),
               p(
@@ -5325,6 +5343,7 @@ function view(model) {
     ]),
     toList([
       navigation_bar(model),
+      div(toList([class$("mt-10")]), toList([])),
       (() => {
         let $ = model.route;
         if ($ instanceof Home) {
@@ -5356,7 +5375,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 226, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 243, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -5497,7 +5516,9 @@ function update(model, msg) {
           from2(
             (dispatch) => {
               return dispatch(
-                new LoginUpdateError(new Some("Login Update Error"))
+                new LoginUpdateError(
+                  new Some("Problemas no servidor, por favor tente mais tarde.")
+                )
               );
             }
           )
@@ -5509,7 +5530,9 @@ function update(model, msg) {
         from2(
           (dispatch) => {
             return dispatch(
-              new LoginUpdateError(new Some("Login Update Error"))
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
             );
           }
         )
@@ -5553,7 +5576,9 @@ function update(model, msg) {
           from2(
             (dispatch) => {
               return dispatch(
-                new LoginUpdateError(new Some("Signup Update Error"))
+                new LoginUpdateError(
+                  new Some("Problemas no servidor, por favor tente mais tarde.")
+                )
               );
             }
           )
@@ -5565,7 +5590,9 @@ function update(model, msg) {
         from2(
           (dispatch) => {
             return dispatch(
-              new LoginUpdateError(new Some("Signup Update Error"))
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
             );
           }
         )

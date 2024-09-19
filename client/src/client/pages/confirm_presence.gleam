@@ -46,7 +46,7 @@ fn confirmed() -> Element(a) {
 pub fn confirm_presence_view(model: Model) -> Element(Msg) {
   case model.auth_user {
     Some(user) -> {
-      main([class("w-full max-w-2xl p-8 mt-12 bg-white rounded-lg shadow-lg")], case
+      main([class("w-full max-w-2xl p-8 mt-20 bg-white rounded-lg shadow-lg")], case
         user.confirmed
       {
         False -> {
@@ -201,7 +201,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                   ),
                 ]),
                 div([class("flex items-center justify-center")], [
-                  button([button_class(), type_("submit")], [
+                  button([button_class("60"), type_("submit")], [
                     text("Enviar Confirmação"),
                   ]),
                 ]),

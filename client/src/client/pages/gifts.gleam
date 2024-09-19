@@ -57,7 +57,7 @@ fn gift_box(gift: Gift) {
         ]),
         a(
           [
-            class("text-pink-600 hover:text-pink-800 underline"),
+            class("text-pink-500 hover:text-pink-800 underline"),
             rel("noopener noreferrer"),
             target("_blank"),
             href(gift.link),
@@ -65,7 +65,12 @@ fn gift_box(gift: Gift) {
           [text("Ver referência")],
         ),
         button(
-          [button_class(), event.on_click(UserRequestedSelectGift(gift.id))],
+          [
+            class(
+              "mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
+            ),
+            event.on_click(UserRequestedSelectGift(gift.id)),
+          ],
           [text("Escolher")],
         ),
       ])
