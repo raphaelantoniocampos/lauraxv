@@ -1,7 +1,6 @@
 import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
-import simplifile
 
 import shared.{type Gift}
 
@@ -31,7 +30,7 @@ pub type Msg {
   OnRouteChange(Route)
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
-  PhotosRecieved(Result(List(String), simplifile.FileError))
+  PhotosRecieved(Result(List(String), lustre_http.HttpError))
 
   UserRequestedSignUp
   SignUpResponded(

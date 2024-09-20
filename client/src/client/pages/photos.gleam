@@ -18,7 +18,7 @@ pub fn photos_view(model: Model) -> Element(a) {
       [text("Fotos do Evento")],
     ),
     div(
-      [class("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")],
+      [class("grid grid-cols-1 sm:grid-cols-2 grid-cols-3 gap-8 w-full")],
       list.map(model.photos, photo_widget),
     ),
   ])

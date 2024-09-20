@@ -28,7 +28,6 @@ import lustre/element/html.{body, div}
 import lustre_http
 import modem
 import shared.{type Gift, Gift, server_url}
-import simplifile
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -52,7 +51,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       modem.init(on_url_change),
       get_gifts(),
       update_countdown(),
-      // get_photos(),
+      get_photos(),
     ]),
   )
 }
@@ -199,7 +198,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     UserOpenedPhotosPage ->
       case model.photos {
         [_] -> #(model, effect.none())
-        // [] -> #(model, get_photos())
+        [] -> #(model, get_photos())
         _ -> #(model, effect.none())
       }
   }
@@ -283,11 +282,12 @@ fn get_gifts() {
   lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
 }
 
-// fn get_photos() {
-//   let photo_list = simplifile.read_directory("priv/static/")
-//
-//   effect.from(fn(dispatch) { dispatch(PhotosRecieved(photo_list)) })
-// }
+fn get_photos() {
+  let url = server_url <> "/photos"
+  let decoder = dynamic.list(dynamic.field("src", dynamic.string))
+
+  lustre_http.get(url, lustre_http.expect_json(decoder, PhotosRecieved))
+}
 
 pub fn update_countdown() {
   let countdown =

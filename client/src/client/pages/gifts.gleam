@@ -8,7 +8,7 @@ import lustre/element/html.{a, button, div, h1, h3, img, main, span}
 import lustre/event
 import shared.{type Gift, Gift}
 
-fn gift_box(gift: Gift) {
+fn gift_widget(gift: Gift) {
   case gift.selected_by {
     0 ->
       div([class("relative bg-white p-4 rounded-lg shadow-lg")], [
@@ -88,7 +88,7 @@ pub fn gifts_view(model: Model) -> Element(Msg) {
     ),
     div(
       [class("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")],
-      list.map(model.gifts, fn(gift) { gift_box(gift) }),
+      list.map(model.gifts, fn(gift) { gift_widget(gift) }),
     ),
   ])
 }
