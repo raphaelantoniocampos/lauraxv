@@ -1,11 +1,3 @@
 import gleam/http.{Get, Post}
 import wisp.{type Request, type Response}
-
-pub fn photos(req: Request) -> Response {
-  use body <- wisp.require_json(req)
-
-  case req.method {
-    // Post -> create_user(req, body)
-    _ -> wisp.method_not_allowed([Get, Post])
-  }
-}
+// const photos_path = "client/priv/static/photos/"

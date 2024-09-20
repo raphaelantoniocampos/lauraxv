@@ -1,8 +1,8 @@
 import client/components/button_class.{button_class}
 import client/state.{
-  type Model, type Msg, LoginResponded, LoginUpdateEmail, LoginUpdateName,
-  LoginUpdatePassword, SignUpResponded, UserRequestedLogin, UserRequestedSignUp,
-  message_error_decoder,
+  type LoginForm, type Model, type Msg, LoginForm, LoginResponded,
+  LoginUpdateEmail, LoginUpdateName, LoginUpdatePassword, SignUpResponded,
+  UserRequestedLogin, UserRequestedSignUp, message_error_decoder,
 }
 import gleam/json
 import gleam/option.{None, Some}
@@ -19,8 +19,8 @@ pub fn login(model: Model) {
   lustre_http.post(
     server_url <> "/auth/login",
     json.object([
-      #("email", json.string(model.login_email)),
-      #("password", json.string(model.login_password)),
+      #("email", json.string(model.login_form.email)),
+      #("password", json.string(model.login_form.password)),
     ]),
     lustre_http.expect_json(message_error_decoder(), LoginResponded),
   )
@@ -30,9 +30,9 @@ pub fn signup(model: Model) {
   lustre_http.post(
     server_url <> "/users",
     json.object([
-      #("name", json.string(model.login_name)),
-      #("email", json.string(model.login_email)),
-      #("password", json.string(model.login_password)),
+      #("name", json.string(model.login_form.name)),
+      #("email", json.string(model.login_form.email)),
+      #("password", json.string(model.login_form.password)),
     ]),
     lustre_http.expect_json(message_error_decoder(), SignUpResponded),
   )
@@ -61,7 +61,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
             event.on_input(LoginUpdateName),
             id("name"),
             type_("name"),
-            value(model.login_name),
+            value(model.login_form.name),
           ]),
         ]),
         div([], [
@@ -78,7 +78,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
             type_("email"),
             autocomplete("email"),
             required(True),
-            value(model.login_email),
+            value(model.login_form.email),
           ]),
         ]),
         div([], [
@@ -94,11 +94,11 @@ pub fn login_view(model: Model) -> Element(Msg) {
             id("password"),
             type_("password"),
             required(True),
-            value(model.login_password),
+            value(model.login_form.password),
           ]),
         ]),
         div([class("flex items-center justify-center")], [
-          button([button_class("80"), type_("submit")], [text("Entrar")]),
+          button([button_class("50"), type_("submit")], [text("Entrar")]),
         ]),
       ]),
       div([class("flex items-center justify-center")], [
@@ -113,7 +113,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
           [text("Cadastre-se")],
         ),
       ]),
-      case model.login_error {
+      case model.login_form.error {
         Some(err) ->
           p([class("text-red-500 text-center")], [text("Error: " <> err)])
         None -> element.none()

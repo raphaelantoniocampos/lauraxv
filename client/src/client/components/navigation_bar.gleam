@@ -1,12 +1,11 @@
 import client/components/button_class.{button_class}
-import client/state.{type Model, type Msg, UserOpenedGiftsPage}
+import client/state.{type Model, UserOpenedGiftsPage, UserOpenedPhotosPage}
 import gleam/option.{None, Some}
 import gleam/string
 import lustre/attribute.{class, href}
 import lustre/element.{text}
 import lustre/element/html.{a, button, div, li, nav, span, ul}
 import lustre/event
-import modem
 
 pub fn navigation_bar(model: Model) {
   nav(
@@ -16,7 +15,7 @@ pub fn navigation_bar(model: Model) {
       ),
     ],
     [
-      div([class("flex min-w-10 text-emerald-600 font-semibold")], [
+      div([class("flex min-w-10 text-pink-600 font-semibold")], [
         a(
           [class("hover:text-emerald-800 transition duration-300"), href("../")],
           [text("\u{21B6}")],
@@ -27,7 +26,7 @@ pub fn navigation_bar(model: Model) {
           a(
             [
               class(
-                "hover:text-pink-800 "
+                "hover:text-emerald-800 "
                 <> case model.route {
                   state.Home -> "text-emerald-600"
                   _ -> "text-pink-600"
@@ -43,7 +42,7 @@ pub fn navigation_bar(model: Model) {
           a(
             [
               class(
-                "hover:text-pink-800 "
+                "hover:text-emerald-800 "
                 <> case model.route {
                   state.EventPage -> "text-emerald-600"
                   _ -> "text-pink-600"
@@ -59,7 +58,7 @@ pub fn navigation_bar(model: Model) {
           a(
             [
               class(
-                "hover:text-pink-800 "
+                "hover:text-emerald-800 "
                 <> case model.route {
                   state.GiftsPage -> "text-emerald-600"
                   _ -> "text-pink-600"
@@ -76,7 +75,7 @@ pub fn navigation_bar(model: Model) {
           a(
             [
               class(
-                "hover:text-pink-800 "
+                "hover:text-emerald-800 "
                 <> case model.route {
                   state.PhotosPage -> "text-emerald-600"
                   _ -> "text-pink-600"
@@ -84,6 +83,7 @@ pub fn navigation_bar(model: Model) {
                 <> " transition duration-300",
               ),
               href("/photos"),
+              event.on_click(UserOpenedPhotosPage),
             ],
             [text("Fotos")],
           ),
@@ -96,7 +96,7 @@ pub fn navigation_bar(model: Model) {
               a(
                 [
                   class(
-                    "hover:text-pink-800 "
+                    "hover:text-emerald-800 "
                     <> case model.route {
                       state.Login -> "text-emerald-600"
                       _ -> "text-pink-600"

@@ -1,19 +1,6 @@
-import cake/insert as i
-import cake/select as s
-import cake/update as u
-import cake/where as w
-import gleam/bool
-import gleam/dynamic
 import gleam/http.{Get, Post}
-import gleam/io
 import gleam/json
-import gleam/list
-import gleam/regex
 import gleam/result
-import gleam/string
-import gleeunit
-import gleeunit/should
-import server/db
 import server/db/gift
 import server/response
 import shared.{type Gift, Gift}

@@ -1,6 +1,7 @@
 import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
+import simplifile
 
 import shared.{type Gift}
 
@@ -21,10 +22,7 @@ pub type Model {
     gifts: List(Gift),
     select_gift: List(Int),
     photos: List(String),
-    login_name: String,
-    login_email: String,
-    login_password: String,
-    login_error: Option(String),
+    login_form: LoginForm,
     countdown: Int,
   )
 }
@@ -33,7 +31,7 @@ pub type Msg {
   OnRouteChange(Route)
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
-  PhotosRecieved(Result(List(String), lustre_http.HttpError))
+  PhotosRecieved(Result(List(String), simplifile.FileError))
 
   UserRequestedSignUp
   SignUpResponded(
@@ -51,6 +49,8 @@ pub type Msg {
   )
 
   UserOpenedGiftsPage
+
+  UserOpenedPhotosPage
 
   UserRequestedSelectGift(value: Int)
 
@@ -73,4 +73,13 @@ pub fn message_error_decoder() {
 
 pub type AuthUser {
   AuthUser(user_id: Int, name: String, confirmed: Bool, is_admin: Bool)
+}
+
+pub type LoginForm {
+  LoginForm(
+    name: String,
+    email: String,
+    password: String,
+    error: Option(String),
+  )
 }

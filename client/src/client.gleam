@@ -7,13 +7,13 @@ import client/pages/login.{login, login_view, signup}
 import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import client/state.{
-  type Model, type Msg, type Route, AuthUser, AuthUserRecieved, ConfirmPresence,
-  CountdownUpdated, EventPage, GiftsPage, GiftsRecieved, Home, Login,
-  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdateName,
-  LoginUpdatePassword, Model, NotFound, OnRouteChange, PhotosPage,
-  PhotosRecieved, SignUpResponded, UserOpenedGiftsPage,
-  UserRequestedConfirmPresence, UserRequestedLogin, UserRequestedSelectGift,
-  UserRequestedSignUp,
+  type LoginForm, type Model, type Msg, type Route, AuthUser, AuthUserRecieved,
+  ConfirmPresence, CountdownUpdated, EventPage, GiftsPage, GiftsRecieved, Home,
+  Login, LoginForm, LoginResponded, LoginUpdateEmail, LoginUpdateError,
+  LoginUpdateName, LoginUpdatePassword, Model, NotFound, OnRouteChange,
+  PhotosPage, PhotosRecieved, SignUpResponded, UserOpenedGiftsPage,
+  UserOpenedPhotosPage, UserRequestedConfirmPresence, UserRequestedLogin,
+  UserRequestedSelectGift, UserRequestedSignUp,
 }
 import rada/date
 
@@ -28,6 +28,7 @@ import lustre/element/html.{body, div}
 import lustre_http
 import modem
 import shared.{type Gift, Gift, server_url}
+import simplifile
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -44,13 +45,15 @@ fn init(_) -> #(Model, Effect(Msg)) {
       gifts: [],
       select_gift: [],
       photos: [],
-      login_name: "",
-      login_email: "",
-      login_password: "",
-      login_error: None,
+      login_form: state.LoginForm("", "", "", None),
       countdown: 0,
     ),
-    effect.batch([modem.init(on_url_change), get_gifts(), update_countdown()]),
+    effect.batch([
+      modem.init(on_url_change),
+      get_gifts(),
+      update_countdown(),
+      // get_photos(),
+    ]),
   )
 }
 
@@ -92,13 +95,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
             )
             Some(id_string), None -> #(
-              Model(
-                ..model,
-                login_name: "",
-                login_email: "",
-                login_password: "",
-                login_error: None,
-              ),
+              Model(..model, login_form: LoginForm("", "", "", None)),
               effect.batch([
                 modem.push("/", None, None),
                 get_auth_user(id_string),
@@ -132,13 +129,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Ok(resp) ->
           case resp.message, resp.error {
             Some(id_string), None -> #(
-              Model(
-                ..model,
-                login_name: "",
-                login_email: "",
-                login_password: "",
-                login_error: None,
-              ),
+              Model(..model, login_form: LoginForm("", "", "", None)),
               effect.batch([
                 modem.push("/", None, None),
                 get_auth_user(id_string),
@@ -172,20 +163,20 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
 
     LoginUpdateName(value) -> #(
-      Model(..model, login_name: value),
+      Model(..model, login_form: LoginForm(..model.login_form, name: value)),
       effect.none(),
     )
 
     LoginUpdateEmail(value) -> #(
-      Model(..model, login_email: value),
+      Model(..model, login_form: LoginForm(..model.login_form, email: value)),
       effect.none(),
     )
     LoginUpdatePassword(value) -> #(
-      Model(..model, login_password: value),
+      Model(..model, login_form: LoginForm(..model.login_form, password: value)),
       effect.none(),
     )
     LoginUpdateError(value) -> #(
-      Model(..model, login_error: value),
+      Model(..model, login_form: LoginForm(..model.login_form, error: value)),
       effect.none(),
     )
 
@@ -200,7 +191,15 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
     UserOpenedGiftsPage ->
       case model.gifts {
+        [_] -> #(model, effect.none())
         [] -> #(model, get_gifts())
+        _ -> #(model, effect.none())
+      }
+
+    UserOpenedPhotosPage ->
+      case model.photos {
+        [_] -> #(model, effect.none())
+        // [] -> #(model, get_photos())
         _ -> #(model, effect.none())
       }
   }
@@ -283,6 +282,12 @@ fn get_gifts() {
 
   lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
 }
+
+// fn get_photos() {
+//   let photo_list = simplifile.read_directory("priv/static/")
+//
+//   effect.from(fn(dispatch) { dispatch(PhotosRecieved(photo_list)) })
+// }
 
 pub fn update_countdown() {
   let countdown =

@@ -21,7 +21,6 @@ pub fn handle_request(req: Request) -> Response {
   case wisp.path_segments(req) {
     ["gifts"] -> gifts.gifts(req)
     ["users"] -> users.users(req)
-    ["photos"] -> photos.photos(req)
     ["auth", "validate", id_string] -> validate.validate(req, id_string)
     ["auth", "login"] -> login.login(req)
     _ -> wisp.not_found()
