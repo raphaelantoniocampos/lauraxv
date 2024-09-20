@@ -8,6 +8,8 @@ import wisp/wisp_mist
 //TODO: Atualizar presentes
 //TODO: Armazenar Confirmação de Presença
 //TODO: Página de Admin (Mostrar número de confirmados e nomes)
+
+//TODO: Refatoração
 //TODO: Ultimos testes
 //TODO: Deploy
 
