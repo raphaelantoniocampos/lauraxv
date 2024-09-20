@@ -1036,16 +1036,6 @@ video {
   background-color: rgb(190 24 93 / var(--tw-bg-opacity));
 }
 
-.hover\:text-emerald-400:hover {
-  --tw-text-opacity: 1;
-  color: rgb(52 211 153 / var(--tw-text-opacity));
-}
-
-.hover\:text-emerald-600:hover {
-  --tw-text-opacity: 1;
-  color: rgb(5 150 105 / var(--tw-text-opacity));
-}
-
 .hover\:text-emerald-800:hover {
   --tw-text-opacity: 1;
   color: rgb(6 95 70 / var(--tw-text-opacity));

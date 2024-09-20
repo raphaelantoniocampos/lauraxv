@@ -4428,14 +4428,23 @@ function navigation_bar(model) {
         ])
       ),
       ul(
-        toList([class$("flex space-x-8 text-pink-600 font-semibold")]),
+        toList([class$("flex space-x-8  font-semibold")]),
         toList([
           li(
             toList([]),
             toList([
               a(
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
+                  class$(
+                    "hover:text-pink-800 " + (() => {
+                      let $ = model.route;
+                      if ($ instanceof Home) {
+                        return "text-emerald-600";
+                      } else {
+                        return "text-pink-600";
+                      }
+                    })() + " transition duration-300"
+                  ),
                   href("/")
                 ]),
                 toList([text("Home")])
@@ -4447,7 +4456,16 @@ function navigation_bar(model) {
             toList([
               a(
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
+                  class$(
+                    "hover:text-pink-800 " + (() => {
+                      let $ = model.route;
+                      if ($ instanceof EventPage) {
+                        return "text-emerald-600";
+                      } else {
+                        return "text-pink-600";
+                      }
+                    })() + " transition duration-300"
+                  ),
                   href("/event")
                 ]),
                 toList([text("Evento")])
@@ -4459,7 +4477,16 @@ function navigation_bar(model) {
             toList([
               a(
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
+                  class$(
+                    "hover:text-pink-800 " + (() => {
+                      let $ = model.route;
+                      if ($ instanceof GiftsPage) {
+                        return "text-emerald-600";
+                      } else {
+                        return "text-pink-600";
+                      }
+                    })() + " transition duration-300"
+                  ),
                   href("/gifts"),
                   on_click(new UserOpenedGiftsPage())
                 ]),
@@ -4472,7 +4499,16 @@ function navigation_bar(model) {
             toList([
               a(
                 toList([
-                  class$("hover:text-pink-800 transition duration-300"),
+                  class$(
+                    "hover:text-pink-800 " + (() => {
+                      let $ = model.route;
+                      if ($ instanceof PhotosPage) {
+                        return "text-emerald-600";
+                      } else {
+                        return "text-pink-600";
+                      }
+                    })() + " transition duration-300"
+                  ),
                   href("/photos")
                 ]),
                 toList([text("Fotos")])
@@ -4481,53 +4517,67 @@ function navigation_bar(model) {
           )
         ])
       ),
-      (() => {
-        let $ = model.auth_user;
-        if ($ instanceof None) {
-          return span(
-            toList([class$("text-pink-600 font-semibold")]),
-            toList([
-              a(
-                toList([
-                  class$("hover:text-emerald-600 transition duration-300"),
-                  href("/login")
-                ]),
-                toList([text("Login")])
-              )
-            ])
-          );
-        } else {
-          let user = $[0];
-          return div(
-            toList([class$("flex items-center space-x-4")]),
-            toList([
-              span(
+      div(
+        toList([]),
+        toList([
+          (() => {
+            let $ = model.auth_user;
+            if ($ instanceof None) {
+              return span(
                 toList([class$("text-pink-600 font-semibold")]),
-                toList([text("Ol\xE1, " + capitalise(user.name))])
-              ),
-              (() => {
-                let $1 = user.confirmed;
-                if ($1) {
-                  return span(
-                    toList([class$("text-emerald-600 font-semibold")]),
-                    toList([text("Presen\xE7a Confirmada")])
-                  );
-                } else {
-                  return button(
-                    toList([button_class("40")]),
+                toList([
+                  a(
                     toList([
-                      a(
-                        toList([href("/confirm")]),
-                        toList([text("Confirme sua presen\xE7a")])
-                      )
-                    ])
-                  );
-                }
-              })()
-            ])
-          );
-        }
-      })()
+                      class$(
+                        "hover:text-pink-800 " + (() => {
+                          let $1 = model.route;
+                          if ($1 instanceof Login) {
+                            return "text-emerald-600";
+                          } else {
+                            return "text-pink-600";
+                          }
+                        })() + " transition duration-300"
+                      ),
+                      href("/login")
+                    ]),
+                    toList([text("Login")])
+                  )
+                ])
+              );
+            } else {
+              let user = $[0];
+              return div(
+                toList([class$("flex items-center space-x-4")]),
+                toList([
+                  span(
+                    toList([class$("text-pink-600 font-semibold")]),
+                    toList([text("Ol\xE1, " + capitalise(user.name))])
+                  ),
+                  (() => {
+                    let $1 = user.confirmed;
+                    if ($1) {
+                      return span(
+                        toList([class$("text-emerald-600 font-semibold")]),
+                        toList([text("Presen\xE7a Confirmada")])
+                      );
+                    } else {
+                      return button(
+                        toList([button_class("40")]),
+                        toList([
+                          a(
+                            toList([href("/confirm")]),
+                            toList([text("Confirme sua presen\xE7a")])
+                          )
+                        ])
+                      );
+                    }
+                  })()
+                ])
+              );
+            }
+          })()
+        ])
+      )
     ])
   );
 }
@@ -4690,7 +4740,7 @@ function login_view(model) {
               button(
                 toList([
                   class$(
-                    "p-1 text-emerald-600 hover:text-emerald-400 transition duration-300"
+                    "p-1 text-pink-600 hover:text-pink-800 transition duration-300"
                   ),
                   on_click(new UserRequestedSignUp())
                 ]),

@@ -106,7 +106,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
         button(
           [
             class(
-              "p-1 text-emerald-600 hover:text-emerald-400 transition duration-300",
+              "p-1 text-pink-600 hover:text-pink-800 transition duration-300",
             ),
             event.on_click(UserRequestedSignUp),
           ],
