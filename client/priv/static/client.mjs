@@ -5359,7 +5359,7 @@ function not_found_view() {
 function photo_widget(photo) {
   return img(
     toList([
-      class$("w-full h-auto rounded-lg shadow-lg"),
+      class$("flex justify-center rounded-lg shadow-lg"),
       alt("Foto"),
       src(photo)
     ])
@@ -5377,9 +5377,7 @@ function photos_view(model) {
         toList([text("Fotos do Evento")])
       ),
       div(
-        toList([
-          class$("grid grid-cols-1 sm:grid-cols-2 grid-cols-3 gap-8 w-full")
-        ]),
+        toList([class$("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3")]),
         map2(model.photos, photo_widget)
       )
     ])

@@ -1,7 +1,6 @@
 import cake
 import cake/dialect/sqlite_dialect
 import gleam/dynamic.{type Dynamic}
-import gleam/io
 import sqlight
 
 const conn_path = "file:db.sqlite3?mode=rw"

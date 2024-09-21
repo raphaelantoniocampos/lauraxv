@@ -5,7 +5,6 @@ import gleam/option.{None, Some}
 import lustre/attribute.{alt, attribute, class, href, id, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p, span}
-import lustre/event
 
 pub fn home_view(model: Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [

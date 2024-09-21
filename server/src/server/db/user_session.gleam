@@ -2,7 +2,6 @@ import cake/insert as i
 import cake/select as s
 import cake/where as w
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/result
 import server/db

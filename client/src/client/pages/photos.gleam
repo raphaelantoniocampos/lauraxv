@@ -5,7 +5,11 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, img, main}
 
 fn photo_widget(photo: String) -> Element(a) {
-  img([class("w-full h-auto rounded-lg shadow-lg"), alt("Foto"), src(photo)])
+  img([
+    class("flex justify-center rounded-lg shadow-lg"),
+    alt("Foto"),
+    src(photo),
+  ])
 }
 
 pub fn photos_view(model: Model) -> Element(a) {
@@ -18,7 +22,7 @@ pub fn photos_view(model: Model) -> Element(a) {
       [text("Fotos do Evento")],
     ),
     div(
-      [class("grid grid-cols-1 sm:grid-cols-2 grid-cols-3 gap-8 w-full")],
+      [class("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3")],
       list.map(model.photos, photo_widget),
     ),
   ])

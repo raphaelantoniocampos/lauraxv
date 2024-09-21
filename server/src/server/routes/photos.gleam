@@ -1,5 +1,4 @@
 import gleam/http.{Get}
-import gleam/io
 import gleam/json
 import gleam/result
 import server/response
@@ -34,5 +33,4 @@ fn photos_to_json(photos: List(String)) {
     json.object([#("src", json.string(dir_path <> photo))])
   })
   |> json.to_string_builder
-  |> io.debug
 }
