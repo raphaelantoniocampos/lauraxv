@@ -1,11 +1,12 @@
 import client/components/button_class.{button_class}
 import client/state.{
   type LoginForm, type Model, type Msg, LoginForm, LoginResponded,
-  LoginUpdateEmail, LoginUpdateName, LoginUpdatePassword, SignUpResponded,
+  LoginUpdateEmail, LoginUpdatePassword, LoginUpdateUsername, SignUpResponded,
   UserRequestedLogin, UserRequestedSignUp, message_error_decoder,
 }
 import gleam/json
 import gleam/option.{None, Some}
+import gleam/string
 import lustre/attribute.{
   attribute, autocomplete, class, for, id, required, type_, value,
 }
@@ -30,7 +31,7 @@ pub fn signup(model: Model) {
   lustre_http.post(
     server_url <> "/users",
     json.object([
-      #("name", json.string(model.login_form.name)),
+      #("username", json.string(string.lowercase(model.login_form.username))),
       #("email", json.string(model.login_form.email)),
       #("password", json.string(model.login_form.password)),
     ]),
@@ -51,17 +52,18 @@ pub fn login_view(model: Model) -> Element(Msg) {
       form([class("space-y-6"), event.on_submit(UserRequestedLogin)], [
         div([], [
           label(
-            [class("block text-sm font-medium text-gray-700"), for("name")],
-            [text("Nome")],
+            [class("block text-sm font-medium text-gray-700"), for("username")],
+            [text("Nome de Usuário")],
           ),
           input([
             class(
               "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
             ),
-            event.on_input(LoginUpdateName),
-            id("name"),
+            event.on_input(LoginUpdateUsername),
+            required(True),
+            id("username"),
             type_("name"),
-            value(model.login_form.name),
+            value(model.login_form.username),
           ]),
         ]),
         div([], [
@@ -115,7 +117,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
       ]),
       case model.login_form.error {
         Some(err) ->
-          p([class("text-red-500 text-center")], [text("Error: " <> err)])
+          p([class("text-red-500 text-center")], [text("Erro: " <> err)])
         None -> element.none()
       },
     ]),

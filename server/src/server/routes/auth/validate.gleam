@@ -29,7 +29,7 @@ fn validate_session(req: Request, id_string: String) -> Response {
     Ok(
       json.object([
         #("user_id", json.int(user_id)),
-        #("name", json.string(user.name)),
+        #("username", json.string(user.username)),
         #("confirmed", json.bool(user.confirmed)),
         #("is_admin", json.bool(user.is_admin)),
       ])

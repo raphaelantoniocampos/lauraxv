@@ -1,5 +1,5 @@
 import client/components/navigation_bar.{navigation_bar}
-import client/pages/confirm_presence.{confirm_presence_view}
+import client/pages/confirm_presence.{confirm_presence, confirm_presence_view}
 import client/pages/event.{event_view}
 import client/pages/gifts.{gifts_view}
 import client/pages/home.{home_view}
@@ -8,13 +8,19 @@ import client/pages/not_found.{not_found_view}
 import client/pages/photos.{photos_view}
 import client/state.{
   type LoginForm, type Model, type Msg, type Route, AuthUser, AuthUserRecieved,
-  ConfirmPresence, CountdownUpdated, EventPage, GiftsPage, GiftsRecieved, Home,
-  Login, LoginForm, LoginResponded, LoginUpdateEmail, LoginUpdateError,
-  LoginUpdateName, LoginUpdatePassword, Model, NotFound, OnRouteChange,
-  PhotosPage, PhotosRecieved, SignUpResponded, UserOpenedGiftsPage,
-  UserOpenedPhotosPage, UserRequestedConfirmPresence, UserRequestedLogin,
-  UserRequestedSelectGift, UserRequestedSignUp,
+  ConfirmForm, ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
+  ConfirmUpdateEmail, ConfirmUpdateError, ConfirmUpdateFirstName,
+  ConfirmUpdateInviteName, ConfirmUpdateLastName, ConfirmUpdatePeopleCount,
+  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, CountdownUpdated, EventPage,
+  GiftsPage, GiftsRecieved, Home, Login, LoginForm, LoginResponded,
+  LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername,
+  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, SignUpResponded,
+  UserOpenedGiftsPage, UserOpenedPhotosPage, UserRequestedConfirmPresence,
+  UserRequestedLogin, UserRequestedSelectGift, UserRequestedSignUp,
 }
+import gleam/int
+import gleam/list
+import gleam/string
 import rada/date
 
 import gleam/dynamic
@@ -41,10 +47,11 @@ fn init(_) -> #(Model, Effect(Msg)) {
     Model(
       route: get_route(),
       auth_user: None,
-      gifts: [],
-      select_gift: [],
+      sugestion_gifts: [],
+      unique_gifts: [],
       photos: [],
-      login_form: state.LoginForm("", "", "", None),
+      login_form: LoginForm("", "", "", None),
+      confirm_form: ConfirmForm("", "", "", "", "", 0, [], None, None),
       countdown: 0,
     ),
     effect.batch([
@@ -71,7 +78,24 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
     GiftsRecieved(gifts_result) ->
       case gifts_result {
-        Ok(gifts) -> #(Model(..model, gifts: gifts), effect.none())
+        Ok(gifts) -> {
+          let gifts_tuple = {
+            list.partition(gifts, fn(gift) {
+              case gift.link, gift.selected_by {
+                Some(_), Some(_) -> True
+                _, _ -> False
+              }
+            })
+          }
+          #(
+            Model(
+              ..model,
+              sugestion_gifts: gifts_tuple.1,
+              unique_gifts: gifts_tuple.0,
+            ),
+            effect.none(),
+          )
+        }
         Error(_) -> #(model, effect.none())
       }
 
@@ -161,14 +185,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    LoginUpdateName(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, name: value)),
+    LoginUpdateUsername(value) -> #(
+      Model(..model, login_form: LoginForm(..model.login_form, username: value)),
       effect.none(),
     )
 
     LoginUpdateEmail(value) -> #(
       Model(..model, login_form: LoginForm(..model.login_form, email: value)),
-      effect.none(),
+      effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
     )
     LoginUpdatePassword(value) -> #(
       Model(..model, login_form: LoginForm(..model.login_form, password: value)),
@@ -184,15 +208,170 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    UserRequestedConfirmPresence -> #(model, effect.none())
+    UserRequestedConfirmPresence -> #(model, confirm_presence(model))
+
+    ConfirmPresenceResponded(resp_result) ->
+      case resp_result {
+        Ok(resp) ->
+          case resp.message, resp.error {
+            Some(id_string), None -> #(
+              Model(
+                ..model,
+                confirm_form: ConfirmForm("", "", "", "", "", 0, [], None, None),
+              ),
+              effect.batch([
+                modem.push("/", None, None),
+                get_auth_user(id_string),
+              ]),
+            )
+            _, Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(ConfirmUpdateError(Some(err)))
+              }),
+            )
+            _, _ -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(
+                  ConfirmUpdateError(Some(
+                    "Problemas no servidor, por favor tente mais tarde.",
+                  )),
+                )
+              }),
+            )
+          }
+        Error(_) -> #(
+          model,
+          effect.from(fn(dispatch) {
+            dispatch(
+              ConfirmUpdateError(Some(
+                "Problemas no servidor, por favor tente mais tarde.",
+              )),
+            )
+          }),
+        )
+      }
+
+    ConfirmUpdateFirstName(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, first_name: value),
+      ),
+      effect.none(),
+    )
+
+    ConfirmUpdateLastName(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, last_name: value),
+      ),
+      effect.none(),
+    )
+
+    ConfirmUpdateInviteName(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, invite_name: value),
+      ),
+      effect.none(),
+    )
+
+    ConfirmUpdateEmail(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, email: value),
+      ),
+      effect.none(),
+    )
+
+    ConfirmUpdatePhone(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, phone: value),
+      ),
+      effect.none(),
+    )
+    ConfirmUpdatePeopleCount(value) -> {
+      case int.parse(value) {
+        Ok(people_count) -> {
+          #(
+            Model(
+              ..model,
+              confirm_form: ConfirmForm(
+                ..model.confirm_form,
+                people_count: people_count,
+              ),
+            ),
+            effect.none(),
+          )
+        }
+        Error(err) -> {
+          #(
+            model,
+            effect.from(fn(dispatch) {
+              dispatch(
+                ConfirmUpdateError(Some(
+                  "O campo \"Quantidade de pessoas\" deve ser um valor inteiro entre 1 e 99",
+                )),
+              )
+            }),
+          )
+        }
+      }
+    }
+
+    ConfirmUpdatePeopleNames(value) -> {
+      let names = string.split(value, "\n")
+      #(
+        Model(
+          ..model,
+          confirm_form: ConfirmForm(..model.confirm_form, people_names: names),
+        ),
+        effect.none(),
+      )
+    }
+
+    ConfirmUpdateComments(value) ->
+      case value {
+        "" -> {
+          #(
+            Model(
+              ..model,
+              confirm_form: ConfirmForm(..model.confirm_form, comments: None),
+            ),
+            effect.none(),
+          )
+        }
+
+        _ -> {
+          #(
+            Model(
+              ..model,
+              confirm_form: ConfirmForm(
+                ..model.confirm_form,
+                comments: Some(value),
+              ),
+            ),
+            effect.none(),
+          )
+        }
+      }
+    ConfirmUpdateError(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, error: value),
+      ),
+      effect.none(),
+    )
 
     UserRequestedSelectGift(_value) -> #(model, effect.none())
 
     UserOpenedGiftsPage ->
-      case model.gifts {
-        [_] -> #(model, effect.none())
-        [] -> #(model, get_gifts())
-        _ -> #(model, effect.none())
+      case model.sugestion_gifts, model.unique_gifts {
+        [_], [_] -> #(model, effect.none())
+        [], [] -> #(model, get_gifts())
+        _, _ -> #(model, effect.none())
       }
 
     UserOpenedPhotosPage ->
@@ -259,7 +438,7 @@ pub fn get_auth_user(id_string: String) -> Effect(Msg) {
     dynamic.decode4(
       AuthUser,
       dynamic.field("user_id", dynamic.int),
-      dynamic.field("name", dynamic.string),
+      dynamic.field("username", dynamic.string),
       dynamic.field("confirmed", dynamic.bool),
       dynamic.field("is_admin", dynamic.bool),
     )
@@ -275,8 +454,8 @@ fn get_gifts() {
       dynamic.field("id", dynamic.int),
       dynamic.field("name", dynamic.string),
       dynamic.field("pic", dynamic.string),
-      dynamic.field("link", dynamic.string),
-      dynamic.field("selected_by", dynamic.int),
+      dynamic.field("link", dynamic.optional(dynamic.string)),
+      dynamic.field("selected_by", dynamic.optional(dynamic.int)),
     ))
 
   lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))

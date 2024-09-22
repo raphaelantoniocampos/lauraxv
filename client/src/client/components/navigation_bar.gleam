@@ -17,7 +17,10 @@ pub fn navigation_bar(model: Model) {
     [
       div([class("flex min-w-10 text-pink-600 font-semibold")], [
         a(
-          [class("hover:text-emerald-800 transition duration-300"), href("../")],
+          [
+            class("text-2xl hover:text-emerald-800 transition duration-300"),
+            href("../"),
+          ],
           [text("\u{21B6}")],
         ),
       ]),
@@ -35,7 +38,7 @@ pub fn navigation_bar(model: Model) {
               ),
               href("/"),
             ],
-            [text("Home")],
+            [text("Página Inicial")],
           ),
         ]),
         li([], [
@@ -111,9 +114,6 @@ pub fn navigation_bar(model: Model) {
           }
           Some(user) -> {
             div([class("flex items-center space-x-4")], [
-              span([class("text-pink-600 font-semibold")], [
-                text("Olá, " <> string.capitalise(user.name)),
-              ]),
               case user.confirmed {
                 True ->
                   span([class("text-emerald-600 font-semibold")], [
@@ -124,6 +124,9 @@ pub fn navigation_bar(model: Model) {
                     a([href("/confirm")], [text("Confirme sua presença")]),
                   ])
               },
+              span([class("text-pink-600 font-semibold")], [
+                text("Olá, " <> string.capitalise(user.name)),
+              ]),
             ])
           }
         },

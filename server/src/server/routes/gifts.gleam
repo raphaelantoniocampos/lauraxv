@@ -1,5 +1,7 @@
 import gleam/http.{Get, Post}
 import gleam/json
+import gleam/list
+import gleam/option.{None, Some}
 import gleam/result
 import server/db/gift
 import server/response
@@ -13,14 +15,14 @@ pub fn gifts(req: Request) -> Response {
   }
 }
 
-fn gifts_to_json(gifts: List(Gift)) {
+pub fn gifts_to_json(gifts: List(Gift)) {
   json.array(gifts, fn(gift) {
     json.object([
       #("id", json.int(gift.id)),
       #("name", json.string(gift.name)),
       #("pic", json.string(gift.pic)),
-      #("link", json.string(gift.link)),
-      #("selected_by", json.int(gift.selected_by)),
+      #("link", json.nullable(gift.link, json.string)),
+      #("selected_by", json.nullable(gift.selected_by, json.int)),
     ])
   })
   |> json.to_string_builder
@@ -32,10 +34,10 @@ fn list_gifts() -> Response {
       gift.get_gifts()
       |> result.replace_error("Problem listing gifts"),
     )
+
     gifts_to_json(gifts)
     |> Ok
   }
-
   response.generate_wisp_response(result)
 }
 // fn create_gift(req: Request, body: dynamic.Dynamic) {

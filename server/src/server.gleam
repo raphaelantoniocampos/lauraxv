@@ -5,11 +5,12 @@ import wisp
 import wisp/testing.{default_secret_key_base}
 import wisp/wisp_mist
 
-//TODO: Atualizar presentes
 //TODO: Armazenar Confirmação de Presença
+//TODO: Adicionar Escolher Presente
 //TODO: Página de Admin (Mostrar número de confirmados e nomes)
+//TODO: Confirmação Login
 
-//TODO: Refatoração
+//TODO: Refatoração (limpar código)
 //TODO: Ultimos testes
 //TODO: Deploy
 

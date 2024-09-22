@@ -3,12 +3,11 @@ import cake/insert as i
 import cake/select as s
 import cake/update as u
 import cake/where as w
-import decode
 import gleam/dynamic
 import gleam/list
 import gleam/result
 import gleam/string
-import server/db.{erlang_list_to_tuple}
+import server/db
 import shared.{type User, User}
 import sqlight
 
@@ -16,7 +15,7 @@ fn get_user_base_query() {
   s.new()
   |> s.selects([
     s.col("user.id"),
-    s.col("user.name"),
+    s.col("user.username"),
     s.col("user.email"),
     s.col("user.password"),
     s.col("user.confirmed"),
@@ -87,7 +86,7 @@ pub fn set_password_for_user(user_id: Int, password: String) {
 }
 
 pub type CreateUser {
-  CreateUser(name: String, email: String, password: String)
+  CreateUser(username: String, email: String, password: String)
 }
 
 pub fn decode_create_user(
@@ -96,14 +95,14 @@ pub fn decode_create_user(
   let decoder =
     dynamic.decode3(
       CreateUser,
-      dynamic.field("name", dynamic.string),
+      dynamic.field("username", dynamic.string),
       dynamic.field("email", dynamic.string),
       dynamic.field("password", dynamic.string),
     )
   case decoder(json) {
     Ok(create_user) ->
       Ok(CreateUser(
-        name: string.lowercase(create_user.name),
+        username: string.lowercase(create_user.username),
         email: string.lowercase(create_user.email),
         password: beecrypt.hash(create_user.password),
       ))
@@ -125,10 +124,24 @@ pub fn does_user_with_same_email_exist(create_user: CreateUser) {
   }
 }
 
+pub fn does_user_with_same_username_exist(create_user: CreateUser) {
+  case
+    s.new()
+    |> s.select(s.col("user.username"))
+    |> s.from_table("user")
+    |> s.where(w.eq(w.col("user.username"), w.string(create_user.username)))
+    |> s.to_query
+    |> db.execute_read([sqlight.text(create_user.username)], dynamic.dynamic)
+  {
+    Ok(users) -> Ok(list.length(users) > 0)
+    Error(_) -> Error("Problem selecting users with same username")
+  }
+}
+
 pub fn insert_user_to_db(create_user: CreateUser) {
   [
     i.row([
-      i.string(create_user.name),
+      i.string(create_user.username),
       i.string(create_user.email),
       i.string(create_user.password),
       i.bool(False),
@@ -136,14 +149,24 @@ pub fn insert_user_to_db(create_user: CreateUser) {
     ]),
   ]
   |> i.from_values(table_name: "user", columns: [
-    "name", "email", "password", "confirmed", "is_admin",
+    "username", "email", "password", "confirmed", "is_admin",
   ])
   |> i.to_query
   |> db.execute_write([
-    sqlight.text(create_user.name),
+    sqlight.text(create_user.username),
     sqlight.text(create_user.email),
     sqlight.text(create_user.password),
     sqlight.bool(False),
     sqlight.bool(False),
   ])
+}
+
+pub fn change_confirmed_for_user(user_id: Int, to: Bool) {
+  u.new()
+  |> u.table("user")
+  |> u.sets([u.set_bool("user.confirmed", to)])
+  |> u.where(w.eq(w.col("user.id"), w.int(user_id)))
+  |> u.to_query
+  |> db.execute_write([sqlight.bool(to), sqlight.int(user_id)])
+  |> result.replace_error("Problem with updating user confirmed status")
 }

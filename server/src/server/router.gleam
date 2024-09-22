@@ -22,6 +22,7 @@ pub fn handle_request(req: Request) -> Response {
     ["gifts"] -> gifts.gifts(req)
     ["photos"] -> photos.photos(req)
     ["users"] -> users.users(req)
+    ["confirm"] -> users.confirm_presence(req)
     ["auth", "validate", id_string] -> validate.validate(req, id_string)
     ["auth", "login"] -> login.login(req)
     _ -> wisp.not_found()

@@ -18,10 +18,11 @@ pub type Model {
   Model(
     route: Route,
     auth_user: Option(AuthUser),
-    gifts: List(Gift),
-    select_gift: List(Int),
+    sugestion_gifts: List(Gift),
+    unique_gifts: List(Gift),
     photos: List(String),
     login_form: LoginForm,
+    confirm_form: ConfirmForm,
     countdown: Int,
   )
 }
@@ -37,7 +38,7 @@ pub type Msg {
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
-  LoginUpdateName(value: String)
+  LoginUpdateUsername(value: String)
   LoginUpdateEmail(value: String)
   LoginUpdatePassword(value: String)
   LoginUpdateError(value: Option(String))
@@ -54,6 +55,19 @@ pub type Msg {
   UserRequestedSelectGift(value: Int)
 
   UserRequestedConfirmPresence
+  ConfirmPresenceResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
+
+  ConfirmUpdateFirstName(value: String)
+  ConfirmUpdateLastName(value: String)
+  ConfirmUpdateInviteName(value: String)
+  ConfirmUpdateEmail(value: String)
+  ConfirmUpdatePhone(value: String)
+  ConfirmUpdatePeopleCount(value: String)
+  ConfirmUpdatePeopleNames(value: String)
+  ConfirmUpdateComments(value: String)
+  ConfirmUpdateError(value: Option(String))
 
   CountdownUpdated(value: Int)
 }
@@ -76,9 +90,23 @@ pub type AuthUser {
 
 pub type LoginForm {
   LoginForm(
-    name: String,
+    username: String,
     email: String,
     password: String,
+    error: Option(String),
+  )
+}
+
+pub type ConfirmForm {
+  ConfirmForm(
+    first_name: String,
+    last_name: String,
+    invite_name: String,
+    email: String,
+    phone: String,
+    people_count: Int,
+    people_names: List(String),
+    comments: Option(String),
     error: Option(String),
   )
 }

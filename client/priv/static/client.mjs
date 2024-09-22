@@ -1588,6 +1588,35 @@ function key_set(list2, key, value3) {
     return prepend(first$1, key_set(rest$1, key, value3));
   }
 }
+function do_partition(loop$list, loop$categorise, loop$trues, loop$falses) {
+  while (true) {
+    let list2 = loop$list;
+    let categorise = loop$categorise;
+    let trues = loop$trues;
+    let falses = loop$falses;
+    if (list2.hasLength(0)) {
+      return [reverse(trues), reverse(falses)];
+    } else {
+      let x = list2.head;
+      let xs = list2.tail;
+      let $ = categorise(x);
+      if ($) {
+        loop$list = xs;
+        loop$categorise = categorise;
+        loop$trues = prepend(x, trues);
+        loop$falses = falses;
+      } else {
+        loop$list = xs;
+        loop$categorise = categorise;
+        loop$trues = trues;
+        loop$falses = prepend(x, falses);
+      }
+    }
+  }
+}
+function partition(list2, categorise) {
+  return do_partition(list2, categorise, toList([]), toList([]));
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
 function map3(result, fun) {
@@ -1759,6 +1788,11 @@ function bool(data) {
 }
 function shallow_list(value3) {
   return decode_list(value3);
+}
+function optional(decode6) {
+  return (value3) => {
+    return decode_option(value3, decode6);
+  };
 }
 function any(decoders) {
   return (data) => {
@@ -2251,6 +2285,12 @@ function object(entries) {
 function identity2(x) {
   return x;
 }
+function array(list2) {
+  return list2.toArray();
+}
+function do_null() {
+  return null;
+}
 function decode(string3) {
   try {
     const result = JSON.parse(string3);
@@ -2377,8 +2417,30 @@ function to_string6(json) {
 function string2(input2) {
   return identity2(input2);
 }
+function int2(input2) {
+  return identity2(input2);
+}
+function null$() {
+  return do_null();
+}
+function nullable(input2, inner_type) {
+  if (input2 instanceof Some) {
+    let value3 = input2[0];
+    return inner_type(value3);
+  } else {
+    return null$();
+  }
+}
 function object2(entries) {
   return object(entries);
+}
+function preprocessed_array(from3) {
+  return array(from3);
+}
+function array2(entries, inner_type) {
+  let _pipe = entries;
+  let _pipe$1 = map2(_pipe, inner_type);
+  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -4286,14 +4348,15 @@ var ConfirmPresence = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, auth_user, gifts, select_gift, photos, login_form, countdown) {
+  constructor(route, auth_user, sugestion_gifts, unique_gifts, photos, login_form, confirm_form, countdown) {
     super();
     this.route = route;
     this.auth_user = auth_user;
-    this.gifts = gifts;
-    this.select_gift = select_gift;
+    this.sugestion_gifts = sugestion_gifts;
+    this.unique_gifts = unique_gifts;
     this.photos = photos;
     this.login_form = login_form;
+    this.confirm_form = confirm_form;
     this.countdown = countdown;
   }
 };
@@ -4329,7 +4392,7 @@ var SignUpResponded = class extends CustomType {
     this.resp_result = resp_result;
   }
 };
-var LoginUpdateName = class extends CustomType {
+var LoginUpdateUsername = class extends CustomType {
   constructor(value3) {
     super();
     this.value = value3;
@@ -4373,6 +4436,66 @@ var UserRequestedSelectGift = class extends CustomType {
 };
 var UserRequestedConfirmPresence = class extends CustomType {
 };
+var ConfirmPresenceResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var ConfirmUpdateFirstName = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdateLastName = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdateInviteName = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdateEmail = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdatePhone = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdatePeopleCount = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdatePeopleNames = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdateComments = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var CountdownUpdated = class extends CustomType {
   constructor(value3) {
     super();
@@ -4387,20 +4510,34 @@ var MessageErrorResponse = class extends CustomType {
   }
 };
 var AuthUser = class extends CustomType {
-  constructor(user_id, name2, confirmed2, is_admin) {
+  constructor(user_id, name2, confirmed, is_admin) {
     super();
     this.user_id = user_id;
     this.name = name2;
-    this.confirmed = confirmed2;
+    this.confirmed = confirmed;
     this.is_admin = is_admin;
   }
 };
 var LoginForm = class extends CustomType {
-  constructor(name2, email, password, error) {
+  constructor(username, email, password, error) {
     super();
-    this.name = name2;
+    this.username = username;
     this.email = email;
     this.password = password;
+    this.error = error;
+  }
+};
+var ConfirmForm = class extends CustomType {
+  constructor(first_name, last_name, invite_name, email, phone, people_count, people_names, comments, error) {
+    super();
+    this.first_name = first_name;
+    this.last_name = last_name;
+    this.invite_name = invite_name;
+    this.email = email;
+    this.phone = phone;
+    this.people_count = people_count;
+    this.people_names = people_names;
+    this.comments = comments;
     this.error = error;
   }
 };
@@ -4428,7 +4565,7 @@ function navigation_bar(model) {
         toList([
           a(
             toList([
-              class$("hover:text-emerald-800 transition duration-300"),
+              class$("text-2xl hover:text-emerald-800 transition duration-300"),
               href("../")
             ]),
             toList([text("\u21B6")])
@@ -4455,7 +4592,7 @@ function navigation_bar(model) {
                   ),
                   href("/")
                 ]),
-                toList([text("Home")])
+                toList([text("P\xE1gina Inicial")])
               )
             ])
           ),
@@ -4558,10 +4695,6 @@ function navigation_bar(model) {
               return div(
                 toList([class$("flex items-center space-x-4")]),
                 toList([
-                  span(
-                    toList([class$("text-pink-600 font-semibold")]),
-                    toList([text("Ol\xE1, " + capitalise(user.name))])
-                  ),
                   (() => {
                     let $1 = user.confirmed;
                     if ($1) {
@@ -4580,7 +4713,11 @@ function navigation_bar(model) {
                         ])
                       );
                     }
-                  })()
+                  })(),
+                  span(
+                    toList([class$("text-pink-600 font-semibold")]),
+                    toList([text("Ol\xE1, " + capitalise(user.name))])
+                  )
                 ])
               );
             }
@@ -4614,7 +4751,7 @@ function signup(model) {
     server_url + "/users",
     object2(
       toList([
-        ["name", string2(model.login_form.name)],
+        ["username", string2(lowercase2(model.login_form.username))],
         ["email", string2(model.login_form.email)],
         ["password", string2(model.login_form.password)]
       ])
@@ -4653,9 +4790,9 @@ function login_view(model) {
                   label(
                     toList([
                       class$("block text-sm font-medium text-gray-700"),
-                      for$("name")
+                      for$("username")
                     ]),
-                    toList([text("Nome")])
+                    toList([text("Nome de Usu\xE1rio")])
                   ),
                   input(
                     toList([
@@ -4664,12 +4801,13 @@ function login_view(model) {
                       ),
                       on_input(
                         (var0) => {
-                          return new LoginUpdateName(var0);
+                          return new LoginUpdateUsername(var0);
                         }
                       ),
-                      id("name"),
+                      required(true),
+                      id("username"),
                       type_("name"),
-                      value(model.login_form.name)
+                      value(model.login_form.username)
                     ])
                   )
                 ])
@@ -4763,7 +4901,7 @@ function login_view(model) {
               let err = $[0];
               return p(
                 toList([class$("text-red-500 text-center")]),
-                toList([text("Error: " + err)])
+                toList([text("Erro: " + err)])
               );
             } else {
               return none2();
@@ -4776,11 +4914,51 @@ function login_view(model) {
 }
 
 // build/dev/javascript/client/client/pages/confirm_presence.mjs
-function confirmed() {
+function confirm_presence(model) {
+  let user_id_string = (() => {
+    let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
+    if (!$.isOk()) {
+      throw makeError(
+        "let_assert",
+        "client/pages/confirm_presence",
+        27,
+        "confirm_presence",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
+      );
+    }
+    let user = $[0];
+    return to_string2(user.user_id);
+  })();
+  return post(
+    server_url + "/confirm",
+    object2(
+      toList([
+        ["id", int2(0)],
+        ["user_id", string2(user_id_string)],
+        ["first_name", string2(model.confirm_form.first_name)],
+        ["last_name", string2(model.confirm_form.last_name)],
+        ["invite_name", string2(model.confirm_form.invite_name)],
+        ["phone", string2(model.confirm_form.phone)],
+        ["people_count", int2(model.confirm_form.people_count)],
+        [
+          "people_names",
+          array2(model.confirm_form.people_names, string2)
+        ],
+        ["comments", nullable(model.confirm_form.comments, string2)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new ConfirmPresenceResponded(var0);
+      }
+    )
+  );
+}
+function user_confirmed_view() {
   return div(
-    toList([
-      class$("bg-white text-center p-12 rounded-lg shadow-lg max-w-xl mx-4")
-    ]),
+    toList([class$("text-center p-12 mx-4")]),
     toList([
       h1(
         toList([
@@ -4815,211 +4993,277 @@ function confirmed() {
 }
 function confirm_presence_view(model) {
   let $ = model.auth_user;
-  if ($ instanceof Some) {
+  if ($ instanceof None) {
+    return login_view(model);
+  } else {
     let user = $[0];
     return main(
       toList([
         class$("w-full max-w-2xl p-8 mt-20 bg-white rounded-lg shadow-lg")
       ]),
-      (() => {
-        let $1 = user.confirmed;
-        if (!$1) {
-          return toList([
-            h1(
+      toList([
+        (() => {
+          let $1 = user.confirmed;
+          if ($1) {
+            return user_confirmed_view();
+          } else {
+            return div(
+              toList([class$("p-2 mt-6 mx-4")]),
               toList([
-                attribute("style", "font-family: 'Pacifico', cursive;"),
-                class$("text-4xl text-pink-700 font-bold mb-6 text-center")
-              ]),
-              toList([text("Confirma\xE7\xE3o de Presen\xE7a")])
-            ),
-            form(
-              toList([class$("space-y-6")]),
-              toList([
-                div(
-                  toList([]),
+                h1(
                   toList([
-                    label(
+                    attribute("style", "font-family: 'Pacifico', cursive;"),
+                    class$("text-4xl text-pink-700 font-bold mb-6 text-center")
+                  ]),
+                  toList([text("Confirma\xE7\xE3o de Presen\xE7a")])
+                ),
+                form(
+                  toList([
+                    class$("space-y-6"),
+                    on_submit(new UserRequestedConfirmPresence())
+                  ]),
+                  toList([
+                    div(
+                      toList([]),
                       toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("name")
-                      ]),
-                      toList([text("Nome e Sobrenome")])
-                    ),
-                    input(
-                      toList([
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("first_name")
+                          ]),
+                          toList([text("Nome")])
                         ),
-                        required(true),
-                        name("name"),
-                        id("name"),
-                        type_("text")
+                        input(
+                          toList([
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            required(true),
+                            name("first_name"),
+                            id("first_name"),
+                            type_("name"),
+                            value(model.confirm_form.first_name),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdateFirstName(var0);
+                              }
+                            )
+                          ])
+                        )
                       ])
-                    )
-                  ])
-                ),
-                div(
-                  toList([]),
-                  toList([
-                    label(
-                      toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("invite-name")
-                      ]),
-                      toList([text("Nome no Convite")])
                     ),
-                    input(
+                    div(
+                      toList([]),
                       toList([
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("last_name")
+                          ]),
+                          toList([text("Sobrenome")])
                         ),
-                        required(true),
-                        name("invite-name"),
-                        id("invite-name"),
-                        type_("text")
+                        input(
+                          toList([
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            required(true),
+                            name("last_name"),
+                            id("last_name"),
+                            type_("text"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdateLastName(var0);
+                              }
+                            ),
+                            value(model.confirm_form.last_name)
+                          ])
+                        )
                       ])
-                    )
-                  ])
-                ),
-                div(
-                  toList([]),
-                  toList([
-                    label(
-                      toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("email")
-                      ]),
-                      toList([text("Email")])
                     ),
-                    input(
+                    div(
+                      toList([]),
                       toList([
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("invite_name")
+                          ]),
+                          toList([text("Nome no Convite")])
                         ),
-                        required(true),
-                        name("email"),
-                        id("email"),
-                        type_("email")
+                        input(
+                          toList([
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            required(true),
+                            name("invite_name"),
+                            id("invite_name"),
+                            type_("text"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdateInviteName(var0);
+                              }
+                            ),
+                            value(model.confirm_form.invite_name)
+                          ])
+                        )
                       ])
-                    )
-                  ])
-                ),
-                div(
-                  toList([]),
-                  toList([
-                    label(
-                      toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("phone")
-                      ]),
-                      toList([text("Telefone")])
                     ),
-                    input(
+                    div(
+                      toList([]),
                       toList([
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("phone")
+                          ]),
+                          toList([text("Telefone")])
                         ),
-                        required(true),
-                        placeholder("Digite apenas n\xFAmeros"),
-                        pattern("\\d{4,15}"),
-                        name("phone"),
-                        id("phone"),
-                        type_("tel")
+                        input(
+                          toList([
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            required(true),
+                            placeholder("Digite apenas n\xFAmeros"),
+                            pattern("\\d{4,15}"),
+                            name("phone"),
+                            id("phone"),
+                            type_("tel"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdatePhone(var0);
+                              }
+                            ),
+                            value(model.confirm_form.phone)
+                          ])
+                        )
                       ])
-                    )
-                  ])
-                ),
-                div(
-                  toList([]),
-                  toList([
-                    label(
-                      toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("people-count")
-                      ]),
-                      toList([text("Quantidade de pessoas (incluindo voc\xEA)")])
                     ),
-                    input(
+                    div(
+                      toList([]),
                       toList([
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("people_count")
+                          ]),
+                          toList([
+                            text("Quantidade de pessoas (incluindo voc\xEA)")
+                          ])
                         ),
-                        required(true),
-                        min2("1"),
-                        max2("99"),
-                        name("people-count"),
-                        id("people-count"),
-                        type_("number")
+                        input(
+                          toList([
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            required(true),
+                            min2("1"),
+                            max2("99"),
+                            name("people_count"),
+                            id("people_count"),
+                            type_("number"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdatePeopleCount(var0);
+                              }
+                            )
+                          ])
+                        )
                       ])
-                    )
-                  ])
-                ),
-                div(
-                  toList([]),
-                  toList([
-                    label(
-                      toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("people-names")
-                      ]),
-                      toList([text("Nome das pessoas")])
                     ),
-                    textarea(
+                    div(
+                      toList([]),
                       toList([
-                        placeholder("Digite os nomes das pessoas (se houver)"),
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("people_names")
+                          ]),
+                          toList([
+                            text(
+                              "Nome completo das pessoas incluindo voc\xEA(se houver)"
+                            )
+                          ])
                         ),
-                        rows(3),
-                        name("people-names"),
-                        id("people-names")
-                      ]),
-                      ""
-                    )
-                  ])
-                ),
-                div(
-                  toList([]),
-                  toList([
-                    label(
-                      toList([
-                        class$("block text-sm font-medium text-gray-700"),
-                        for$("comments")
-                      ]),
-                      toList([text("Coment\xE1rios (se houver)")])
+                        textarea(
+                          toList([
+                            placeholder("Digite um nome por linha"),
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            rows(3),
+                            name("people_names"),
+                            id("people_names"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdatePeopleNames(var0);
+                              }
+                            ),
+                            value(model.confirm_form.first_name + "\n")
+                          ]),
+                          ""
+                        )
+                      ])
                     ),
-                    textarea(
+                    div(
+                      toList([]),
                       toList([
-                        class$(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                        label(
+                          toList([
+                            class$("block text-sm font-medium text-gray-700"),
+                            for$("comments")
+                          ]),
+                          toList([text("Coment\xE1rios (se houver)")])
                         ),
-                        rows(3),
-                        name("comments"),
-                        id("comments")
-                      ]),
-                      ""
-                    )
-                  ])
-                ),
-                div(
-                  toList([class$("flex items-center justify-center")]),
-                  toList([
-                    button(
-                      toList([button_class("60"), type_("submit")]),
-                      toList([text("Enviar Confirma\xE7\xE3o")])
-                    )
+                        textarea(
+                          toList([
+                            class$(
+                              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                            ),
+                            rows(3),
+                            name("comments"),
+                            id("comments"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdateComments(var0);
+                              }
+                            )
+                          ]),
+                          ""
+                        )
+                      ])
+                    ),
+                    div(
+                      toList([class$("flex items-center justify-center")]),
+                      toList([
+                        button(
+                          toList([button_class("60"), type_("submit")]),
+                          toList([text("Enviar Confirma\xE7\xE3o")])
+                        )
+                      ])
+                    ),
+                    (() => {
+                      let $2 = model.confirm_form.error;
+                      if ($2 instanceof Some) {
+                        let err = $2[0];
+                        return p(
+                          toList([class$("text-red-500 text-center")]),
+                          toList([text("Erro: " + err)])
+                        );
+                      } else {
+                        return none2();
+                      }
+                    })()
                   ])
                 )
               ])
-            )
-          ]);
-        } else {
-          return toList([confirmed()]);
-        }
-      })()
+            );
+          }
+        })()
+      ])
     );
-  } else {
-    return login_view(model);
   }
 }
 
@@ -5114,93 +5358,128 @@ function event_view() {
 }
 
 // build/dev/javascript/client/client/pages/gifts.mjs
-function gift_widget(gift) {
-  let $ = gift.selected_by;
-  if ($ === 0) {
-    return div(
-      toList([class$("relative bg-white p-4 rounded-lg shadow-lg")]),
-      toList([
-        div(
-          toList([class$("absolute inset-0 bg-black opacity-50 rounded-lg")]),
-          toList([])
-        ),
-        div(
-          toList([class$("absolute inset-0 flex items-center justify-center")]),
-          toList([
-            span(
-              toList([class$("bg-red-600 text-white px-4 py-1 rounded-full")]),
-              toList([text("Selecionado")])
-            )
-          ])
-        ),
-        img(
-          toList([
-            class$(
-              "w-full h-80 rounded-lg grayscale opacity-50 object-cover z-0"
-            ),
-            alt("Presente" + to_string2(gift.id)),
-            src(gift.pic)
-          ])
-        ),
-        h3(
-          toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
-          toList([text(gift.name)])
-        ),
-        a(
-          toList([
-            class$(
-              "text-pink-600 hover:text-pink-800 underline cursor-not-allowed"
-            ),
-            href(gift.link)
-          ]),
-          toList([text("Ver refer\xEAncia")])
-        ),
-        button(
-          toList([
-            disabled(true),
-            class$(
-              "mt-4 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-full cursor-not-allowed"
-            )
-          ]),
-          toList([text("Escolher")])
-        )
-      ])
-    );
+function sugestion_gift(gift) {
+  return div(
+    toList([
+      class$(
+        "bg-white p-4 rounded-lg shadow-lg flex flex-col items-center justify-between h-80"
+      )
+    ]),
+    toList([
+      img(
+        toList([
+          class$("w-full h-48 rounded-lg object-cover mb-4"),
+          alt("Presente" + to_string2(gift.id)),
+          src(gift.pic)
+        ])
+      ),
+      h3(
+        toList([class$("text-lg font-semibold text-pink-700 text-center")]),
+        toList([text(gift.name)])
+      )
+    ])
+  );
+}
+function unselected_gift(gift, link) {
+  return div(
+    toList([
+      class$(
+        "relative bg-white p-4 rounded-lg shadow-lg items-center justify-between"
+      )
+    ]),
+    toList([
+      img(
+        toList([
+          class$("w-full h-70 rounded-lg object-cover z-0"),
+          alt("Presente" + to_string2(gift.id)),
+          src(gift.pic)
+        ])
+      ),
+      h3(
+        toList([class$("text-lg font-semibold text-pink-700 mt-2")]),
+        toList([text(gift.name)])
+      ),
+      a(
+        toList([
+          class$("text-pink-600 hover:text-pink-800 underline text-center"),
+          rel("noopener noreferrer"),
+          target("_blank"),
+          href(link)
+        ]),
+        toList([text("Ver refer\xEAncia")])
+      ),
+      button(
+        toList([
+          class$(
+            "mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-full transition duration-300"
+          ),
+          on_click(new UserRequestedSelectGift(gift.id))
+        ]),
+        toList([text("Escolher")])
+      )
+    ])
+  );
+}
+function selected_gift(gift) {
+  return div(
+    toList([class$("relative bg-white p-3 rounded-lg shadow-lg")]),
+    toList([
+      div(
+        toList([class$("absolute inset-0 bg-black opacity-60 rounded-lg")]),
+        toList([
+          div(
+            toList([class$("absolute inset-0 flex items-center justify-center")]),
+            toList([
+              span(
+                toList([
+                  class$("bg-red-600 text-white px-3 py-1 rounded-full z-20")
+                ]),
+                toList([text("Selecionado")])
+              )
+            ])
+          )
+        ])
+      ),
+      img(
+        toList([
+          class$("w-full h-70 rounded-lg grayscale"),
+          alt("Presente" + to_string2(gift.id)),
+          src(gift.pic)
+        ])
+      ),
+      h3(
+        toList([class$("text-lg font-semibold text-pink-300 mt-2")]),
+        toList([text(gift.name)])
+      ),
+      a(
+        toList([class$("text-pink-300 underline")]),
+        toList([text("Ver refer\xEAncia")])
+      ),
+      button(
+        toList([
+          disabled(true),
+          class$(
+            "mt-3 w-full bg-emerald-600 text-white font-bold py-1 px-3 rounded-full cursor-not-allowed"
+          )
+        ]),
+        toList([text("Escolher")])
+      )
+    ])
+  );
+}
+function unique_gift(gift) {
+  let $ = gift.link;
+  let $1 = gift.selected_by;
+  if ($ instanceof Some && $1 instanceof Some) {
+    let link = $[0];
+    let selected_by = $1[0];
+    if (selected_by === 0) {
+      return unselected_gift(gift, link);
+    } else {
+      return selected_gift(gift);
+    }
   } else {
-    return div(
-      toList([class$("bg-white p-4 rounded-lg shadow-lg")]),
-      toList([
-        img(
-          toList([
-            class$("w-full h-80 rounded-lg object-cover"),
-            alt("Presente" + to_string2(gift.id)),
-            src(gift.pic)
-          ])
-        ),
-        h3(
-          toList([class$("text-xl font-semibold text-pink-700 mt-4")]),
-          toList([text(gift.name)])
-        ),
-        a(
-          toList([
-            class$("text-pink-500 hover:text-pink-800 underline"),
-            rel("noopener noreferrer"),
-            target("_blank"),
-            href(gift.link)
-          ]),
-          toList([text("Ver refer\xEAncia")])
-        ),
-        button(
-          toList([
-            class$(
-              "mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
-            ),
-            on_click(new UserRequestedSelectGift(gift.id))
-          ]),
-          toList([text("Escolher")])
-        )
-      ])
-    );
+    return selected_gift(gift);
   }
 }
 function gifts_view(model) {
@@ -5210,17 +5489,29 @@ function gifts_view(model) {
       h1(
         toList([
           attribute("style", "font-family: 'Pacifico', cursive;"),
-          class$("text-5xl text-white font-bold mb-12")
+          class$("text-5xl text-white font-bold mb-12 p-12")
         ]),
         toList([text("Lista de Presentes")])
       ),
+      h2(
+        toList([class$("text-3xl text-white font-bold mb-6")]),
+        toList([text("Sugest\xF5es de Presentes")])
+      ),
       div(
         toList([
-          class$("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full")
+          class$("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full")
         ]),
-        map2(model.gifts, (gift) => {
-          return gift_widget(gift);
-        })
+        map2(model.sugestion_gifts, sugestion_gift)
+      ),
+      h2(
+        toList([class$("text-3xl text-white font-bold mb-6 p-12")]),
+        toList([text("Presentes \xDAnicos")])
+      ),
+      div(
+        toList([
+          class$("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")
+        ]),
+        map2(model.unique_gifts, unique_gift)
       )
     ])
   );
@@ -5432,7 +5723,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 241, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 420, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -5465,7 +5756,7 @@ function get_auth_user(id_string) {
       return new AuthUser(var0, var1, var2, var3);
     },
     field("user_id", int),
-    field("name", string),
+    field("username", string),
     field("confirmed", bool),
     field("is_admin", bool)
   );
@@ -5489,8 +5780,8 @@ function get_gifts() {
       field("id", int),
       field("name", string),
       field("pic", string),
-      field("link", string),
-      field("selected_by", int)
+      field("link", optional(string)),
+      field("selected_by", optional(int))
     )
   );
   return get2(
@@ -5532,7 +5823,25 @@ function update(model, msg) {
     let gifts_result = msg[0];
     if (gifts_result.isOk()) {
       let gifts = gifts_result[0];
-      return [model.withFields({ gifts }), none()];
+      let gifts_tuple = partition(
+        gifts,
+        (gift) => {
+          let $ = gift.link;
+          let $1 = gift.selected_by;
+          if ($ instanceof Some && $1 instanceof Some) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      );
+      return [
+        model.withFields({
+          sugestion_gifts: gifts_tuple[1],
+          unique_gifts: gifts_tuple[0]
+        }),
+        none()
+      ];
     } else {
       return [model, none()];
     }
@@ -5658,11 +5967,11 @@ function update(model, msg) {
         )
       ];
     }
-  } else if (msg instanceof LoginUpdateName) {
+  } else if (msg instanceof LoginUpdateUsername) {
     let value3 = msg.value;
     return [
       model.withFields({
-        login_form: model.login_form.withFields({ name: value3 })
+        login_form: model.login_form.withFields({ username: value3 })
       }),
       none()
     ];
@@ -5672,7 +5981,11 @@ function update(model, msg) {
       model.withFields({
         login_form: model.login_form.withFields({ email: value3 })
       }),
-      none()
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdateEmail(value3));
+        }
+      )
     ];
   } else if (msg instanceof LoginUpdatePassword) {
     let value3 = msg.value;
@@ -5694,14 +6007,188 @@ function update(model, msg) {
     let value3 = msg.value;
     return [model.withFields({ countdown: value3 }), none()];
   } else if (msg instanceof UserRequestedConfirmPresence) {
-    return [model, none()];
+    return [model, confirm_presence(model)];
+  } else if (msg instanceof ConfirmPresenceResponded) {
+    let resp_result = msg.resp_result;
+    if (resp_result.isOk()) {
+      let resp = resp_result[0];
+      let $ = resp.message;
+      let $1 = resp.error;
+      if ($ instanceof Some && $1 instanceof None) {
+        let id_string = $[0];
+        return [
+          model.withFields({
+            confirm_form: new ConfirmForm(
+              "",
+              "",
+              "",
+              "",
+              "",
+              0,
+              toList([]),
+              new None(),
+              new None()
+            )
+          }),
+          batch(
+            toList([
+              push("/", new None(), new None()),
+              get_auth_user(id_string)
+            ])
+          )
+        ];
+      } else if ($1 instanceof Some) {
+        let err = $1[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new ConfirmUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else {
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(
+                new ConfirmUpdateError(
+                  new Some("Problemas no servidor, por favor tente mais tarde.")
+                )
+              );
+            }
+          )
+        ];
+      }
+    } else {
+      return [
+        model,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new ConfirmUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ];
+    }
+  } else if (msg instanceof ConfirmUpdateFirstName) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ first_name: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof ConfirmUpdateLastName) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ last_name: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof ConfirmUpdateInviteName) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ invite_name: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof ConfirmUpdateEmail) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ email: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof ConfirmUpdatePhone) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ phone: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof ConfirmUpdatePeopleCount) {
+    let value3 = msg.value;
+    let $ = parse(value3);
+    if ($.isOk()) {
+      let people_count = $[0];
+      return [
+        model.withFields({
+          confirm_form: model.confirm_form.withFields({
+            people_count
+          })
+        }),
+        none()
+      ];
+    } else {
+      let err = $[0];
+      return [
+        model,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new ConfirmUpdateError(
+                new Some(
+                  'O campo "Quantidade de pessoas" deve ser um valor inteiro entre 1 e 99'
+                )
+              )
+            );
+          }
+        )
+      ];
+    }
+  } else if (msg instanceof ConfirmUpdatePeopleNames) {
+    let value3 = msg.value;
+    let names = split3(value3, "\n");
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ people_names: names })
+      }),
+      none()
+    ];
+  } else if (msg instanceof ConfirmUpdateComments) {
+    let value3 = msg.value;
+    if (value3 === "") {
+      return [
+        model.withFields({
+          confirm_form: model.confirm_form.withFields({ comments: new None() })
+        }),
+        none()
+      ];
+    } else {
+      return [
+        model.withFields({
+          confirm_form: model.confirm_form.withFields({
+            comments: new Some(value3)
+          })
+        }),
+        none()
+      ];
+    }
+  } else if (msg instanceof ConfirmUpdateError) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ error: value3 })
+      }),
+      none()
+    ];
   } else if (msg instanceof UserRequestedSelectGift) {
     return [model, none()];
   } else if (msg instanceof UserOpenedGiftsPage) {
-    let $ = model.gifts;
-    if ($.hasLength(1)) {
+    let $ = model.sugestion_gifts;
+    let $1 = model.unique_gifts;
+    if ($.hasLength(1) && $1.hasLength(1)) {
       return [model, none()];
-    } else if ($.hasLength(0)) {
+    } else if ($.hasLength(0) && $1.hasLength(0)) {
       return [model, get_gifts()];
     } else {
       return [model, none()];
@@ -5738,6 +6225,7 @@ function init3(_) {
       toList([]),
       toList([]),
       new LoginForm("", "", "", new None()),
+      new ConfirmForm("", "", "", "", "", 0, toList([]), new None(), new None()),
       0
     ),
     batch(

@@ -38,8 +38,8 @@ fn gift_db_decoder() {
     dynamic.element(0, dynamic.int),
     dynamic.element(1, dynamic.string),
     dynamic.element(2, dynamic.string),
-    dynamic.element(3, dynamic.string),
-    dynamic.element(4, dynamic.int),
+    dynamic.element(3, dynamic.optional(dynamic.string)),
+    dynamic.element(4, dynamic.optional(dynamic.int)),
   )
 }
 
@@ -59,50 +59,4 @@ pub fn get_gift_by_id(gift_id: Int) -> Result(Gift, String) {
     Ok(gift) -> Ok(gift)
     Error(_) -> Error("No gift found when getting gift by id")
   }
-}
-
-pub type CreateGift {
-  CreateGift(name: String, pic: String, link: String)
-}
-
-pub fn decode_create_gift(
-  json: dynamic.Dynamic,
-) -> Result(CreateGift, dynamic.DecodeErrors) {
-  let decoder =
-    dynamic.decode3(
-      CreateGift,
-      dynamic.field("name", dynamic.string),
-      dynamic.field("pic", dynamic.string),
-      dynamic.field("link", dynamic.string),
-    )
-  case decoder(json) {
-    Ok(create_gift) ->
-      Ok(CreateGift(
-        name: create_gift.name,
-        pic: create_gift.pic,
-        link: create_gift.link,
-      ))
-    Error(error) -> Error(error)
-  }
-}
-
-pub fn insert_user_to_db(create_gift: CreateGift) {
-  [
-    i.row([
-      i.string(create_gift.name),
-      i.string(create_gift.pic),
-      i.string(create_gift.link),
-      i.int(0),
-    ]),
-  ]
-  |> i.from_values(table_name: "gift", columns: [
-    "name", "pic", "link", "selected_by",
-  ])
-  |> i.to_query
-  |> db.execute_write([
-    sqlight.text(create_gift.name),
-    sqlight.text(create_gift.pic),
-    sqlight.text(create_gift.link),
-    sqlight.int(0),
-  ])
 }
