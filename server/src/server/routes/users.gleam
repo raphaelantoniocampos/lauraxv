@@ -2,6 +2,7 @@ import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/regex
 import gleam/result
@@ -118,12 +119,22 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       return: Error("Usuário já está confirmou presença"),
     )
 
+    use _ <- result.try(case user.set_is_confirmed(user.id, True) {
+      Ok(_) -> Ok(Nil)
+      Error(err) -> {
+        io.debug(err)
+        Error("Problema configurando usuario presença")
+      }
+    })
+
     use _ <- result.try(case
-      confirmed_user.insert_confirmed_user_to_db(confirmed_user),
-      user.set_is_confirmed(user.id, True)
+      confirmed_user.insert_confirmed_user_to_db(confirmed_user)
     {
-      Ok(_), Ok(_) -> Ok(Nil)
-      _, _ -> Error("Problema confirmando presença")
+      Ok(_) -> Ok(Nil)
+      Error(err) -> {
+        io.debug(err)
+        Error("Problema confirmando presença")
+      }
     })
 
     use inserted_confirmed_user <- result.try(

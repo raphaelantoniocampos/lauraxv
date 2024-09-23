@@ -3,6 +3,7 @@ import cake/insert as i
 import cake/select as s
 import cake/update as u
 import cake/where as w
+import gleam/bool
 import gleam/dynamic
 import gleam/list
 import gleam/result
@@ -162,11 +163,12 @@ pub fn insert_user_to_db(create_user: CreateUser) {
 }
 
 pub fn set_is_confirmed(user_id: Int, to: Bool) {
+  let to_int = bool.to_int(to)
   u.new()
   |> u.table("user")
-  |> u.sets([u.set_bool("user.is_confirmed", to)])
-  |> u.where(w.eq(w.col("user.id"), w.int(user_id)))
+  |> u.sets([u.set_int("is_confirmed", to_int)])
+  |> u.where(w.eq(w.col("id"), w.int(user_id)))
   |> u.to_query
-  |> db.execute_write([sqlight.bool(to), sqlight.int(user_id)])
+  |> db.execute_write([sqlight.int(user_id), sqlight.int(to_int)])
   |> result.replace_error("Problem with updating user confirmed status")
 }

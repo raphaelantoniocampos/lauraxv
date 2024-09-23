@@ -95,7 +95,7 @@ pub fn navigation_bar(model: Model) {
       div([], [
         case model.auth_user {
           None -> {
-            span([class("text-pink-600 font-semibold")], [
+            span([class("min-w-5 text-pink-600 font-semibold")], [
               a(
                 [
                   class(

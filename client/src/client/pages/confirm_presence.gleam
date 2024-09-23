@@ -2,48 +2,105 @@ import client/components/button_class.{button_class}
 import client/pages/login.{login_view}
 import client/state.{
   type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateFirstName, ConfirmUpdateInviteName, ConfirmUpdateLastName,
-  ConfirmUpdatePeopleCount, ConfirmUpdatePeopleNames, ConfirmUpdatePhone,
-  UserRequestedConfirmPresence, message_error_decoder,
+  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
+  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, UserRequestedConfirmPresence,
+  message_error_decoder,
 }
 import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/string
 import lustre/attribute.{
   attribute, class, for, href, id, max, min, name, pattern, placeholder,
-  required, rows, type_, value, wrap,
+  required, type_, value,
 }
 import lustre/element.{type Element, text}
-import lustre/element/html.{
-  a, button, div, form, h1, input, label, main, p, textarea,
-}
+import lustre/element/html.{a, button, div, form, h1, input, label, main, p, ul}
 import lustre/event
 import lustre_http
 import shared.{server_url}
 
 pub fn confirm_presence(model: Model) {
-  let user_id_string = {
+  let user_id = {
     let assert Ok(user) =
       option.to_result(model.auth_user, "Usuário não está logado")
-    int.to_string(user.user_id)
+    user.user_id
   }
 
   lustre_http.post(
     server_url <> "/confirm",
     json.object([
       #("id", json.int(0)),
-      #("user_id", json.string(user_id_string)),
-      #("first_name", json.string(model.confirm_form.first_name)),
-      #("last_name", json.string(model.confirm_form.last_name)),
+      #("user_id", json.int(user_id)),
+      #("name", json.string(model.confirm_form.name)),
       #("invite_name", json.string(model.confirm_form.invite_name)),
       #("phone", json.string(model.confirm_form.phone)),
       #("people_count", json.int(model.confirm_form.people_count)),
-      #("people_names", json.string(model.confirm_form.people_names)),
-      #("comments", json.nullable(model.confirm_form.comments, json.string)),
+      #(
+        "people_names",
+        model.confirm_form.people_names
+          |> json.array(json.string),
+      ),
+      #(
+        "comments",
+        model.confirm_form.comments
+          |> json.nullable(json.string),
+      ),
     ]),
     lustre_http.expect_json(message_error_decoder(), ConfirmPresenceResponded),
   )
+}
+
+fn name_box_element(model: Model, n: Int) {
+  let string_n = int.to_string(n + 1)
+  element.element("name_box", [], [
+    case n {
+      0 -> {
+        div([class("py-3")], [
+          label(
+            [
+              class("block text-sm font-medium text-gray-700"),
+              for("people_names_" <> string_n),
+            ],
+            [text("Seu nome")],
+          ),
+          input([
+            class(
+              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+            ),
+            required(True),
+            name("people_names_" <> string_n),
+            id("people_names_" <> string_n),
+            type_("name"),
+            value(model.confirm_form.name),
+            event.on_input(ConfirmUpdateName),
+          ]),
+        ])
+      }
+      _ -> {
+        div([class("py-3")], [
+          label(
+            [
+              class("block text-sm font-medium text-gray-700"),
+              for("people_names_" <> string_n),
+            ],
+            [text(string_n <> "ª pessoa")],
+          ),
+          input([
+            class(
+              "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+            ),
+            required(True),
+            name("people_names_" <> string_n),
+            id("people_names_" <> string_n),
+            type_("name"),
+            event.on_input(ConfirmUpdatePeopleNames),
+          ]),
+        ])
+      }
+    },
+  ])
 }
 
 fn confirmed_user_view() -> Element(a) {
@@ -103,7 +160,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                         class("block text-sm font-medium text-gray-700"),
                         for("first_name"),
                       ],
-                      [text("Nome")],
+                      [text("Nome completo")],
                     ),
                     input([
                       class(
@@ -113,28 +170,8 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       name("first_name"),
                       id("first_name"),
                       type_("name"),
-                      value(model.confirm_form.first_name),
-                      event.on_input(ConfirmUpdateFirstName),
-                    ]),
-                  ]),
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("last_name"),
-                      ],
-                      [text("Sobrenome")],
-                    ),
-                    input([
-                      class(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                      ),
-                      required(True),
-                      name("last_name"),
-                      id("last_name"),
-                      type_("text"),
-                      event.on_input(ConfirmUpdateLastName),
-                      value(model.confirm_form.last_name),
+                      value(model.confirm_form.name),
+                      event.on_input(ConfirmUpdateName),
                     ]),
                   ]),
                   div([], [
@@ -206,25 +243,16 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                         class("block text-sm font-medium text-gray-700"),
                         for("people_names"),
                       ],
-                      [
-                        text(
-                          "Nome completo das pessoas incluindo você (se houver)",
-                        ),
-                      ],
+                      [text("Nome completo das pessoas (se houver)")],
                     ),
-                    textarea(
-                      [
-                        class(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                        ),
-                        placeholder("Digite um nome por linha"),
-                        name("people_names"),
-                        id("people_names"),
-                        rows(5),
-                        // event.on_input(ConfirmUpdatePeopleNames),
-                      ],
-                      "",
+                    div(
+                      [class("block text-sm font-medium text-gray-700")],
+                      list.range(0, model.confirm_form.people_count - 1)
+                        |> list.map(fn(n) { name_box_element(model, n) }),
                     ),
+                    div([], [
+                      text(string.concat(model.confirm_form.people_names)),
+                    ]),
                   ]),
                   div([], [
                     label(

@@ -27,8 +27,7 @@ pub type ConfirmedUser {
   ConfirmedUser(
     id: Int,
     user_id: Int,
-    first_name: String,
-    last_name: String,
+    name: String,
     invite_name: String,
     phone: String,
     people_count: Int,

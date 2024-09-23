@@ -59,8 +59,7 @@ pub type Msg {
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
-  ConfirmUpdateFirstName(value: String)
-  ConfirmUpdateLastName(value: String)
+  ConfirmUpdateName(value: String)
   ConfirmUpdateInviteName(value: String)
   ConfirmUpdateEmail(value: String)
   ConfirmUpdatePhone(value: String)
@@ -99,13 +98,12 @@ pub type LoginForm {
 
 pub type ConfirmForm {
   ConfirmForm(
-    first_name: String,
-    last_name: String,
+    name: String,
     invite_name: String,
     email: String,
     phone: String,
     people_count: Int,
-    people_names: String,
+    people_names: List(String),
     comments: Option(String),
     error: Option(String),
   )

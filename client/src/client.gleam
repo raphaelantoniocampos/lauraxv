@@ -9,14 +9,14 @@ import client/pages/photos.{photos_view}
 import client/state.{
   type LoginForm, type Model, type Msg, type Route, AuthUser, AuthUserRecieved,
   ConfirmForm, ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateEmail, ConfirmUpdateError, ConfirmUpdateFirstName,
-  ConfirmUpdateInviteName, ConfirmUpdateLastName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, CountdownUpdated, EventPage,
-  GiftsPage, GiftsRecieved, Home, Login, LoginForm, LoginResponded,
-  LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername,
-  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, SignUpResponded,
-  UserOpenedGiftsPage, UserOpenedPhotosPage, UserRequestedConfirmPresence,
-  UserRequestedLogin, UserRequestedSelectGift, UserRequestedSignUp,
+  ConfirmUpdateEmail, ConfirmUpdateError, ConfirmUpdateInviteName,
+  ConfirmUpdateName, ConfirmUpdatePeopleCount, ConfirmUpdatePeopleNames,
+  ConfirmUpdatePhone, CountdownUpdated, EventPage, GiftsPage, GiftsRecieved,
+  Home, Login, LoginForm, LoginResponded, LoginUpdateEmail, LoginUpdateError,
+  LoginUpdatePassword, LoginUpdateUsername, Model, NotFound, OnRouteChange,
+  PhotosPage, PhotosRecieved, SignUpResponded, UserOpenedGiftsPage,
+  UserOpenedPhotosPage, UserRequestedConfirmPresence, UserRequestedLogin,
+  UserRequestedSelectGift, UserRequestedSignUp,
 }
 import gleam/int
 import gleam/list
@@ -51,7 +51,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       unique_gifts: [],
       photos: [],
       login_form: LoginForm("", "", "", None),
-      confirm_form: ConfirmForm("", "", "", "", "", 0, "", None, None),
+      confirm_form: ConfirmForm("", "", "", "", 1, [], None, None),
       countdown: 0,
     ),
     effect.batch([
@@ -217,7 +217,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
             Some(id_string), None -> #(
               Model(
                 ..model,
-                confirm_form: ConfirmForm("", "", "", "", "", 0, "", None, None),
+                confirm_form: ConfirmForm("", "", "", "", 1, [], None, None),
               ),
               effect.batch([
                 modem.push("/", None, None),
@@ -253,18 +253,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    ConfirmUpdateFirstName(value) -> #(
+    ConfirmUpdateName(value) -> #(
       Model(
         ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, first_name: value),
-      ),
-      effect.none(),
-    )
-
-    ConfirmUpdateLastName(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, last_name: value),
+        confirm_form: ConfirmForm(..model.confirm_form, name: value),
       ),
       effect.none(),
     )
@@ -306,7 +298,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
             effect.none(),
           )
         }
-        Error(err) -> {
+        Error(_) -> {
           #(
             model,
             effect.from(fn(dispatch) {
@@ -325,7 +317,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       #(
         Model(
           ..model,
-          confirm_form: ConfirmForm(..model.confirm_form, people_names: value),
+          confirm_form: ConfirmForm(..model.confirm_form, people_names: [value]),
         ),
         effect.none(),
       )
@@ -334,7 +326,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     ConfirmUpdateComments(value) -> #(
       Model(
         ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, comments: None),
+        confirm_form: ConfirmForm(..model.confirm_form, comments: Some(value)),
       ),
       effect.none(),
     )
