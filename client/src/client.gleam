@@ -9,15 +9,16 @@ import client/pages/photos.{photos_view}
 import client/state.{
   type LoginForm, type Model, type Msg, type Route, AuthUser, AuthUserRecieved,
   ConfirmForm, ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateEmail, ConfirmUpdateError, ConfirmUpdateInviteName,
-  ConfirmUpdateName, ConfirmUpdatePeopleCount, ConfirmUpdatePeopleNames,
-  ConfirmUpdatePhone, CountdownUpdated, EventPage, GiftsPage, GiftsRecieved,
-  Home, Login, LoginForm, LoginResponded, LoginUpdateEmail, LoginUpdateError,
-  LoginUpdatePassword, LoginUpdateUsername, Model, NotFound, OnRouteChange,
-  PhotosPage, PhotosRecieved, SignUpResponded, UserOpenedGiftsPage,
-  UserOpenedPhotosPage, UserRequestedConfirmPresence, UserRequestedLogin,
-  UserRequestedSelectGift, UserRequestedSignUp,
+  ConfirmUpdateCompanionName, ConfirmUpdateEmail, ConfirmUpdateError,
+  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
+  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, CountdownUpdated, EventPage,
+  GiftsPage, GiftsRecieved, Home, Login, LoginForm, LoginResponded,
+  LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername,
+  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, SignUpResponded,
+  UserOpenedGiftsPage, UserOpenedPhotosPage, UserRequestedConfirmPresence,
+  UserRequestedLogin, UserRequestedSelectGift, UserRequestedSignUp,
 }
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
@@ -51,7 +52,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       unique_gifts: [],
       photos: [],
       login_form: LoginForm("", "", "", None),
-      confirm_form: ConfirmForm("", "", "", "", 1, [], None, None),
+      confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
       countdown: 0,
     ),
     effect.batch([
@@ -217,7 +218,17 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
             Some(id_string), None -> #(
               Model(
                 ..model,
-                confirm_form: ConfirmForm("", "", "", "", 1, [], None, None),
+                confirm_form: ConfirmForm(
+                  "",
+                  "",
+                  "",
+                  "",
+                  1,
+                  "",
+                  dict.new(),
+                  None,
+                  None,
+                ),
               ),
               effect.batch([
                 modem.push("/", None, None),
@@ -313,11 +324,59 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
     }
 
+    ConfirmUpdateCompanionName(n, value) -> {
+      case
+        n,
+        model.confirm_form.people_names
+        |> dict.has_key(n)
+      {
+        0, _ -> {
+          let people_names =
+            dict.new()
+            |> dict.insert(n, value)
+          #(
+            Model(
+              ..model,
+              confirm_form: ConfirmForm(
+                ..model.confirm_form,
+                name: value,
+                companion_name: value,
+              ),
+            ),
+            effect.from(fn(dispatch) {
+              dispatch(ConfirmUpdatePeopleNames(people_names))
+            }),
+          )
+        }
+        _, _ -> {
+          let people_names =
+            model.confirm_form.people_names
+            |> dict.upsert(n, fn(op) {
+              case op {
+                Some(key) -> value
+                None -> ""
+              }
+            })
+          #(
+            Model(
+              ..model,
+              confirm_form: ConfirmForm(
+                ..model.confirm_form,
+                companion_name: value,
+              ),
+            ),
+            effect.from(fn(dispatch) {
+              dispatch(ConfirmUpdatePeopleNames(people_names))
+            }),
+          )
+        }
+      }
+    }
     ConfirmUpdatePeopleNames(value) -> {
       #(
         Model(
           ..model,
-          confirm_form: ConfirmForm(..model.confirm_form, people_names: [value]),
+          confirm_form: ConfirmForm(..model.confirm_form, people_names: value),
         ),
         effect.none(),
       )

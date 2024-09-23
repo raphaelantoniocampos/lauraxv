@@ -2,10 +2,11 @@ import client/components/button_class.{button_class}
 import client/pages/login.{login_view}
 import client/state.{
   type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, UserRequestedConfirmPresence,
+  ConfirmUpdateCompanionName, ConfirmUpdateInviteName, ConfirmUpdateName,
+  ConfirmUpdatePeopleCount, ConfirmUpdatePhone, UserRequestedConfirmPresence,
   message_error_decoder,
 }
+import gleam/dict
 import gleam/int
 import gleam/json
 import gleam/list
@@ -16,7 +17,9 @@ import lustre/attribute.{
   required, type_, value,
 }
 import lustre/element.{type Element, text}
-import lustre/element/html.{a, button, div, form, h1, input, label, main, p, ul}
+import lustre/element/html.{
+  a, button, div, form, h1, input, label, li, main, p, ul,
+}
 import lustre/event
 import lustre_http
 import shared.{server_url}
@@ -37,11 +40,11 @@ pub fn confirm_presence(model: Model) {
       #("invite_name", json.string(model.confirm_form.invite_name)),
       #("phone", json.string(model.confirm_form.phone)),
       #("people_count", json.int(model.confirm_form.people_count)),
-      #(
-        "people_names",
-        model.confirm_form.people_names
-          |> json.array(json.string),
-      ),
+      // #(
+      //   "people_names",
+      //   model.confirm_form.people_names
+      //     |> json.json(json.string),
+      // ),
       #(
         "comments",
         model.confirm_form.comments
@@ -57,7 +60,7 @@ fn name_box_element(model: Model, n: Int) {
   element.element("name_box", [], [
     case n {
       0 -> {
-        div([class("py-3")], [
+        li([class("py-3")], [
           label(
             [
               class("block text-sm font-medium text-gray-700"),
@@ -74,12 +77,12 @@ fn name_box_element(model: Model, n: Int) {
             id("people_names_" <> string_n),
             type_("name"),
             value(model.confirm_form.name),
-            event.on_input(ConfirmUpdateName),
+            event.on_input(fn(value) { ConfirmUpdateCompanionName(n, value) }),
           ]),
         ])
       }
       _ -> {
-        div([class("py-3")], [
+        li([class("py-3")], [
           label(
             [
               class("block text-sm font-medium text-gray-700"),
@@ -95,7 +98,7 @@ fn name_box_element(model: Model, n: Int) {
             name("people_names_" <> string_n),
             id("people_names_" <> string_n),
             type_("name"),
-            event.on_input(ConfirmUpdatePeopleNames),
+            event.on_input(fn(value) { ConfirmUpdateCompanionName(n, value) }),
           ]),
         ])
       }
@@ -245,13 +248,20 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       ],
                       [text("Nome completo das pessoas (se houver)")],
                     ),
-                    div(
+                    ul(
                       [class("block text-sm font-medium text-gray-700")],
                       list.range(0, model.confirm_form.people_count - 1)
                         |> list.map(fn(n) { name_box_element(model, n) }),
                     ),
-                    div([], [
-                      text(string.concat(model.confirm_form.people_names)),
+                    div([class("py-2")], [
+                      text(
+                        model.confirm_form.people_names
+                        |> dict.values
+                        |> string.concat,
+                      ),
+                      div([class("py-1")], [
+                        text(model.confirm_form.companion_name),
+                      ]),
                     ]),
                   ]),
                   div([], [

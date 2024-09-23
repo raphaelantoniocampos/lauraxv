@@ -1,3 +1,4 @@
+import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
@@ -64,7 +65,8 @@ pub type Msg {
   ConfirmUpdateEmail(value: String)
   ConfirmUpdatePhone(value: String)
   ConfirmUpdatePeopleCount(value: String)
-  ConfirmUpdatePeopleNames(value: String)
+  ConfirmUpdateCompanionName(key: Int, value: String)
+  ConfirmUpdatePeopleNames(value: Dict(Int, String))
   ConfirmUpdateComments(value: String)
   ConfirmUpdateError(value: Option(String))
 
@@ -103,7 +105,8 @@ pub type ConfirmForm {
     email: String,
     phone: String,
     people_count: Int,
-    people_names: List(String),
+    companion_name: String,
+    people_names: Dict(Int, String),
     comments: Option(String),
     error: Option(String),
   )
