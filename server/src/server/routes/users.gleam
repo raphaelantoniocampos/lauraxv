@@ -114,13 +114,13 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
     })
 
     use <- bool.guard(
-      when: user.confirmed,
+      when: user.is_confirmed,
       return: Error("Usuário já está confirmou presença"),
     )
 
     use _ <- result.try(case
       confirmed_user.insert_confirmed_user_to_db(confirmed_user),
-      user.change_confirmed_for_user(user.id, True)
+      user.set_is_confirmed(user.id, True)
     {
       Ok(_), Ok(_) -> Ok(Nil)
       _, _ -> Error("Problema confirmando presença")

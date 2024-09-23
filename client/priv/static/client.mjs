@@ -2285,9 +2285,6 @@ function object(entries) {
 function identity2(x) {
   return x;
 }
-function array(list2) {
-  return list2.toArray();
-}
 function do_null() {
   return null;
 }
@@ -2433,14 +2430,6 @@ function nullable(input2, inner_type) {
 }
 function object2(entries) {
   return object(entries);
-}
-function preprocessed_array(from3) {
-  return array(from3);
-}
-function array2(entries, inner_type) {
-  let _pipe = entries;
-  let _pipe$1 = map2(_pipe, inner_type);
-  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -4510,11 +4499,11 @@ var MessageErrorResponse = class extends CustomType {
   }
 };
 var AuthUser = class extends CustomType {
-  constructor(user_id, name2, confirmed, is_admin) {
+  constructor(user_id, name2, is_confirmed, is_admin) {
     super();
     this.user_id = user_id;
     this.name = name2;
-    this.confirmed = confirmed;
+    this.is_confirmed = is_confirmed;
     this.is_admin = is_admin;
   }
 };
@@ -4696,7 +4685,7 @@ function navigation_bar(model) {
                 toList([class$("flex items-center space-x-4")]),
                 toList([
                   (() => {
-                    let $1 = user.confirmed;
+                    let $1 = user.is_confirmed;
                     if ($1) {
                       return span(
                         toList([class$("text-emerald-600 font-semibold")]),
@@ -4941,10 +4930,7 @@ function confirm_presence(model) {
         ["invite_name", string2(model.confirm_form.invite_name)],
         ["phone", string2(model.confirm_form.phone)],
         ["people_count", int2(model.confirm_form.people_count)],
-        [
-          "people_names",
-          array2(model.confirm_form.people_names, string2)
-        ],
+        ["people_names", string2(model.confirm_form.people_names)],
         ["comments", nullable(model.confirm_form.comments, string2)]
       ])
     ),
@@ -4956,7 +4942,7 @@ function confirm_presence(model) {
     )
   );
 }
-function user_confirmed_view() {
+function confirmed_user_view() {
   return div(
     toList([class$("text-center p-12 mx-4")]),
     toList([
@@ -5003,9 +4989,9 @@ function confirm_presence_view(model) {
       ]),
       toList([
         (() => {
-          let $1 = user.confirmed;
+          let $1 = user.is_confirmed;
           if ($1) {
-            return user_confirmed_view();
+            return confirmed_user_view();
           } else {
             return div(
               toList([class$("p-2 mt-6 mx-4")]),
@@ -5183,25 +5169,19 @@ function confirm_presence_view(model) {
                           ]),
                           toList([
                             text(
-                              "Nome completo das pessoas incluindo voc\xEA(se houver)"
+                              "Nome completo das pessoas incluindo voc\xEA (se houver)"
                             )
                           ])
                         ),
                         textarea(
                           toList([
-                            placeholder("Digite um nome por linha"),
                             class$(
                               "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
                             ),
-                            rows(3),
+                            placeholder("Digite um nome por linha"),
                             name("people_names"),
                             id("people_names"),
-                            on_input(
-                              (var0) => {
-                                return new ConfirmUpdatePeopleNames(var0);
-                              }
-                            ),
-                            value(model.confirm_form.first_name + "\n")
+                            rows(5)
                           ]),
                           ""
                         )
@@ -5217,21 +5197,15 @@ function confirm_presence_view(model) {
                           ]),
                           toList([text("Coment\xE1rios (se houver)")])
                         ),
-                        textarea(
+                        input(
                           toList([
                             class$(
                               "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
                             ),
-                            rows(3),
                             name("comments"),
                             id("comments"),
-                            on_input(
-                              (var0) => {
-                                return new ConfirmUpdateComments(var0);
-                              }
-                            )
-                          ]),
-                          ""
+                            type_("text")
+                          ])
                         )
                       ])
                     ),
@@ -5723,7 +5697,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 420, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 402, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -5757,7 +5731,7 @@ function get_auth_user(id_string) {
     },
     field("user_id", int),
     field("username", string),
-    field("confirmed", bool),
+    field("is_confirmed", bool),
     field("is_admin", bool)
   );
   return get2(
@@ -6025,7 +5999,7 @@ function update(model, msg) {
               "",
               "",
               0,
-              toList([]),
+              "",
               new None(),
               new None()
             )
@@ -6147,32 +6121,20 @@ function update(model, msg) {
     }
   } else if (msg instanceof ConfirmUpdatePeopleNames) {
     let value3 = msg.value;
-    let names = split3(value3, "\n");
     return [
       model.withFields({
-        confirm_form: model.confirm_form.withFields({ people_names: names })
+        confirm_form: model.confirm_form.withFields({ people_names: value3 })
       }),
       none()
     ];
   } else if (msg instanceof ConfirmUpdateComments) {
     let value3 = msg.value;
-    if (value3 === "") {
-      return [
-        model.withFields({
-          confirm_form: model.confirm_form.withFields({ comments: new None() })
-        }),
-        none()
-      ];
-    } else {
-      return [
-        model.withFields({
-          confirm_form: model.confirm_form.withFields({
-            comments: new Some(value3)
-          })
-        }),
-        none()
-      ];
-    }
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ comments: new None() })
+      }),
+      none()
+    ];
   } else if (msg instanceof ConfirmUpdateError) {
     let value3 = msg.value;
     return [
@@ -6225,7 +6187,7 @@ function init3(_) {
       toList([]),
       toList([]),
       new LoginForm("", "", "", new None()),
-      new ConfirmForm("", "", "", "", "", 0, toList([]), new None(), new None()),
+      new ConfirmForm("", "", "", "", "", 0, "", new None(), new None()),
       0
     ),
     batch(

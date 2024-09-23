@@ -114,7 +114,7 @@ pub fn navigation_bar(model: Model) {
           }
           Some(user) -> {
             div([class("flex items-center space-x-4")], [
-              case user.confirmed {
+              case user.is_confirmed {
                 True ->
                   span([class("text-emerald-600 font-semibold")], [
                     text("Presença Confirmada"),

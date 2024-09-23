@@ -18,7 +18,7 @@ pub type User {
     username: String,
     email: String,
     password: String,
-    confirmed: Bool,
+    is_confirmed: Bool,
     is_admin: Bool,
   )
 }

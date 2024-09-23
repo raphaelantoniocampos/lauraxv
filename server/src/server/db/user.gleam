@@ -18,7 +18,7 @@ fn get_user_base_query() {
     s.col("user.username"),
     s.col("user.email"),
     s.col("user.password"),
-    s.col("user.confirmed"),
+    s.col("user.is_confirmed"),
     s.col("user.is_admin"),
   ])
   |> s.from_table("user")
@@ -149,7 +149,7 @@ pub fn insert_user_to_db(create_user: CreateUser) {
     ]),
   ]
   |> i.from_values(table_name: "user", columns: [
-    "username", "email", "password", "confirmed", "is_admin",
+    "username", "email", "password", "is_confirmed", "is_admin",
   ])
   |> i.to_query
   |> db.execute_write([
@@ -161,10 +161,10 @@ pub fn insert_user_to_db(create_user: CreateUser) {
   ])
 }
 
-pub fn change_confirmed_for_user(user_id: Int, to: Bool) {
+pub fn set_is_confirmed(user_id: Int, to: Bool) {
   u.new()
   |> u.table("user")
-  |> u.sets([u.set_bool("user.confirmed", to)])
+  |> u.sets([u.set_bool("user.is_confirmed", to)])
   |> u.where(w.eq(w.col("user.id"), w.int(user_id)))
   |> u.to_query
   |> db.execute_write([sqlight.bool(to), sqlight.int(user_id)])

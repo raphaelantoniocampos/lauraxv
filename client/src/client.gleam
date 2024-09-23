@@ -51,7 +51,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       unique_gifts: [],
       photos: [],
       login_form: LoginForm("", "", "", None),
-      confirm_form: ConfirmForm("", "", "", "", "", 0, [], None, None),
+      confirm_form: ConfirmForm("", "", "", "", "", 0, "", None, None),
       countdown: 0,
     ),
     effect.batch([
@@ -217,7 +217,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
             Some(id_string), None -> #(
               Model(
                 ..model,
-                confirm_form: ConfirmForm("", "", "", "", "", 0, [], None, None),
+                confirm_form: ConfirmForm("", "", "", "", "", 0, "", None, None),
               ),
               effect.batch([
                 modem.push("/", None, None),
@@ -322,41 +322,23 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
 
     ConfirmUpdatePeopleNames(value) -> {
-      let names = string.split(value, "\n")
       #(
         Model(
           ..model,
-          confirm_form: ConfirmForm(..model.confirm_form, people_names: names),
+          confirm_form: ConfirmForm(..model.confirm_form, people_names: value),
         ),
         effect.none(),
       )
     }
 
-    ConfirmUpdateComments(value) ->
-      case value {
-        "" -> {
-          #(
-            Model(
-              ..model,
-              confirm_form: ConfirmForm(..model.confirm_form, comments: None),
-            ),
-            effect.none(),
-          )
-        }
+    ConfirmUpdateComments(value) -> #(
+      Model(
+        ..model,
+        confirm_form: ConfirmForm(..model.confirm_form, comments: None),
+      ),
+      effect.none(),
+    )
 
-        _ -> {
-          #(
-            Model(
-              ..model,
-              confirm_form: ConfirmForm(
-                ..model.confirm_form,
-                comments: Some(value),
-              ),
-            ),
-            effect.none(),
-          )
-        }
-      }
     ConfirmUpdateError(value) -> #(
       Model(
         ..model,
@@ -439,7 +421,7 @@ pub fn get_auth_user(id_string: String) -> Effect(Msg) {
       AuthUser,
       dynamic.field("user_id", dynamic.int),
       dynamic.field("username", dynamic.string),
-      dynamic.field("confirmed", dynamic.bool),
+      dynamic.field("is_confirmed", dynamic.bool),
       dynamic.field("is_admin", dynamic.bool),
     )
 

@@ -85,7 +85,7 @@ pub fn message_error_decoder() {
 }
 
 pub type AuthUser {
-  AuthUser(user_id: Int, name: String, confirmed: Bool, is_admin: Bool)
+  AuthUser(user_id: Int, name: String, is_confirmed: Bool, is_admin: Bool)
 }
 
 pub type LoginForm {
@@ -105,7 +105,7 @@ pub type ConfirmForm {
     email: String,
     phone: String,
     people_count: Int,
-    people_names: List(String),
+    people_names: String,
     comments: Option(String),
     error: Option(String),
   )

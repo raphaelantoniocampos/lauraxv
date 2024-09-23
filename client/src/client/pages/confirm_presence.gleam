@@ -12,7 +12,7 @@ import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{
   attribute, class, for, href, id, max, min, name, pattern, placeholder,
-  required, rows, type_, value,
+  required, rows, type_, value, wrap,
 }
 import lustre/element.{type Element, text}
 import lustre/element/html.{
@@ -39,17 +39,14 @@ pub fn confirm_presence(model: Model) {
       #("invite_name", json.string(model.confirm_form.invite_name)),
       #("phone", json.string(model.confirm_form.phone)),
       #("people_count", json.int(model.confirm_form.people_count)),
-      #(
-        "people_names",
-        json.array(model.confirm_form.people_names, json.string),
-      ),
+      #("people_names", json.string(model.confirm_form.people_names)),
       #("comments", json.nullable(model.confirm_form.comments, json.string)),
     ]),
     lustre_http.expect_json(message_error_decoder(), ConfirmPresenceResponded),
   )
 }
 
-fn user_confirmed_view() -> Element(a) {
+fn confirmed_user_view() -> Element(a) {
   div([class("text-center p-12 mx-4")], [
     h1(
       [
@@ -83,8 +80,8 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
     None -> login_view(model)
     Some(user) ->
       main([class("w-full max-w-2xl p-8 mt-20 bg-white rounded-lg shadow-lg")], [
-        case user.confirmed {
-          True -> user_confirmed_view()
+        case user.is_confirmed {
+          True -> confirmed_user_view()
           False -> {
             div([class("p-2 mt-6 mx-4")], [
               h1(
@@ -211,22 +208,20 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       ],
                       [
                         text(
-                          "Nome completo das pessoas incluindo você(se houver)",
+                          "Nome completo das pessoas incluindo você (se houver)",
                         ),
                       ],
                     ),
                     textarea(
                       [
-                        placeholder("Digite um nome por linha"),
                         class(
                           "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
                         ),
-                        rows(3),
+                        placeholder("Digite um nome por linha"),
                         name("people_names"),
                         id("people_names"),
-                        // type_("text"),
-                        event.on_input(ConfirmUpdatePeopleNames),
-                        value(model.confirm_form.first_name <> "\n"),
+                        rows(5),
+                        // event.on_input(ConfirmUpdatePeopleNames),
                       ],
                       "",
                     ),
@@ -239,19 +234,15 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       ],
                       [text("Comentários (se houver)")],
                     ),
-                    textarea(
-                      [
-                        class(
-                          "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                        ),
-                        rows(3),
-                        name("comments"),
-                        id("comments"),
-                        event.on_input(ConfirmUpdateComments),
-                        // value(""),
-                      ],
-                      "",
-                    ),
+                    input([
+                      class(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+                      ),
+                      name("comments"),
+                      id("comments"),
+                      type_("text"),
+                      // event.on_input(ConfirmUpdateComments),
+                    ]),
                   ]),
                   div([class("flex items-center justify-center")], [
                     button([button_class("60"), type_("submit")], [
