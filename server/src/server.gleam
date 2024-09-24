@@ -5,7 +5,6 @@ import wisp
 import wisp/testing.{default_secret_key_base}
 import wisp/wisp_mist
 
-//TODO: Armazenar Confirmação de Presença
 //TODO: Adicionar Selecionar/Deselecionar Presente
 //TODO: Página de Admin (Mostrar número de confirmados e nomes)
 //TODO: Confirmação Login (Botão "tem certeza?")
