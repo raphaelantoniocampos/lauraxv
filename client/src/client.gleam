@@ -325,52 +325,23 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
 
     ConfirmUpdateCompanionName(n, value) -> {
-      case
-        n,
+      let people_names =
         model.confirm_form.people_names
-        |> dict.has_key(n)
-      {
-        0, _ -> {
-          let people_names =
-            dict.new()
-            |> dict.insert(n, value)
-          #(
-            Model(
-              ..model,
-              confirm_form: ConfirmForm(
-                ..model.confirm_form,
-                name: value,
-                companion_name: value,
-              ),
-            ),
-            effect.from(fn(dispatch) {
-              dispatch(ConfirmUpdatePeopleNames(people_names))
-            }),
-          )
-        }
-        _, _ -> {
-          let people_names =
-            model.confirm_form.people_names
-            |> dict.upsert(n, fn(op) {
-              case op {
-                Some(key) -> value
-                None -> ""
-              }
-            })
-          #(
-            Model(
-              ..model,
-              confirm_form: ConfirmForm(
-                ..model.confirm_form,
-                companion_name: value,
-              ),
-            ),
-            effect.from(fn(dispatch) {
-              dispatch(ConfirmUpdatePeopleNames(people_names))
-            }),
-          )
-        }
-      }
+        |> dict.upsert(n, fn(key) {
+          case key {
+            Some(_) -> value
+            None -> ""
+          }
+        })
+      #(
+        Model(
+          ..model,
+          confirm_form: ConfirmForm(..model.confirm_form, companion_name: value),
+        ),
+        effect.from(fn(dispatch) {
+          dispatch(ConfirmUpdatePeopleNames(people_names))
+        }),
+      )
     }
     ConfirmUpdatePeopleNames(value) -> {
       #(

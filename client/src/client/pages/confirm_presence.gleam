@@ -40,11 +40,12 @@ pub fn confirm_presence(model: Model) {
       #("invite_name", json.string(model.confirm_form.invite_name)),
       #("phone", json.string(model.confirm_form.phone)),
       #("people_count", json.int(model.confirm_form.people_count)),
-      // #(
-      //   "people_names",
-      //   model.confirm_form.people_names
-      //     |> json.json(json.string),
-      // ),
+      #(
+        "people_names",
+        model.confirm_form.people_names
+          |> dict.values
+          |> json.array(json.string),
+      ),
       #(
         "comments",
         model.confirm_form.comments

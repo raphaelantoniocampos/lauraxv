@@ -39,7 +39,6 @@ var List = class {
     }
     return desired === 0;
   }
-  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -255,7 +254,6 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
-  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -1992,12 +1990,6 @@ function new$() {
 function get(from3, get3) {
   return map_get(from3, get3);
 }
-function do_has_key(key, dict) {
-  return !isEqual(get(dict, key), new Error(void 0));
-}
-function has_key(dict, key) {
-  return do_has_key(key, dict);
-}
 function insert(dict, key, value3) {
   return map_insert(key, value3, dict);
 }
@@ -2367,6 +2359,9 @@ function object(entries) {
 function identity2(x) {
   return x;
 }
+function array(list2) {
+  return list2.toArray();
+}
 function do_null() {
   return null;
 }
@@ -2512,6 +2507,14 @@ function nullable(input2, inner_type) {
 }
 function object2(entries) {
   return object(entries);
+}
+function preprocessed_array(from3) {
+  return array(from3);
+}
+function array2(entries, inner_type) {
+  let _pipe = entries;
+  let _pipe$1 = map2(_pipe, inner_type);
+  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -4985,11 +4988,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "let_assert",
+        "assignment_no_match",
         "client/pages/confirm_presence",
         29,
         "confirm_presence",
-        "Pattern match failed, no pattern matched the value.",
+        "Assignment pattern did not match",
         { value: $ }
       );
     }
@@ -5006,6 +5009,14 @@ function confirm_presence(model) {
         ["invite_name", string2(model.confirm_form.invite_name)],
         ["phone", string2(model.confirm_form.phone)],
         ["people_count", int2(model.confirm_form.people_count)],
+        [
+          "people_names",
+          (() => {
+            let _pipe = model.confirm_form.people_names;
+            let _pipe$1 = values(_pipe);
+            return array2(_pipe$1, string2);
+          })()
+        ],
         [
           "comments",
           (() => {
@@ -5837,7 +5848,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 453, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 424, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -6253,55 +6264,30 @@ function update(model, msg) {
   } else if (msg instanceof ConfirmUpdateCompanionName) {
     let n = msg.key;
     let value3 = msg.value;
-    let $ = (() => {
+    let people_names = (() => {
       let _pipe = model.confirm_form.people_names;
-      return has_key(_pipe, n);
+      return upsert(
+        _pipe,
+        n,
+        (key) => {
+          if (key instanceof Some) {
+            return value3;
+          } else {
+            return "";
+          }
+        }
+      );
     })();
-    if (n === 0) {
-      let people_names = (() => {
-        let _pipe = new$();
-        return insert(_pipe, n, value3);
-      })();
-      return [
-        model.withFields({
-          confirm_form: model.confirm_form.withFields({
-            name: value3,
-            companion_name: value3
-          })
-        }),
-        from2(
-          (dispatch) => {
-            return dispatch(new ConfirmUpdatePeopleNames(people_names));
-          }
-        )
-      ];
-    } else {
-      let people_names = (() => {
-        let _pipe = model.confirm_form.people_names;
-        return upsert(
-          _pipe,
-          n,
-          (op) => {
-            if (op instanceof Some) {
-              let key = op[0];
-              return value3;
-            } else {
-              return "";
-            }
-          }
-        );
-      })();
-      return [
-        model.withFields({
-          confirm_form: model.confirm_form.withFields({ companion_name: value3 })
-        }),
-        from2(
-          (dispatch) => {
-            return dispatch(new ConfirmUpdatePeopleNames(people_names));
-          }
-        )
-      ];
-    }
+    return [
+      model.withFields({
+        confirm_form: model.confirm_form.withFields({ companion_name: value3 })
+      }),
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdatePeopleNames(people_names));
+        }
+      )
+    ];
   } else if (msg instanceof ConfirmUpdatePeopleNames) {
     let value3 = msg.value;
     return [

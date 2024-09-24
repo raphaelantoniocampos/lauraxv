@@ -100,11 +100,17 @@ fn create_user(req: Request, body: dynamic.Dynamic) {
 
 fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
   let result = {
+    io.debug(body)
     use confirmed_user <- result.try(case
       confirmed_user.decode_confirmed_user(body)
     {
       Ok(val) -> Ok(val)
-      Error(_) -> Error("Invalid body recieved")
+      Error(_) -> Error("Invalid body recieved - ConfirmedUser")
+    })
+
+    use companions <- result.try(case confirmed_user.decode_companions(body) {
+      Ok(val) -> Ok(val)
+      Error(_) -> Error("Invalid body recieved - Companions")
     })
 
     use user <- result.try({
@@ -123,7 +129,18 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       Ok(_) -> Ok(Nil)
       Error(err) -> {
         io.debug(err)
-        Error("Problema configurando usuario presença")
+        Error("Problema configurando presença do usuário")
+      }
+    })
+
+    use _ <- result.try(case
+      confirmed_user.insert_companions_to_db(companions)
+      |> result.all
+    {
+      Ok(_) -> Ok(Nil)
+      Error(err) -> {
+        io.debug(err)
+        Error("Problema salvando companhias no banco de dados")
       }
     })
 
@@ -131,8 +148,7 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       confirmed_user.insert_confirmed_user_to_db(confirmed_user)
     {
       Ok(_) -> Ok(Nil)
-      Error(err) -> {
-        io.debug(err)
+      Error(_) -> {
         Error("Problema confirmando presença")
       }
     })

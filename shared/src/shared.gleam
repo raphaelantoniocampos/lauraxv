@@ -31,7 +31,10 @@ pub type ConfirmedUser {
     invite_name: String,
     phone: String,
     people_count: Int,
-    people_names: List(String),
     comments: Option(String),
   )
+}
+
+pub type Companion {
+  Companion(id: Int, user_id: Int, name: String)
 }
