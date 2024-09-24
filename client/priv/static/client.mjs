@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -254,6 +255,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
+  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -4988,11 +4990,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "assignment_no_match",
+        "let_assert",
         "client/pages/confirm_presence",
         29,
         "confirm_presence",
-        "Assignment pattern did not match",
+        "Pattern match failed, no pattern matched the value.",
         { value: $ }
       );
     }
@@ -5999,13 +6001,18 @@ function update(model, msg) {
           )
         ];
       } else if ($ instanceof Some && $1 instanceof None) {
-        let id_string = $[0];
+        let response = $[0];
         return [
           model.withFields({ login_form: new LoginForm("", "", "", new None()) }),
           batch(
             toList([
               push("/", new None(), new None()),
-              get_auth_user(id_string)
+              get_auth_user(
+                (() => {
+                  let _pipe = response;
+                  return drop_left(_pipe, 14);
+                })()
+              )
             ])
           )
         ];
@@ -6044,13 +6051,18 @@ function update(model, msg) {
       let $ = resp.message;
       let $1 = resp.error;
       if ($ instanceof Some && $1 instanceof None) {
-        let id_string = $[0];
+        let response = $[0];
         return [
           model.withFields({ login_form: new LoginForm("", "", "", new None()) }),
           batch(
             toList([
               push("/", new None(), new None()),
-              get_auth_user(id_string)
+              get_auth_user(
+                (() => {
+                  let _pipe = response;
+                  return drop_left(_pipe, 14);
+                })()
+              )
             ])
           )
         ];
@@ -6140,25 +6152,18 @@ function update(model, msg) {
       let $ = resp.message;
       let $1 = resp.error;
       if ($ instanceof Some && $1 instanceof None) {
-        let id_string = $[0];
+        let response = $[0];
         return [
-          model.withFields({
-            confirm_form: new ConfirmForm(
-              "",
-              "",
-              "",
-              "",
-              1,
-              "",
-              new$(),
-              new None(),
-              new None()
-            )
-          }),
+          model,
           batch(
             toList([
               push("/", new None(), new None()),
-              get_auth_user(id_string)
+              get_auth_user(
+                (() => {
+                  let _pipe = response;
+                  return drop_left(_pipe, 23);
+                })()
+              )
             ])
           )
         ];

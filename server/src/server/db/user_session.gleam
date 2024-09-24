@@ -5,6 +5,7 @@ import gleam/dynamic
 import gleam/list
 import gleam/result
 import server/db
+import server/db/user
 import server/generate_token.{generate_token}
 import sqlight
 import wisp.{type Request}
@@ -47,7 +48,10 @@ pub fn create_user_session(user_id: Int) {
     [i.row([i.int(user_id), i.string(token)])]
     |> i.from_values(table_name: "user_session", columns: ["user_id", "token"])
     |> i.to_query
-    |> db.execute_write([sqlight.int(user_id), sqlight.text(token)])
+    |> db.execute_write(
+      [sqlight.int(user_id), sqlight.text(token)],
+      user.user_db_decoder(),
+    )
 
   case result {
     Ok(_) -> Ok(token)

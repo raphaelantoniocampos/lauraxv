@@ -104,10 +104,10 @@ pub fn insert_companions_to_db(companions: List(Companion)) {
     [i.row([i.int(companion.user_id), i.string(companion.name)])]
     |> i.from_values(table_name: "companion", columns: ["user_id", "name"])
     |> i.to_query
-    |> db.execute_write([
-      sqlight.int(companion.user_id),
-      sqlight.text(companion.name),
-    ])
+    |> db.execute_write(
+      [sqlight.int(companion.user_id), sqlight.text(companion.name)],
+      companion_db_decoder(),
+    )
   })
 }
 
@@ -159,14 +159,17 @@ pub fn insert_confirmed_user_to_db(confirmed_user: ConfirmedUser) {
     "user_id", "name", "invite_name", "phone", "people_count", "comments",
   ])
   |> i.to_query
-  |> db.execute_write([
-    sqlight.int(confirmed_user.user_id),
-    sqlight.text(confirmed_user.name),
-    sqlight.text(confirmed_user.invite_name),
-    sqlight.text(confirmed_user.phone),
-    sqlight.int(confirmed_user.people_count),
-    sqlight.nullable(sqlight.text, confirmed_user.comments),
-  ])
+  |> db.execute_write(
+    [
+      sqlight.int(confirmed_user.user_id),
+      sqlight.text(confirmed_user.name),
+      sqlight.text(confirmed_user.invite_name),
+      sqlight.text(confirmed_user.phone),
+      sqlight.int(confirmed_user.people_count),
+      sqlight.nullable(sqlight.text, confirmed_user.comments),
+    ],
+    confirmed_user_db_decoder(),
+  )
 }
 
 pub fn get_confirmed_user_by_id(user_id: Int) -> Result(ConfirmedUser, String) {

@@ -5,6 +5,7 @@ import cake/update as u
 import cake/where as w
 import gleam/bool
 import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -79,10 +80,10 @@ pub fn set_password_for_user(user_id: Int, password: String) {
   |> u.sets([u.set_string("user.password", beecrypt.hash(password))])
   |> u.where(w.eq(w.col("user.id"), w.int(user_id)))
   |> u.to_query
-  |> db.execute_write([
-    sqlight.text(beecrypt.hash(password)),
-    sqlight.int(user_id),
-  ])
+  |> db.execute_write(
+    [sqlight.text(beecrypt.hash(password)), sqlight.int(user_id)],
+    user_db_decoder(),
+  )
   |> result.replace_error("Problem with updating user password")
 }
 
@@ -153,22 +154,28 @@ pub fn insert_user_to_db(create_user: CreateUser) {
     "username", "email", "password", "is_confirmed", "is_admin",
   ])
   |> i.to_query
-  |> db.execute_write([
-    sqlight.text(create_user.username),
-    sqlight.text(create_user.email),
-    sqlight.text(create_user.password),
-    sqlight.bool(False),
-    sqlight.bool(False),
-  ])
+  |> db.execute_write(
+    [
+      sqlight.text(create_user.username),
+      sqlight.text(create_user.email),
+      sqlight.text(create_user.password),
+      sqlight.bool(False),
+      sqlight.bool(False),
+    ],
+    user_db_decoder(),
+  )
 }
 
 pub fn set_is_confirmed(user_id: Int, to: Bool) {
-  let to_int = bool.to_int(to)
+  let int_bool = bool.to_int(to)
   u.new()
   |> u.table("user")
-  |> u.sets([u.set_int("is_confirmed", to_int)])
+  |> u.sets([u.set_bool("is_confirmed", to)])
   |> u.where(w.eq(w.col("id"), w.int(user_id)))
   |> u.to_query
-  |> db.execute_write([sqlight.int(user_id), sqlight.int(to_int)])
+  |> db.execute_write(
+    [sqlight.int(int_bool), sqlight.int(user_id)],
+    user_db_decoder(),
+  )
   |> result.replace_error("Problem with updating user confirmed status")
 }

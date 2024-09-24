@@ -34,7 +34,7 @@ import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import lustre_http
 import modem
-import shared.{type Gift, Gift, server_url}
+import shared.{type ConfirmedUser, type Gift, ConfirmedUser, Gift, server_url}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -118,11 +118,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
               model,
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
             )
-            Some(id_string), None -> #(
+            Some(response), None -> #(
               Model(..model, login_form: LoginForm("", "", "", None)),
               effect.batch([
                 modem.push("/", None, None),
-                get_auth_user(id_string),
+                get_auth_user(
+                  response
+                  |> string.drop_left(14),
+                ),
               ]),
             )
             _, _ -> #(
@@ -152,13 +155,18 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
-            Some(id_string), None -> #(
-              Model(..model, login_form: LoginForm("", "", "", None)),
-              effect.batch([
-                modem.push("/", None, None),
-                get_auth_user(id_string),
-              ]),
-            )
+            Some(response), None -> {
+              #(
+                Model(..model, login_form: LoginForm("", "", "", None)),
+                effect.batch([
+                  modem.push("/", None, None),
+                  get_auth_user(
+                    response
+                    |> string.drop_left(14),
+                  ),
+                ]),
+              )
+            }
             _, Some(err) -> #(
               model,
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
@@ -215,26 +223,18 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
-            Some(id_string), None -> #(
-              Model(
-                ..model,
-                confirm_form: ConfirmForm(
-                  "",
-                  "",
-                  "",
-                  "",
-                  1,
-                  "",
-                  dict.new(),
-                  None,
-                  None,
-                ),
-              ),
-              effect.batch([
-                modem.push("/", None, None),
-                get_auth_user(id_string),
-              ]),
-            )
+            Some(response), None -> {
+              #(
+                model,
+                effect.batch([
+                  modem.push("/", None, None),
+                  get_auth_user(
+                    response
+                    |> string.drop_left(23),
+                  ),
+                ]),
+              )
+            }
             _, Some(err) -> #(
               model,
               effect.from(fn(dispatch) {

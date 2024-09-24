@@ -63,7 +63,7 @@ fn do_login(req: Request, body: dynamic.Dynamic) {
     // Using user id for now
     let user_id = int.to_string(user.id)
     Ok(
-      json.object([#("message", json.string(user_id))])
+      json.object([#("message", json.string("Logged in. id:" <> user_id))])
       |> json.to_string_builder,
     )
   }

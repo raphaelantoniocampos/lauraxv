@@ -3,7 +3,7 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import shared.{type Gift}
+import shared.{type ConfirmedUser, type Gift}
 
 pub type Route {
   Home

@@ -90,7 +90,16 @@ fn create_user(req: Request, body: dynamic.Dynamic) {
     // Ok(session_token)
     // Using user id for now
     Ok(
-      json.object([#("message", json.string(int.to_string(inserted_user.id)))])
+      json.object([
+        #(
+          "message",
+          json.string(
+            "Signed up. id:"
+            <> inserted_user.id
+            |> int.to_string,
+          ),
+        ),
+      ])
       |> json.to_string_builder,
     )
   }
@@ -113,12 +122,26 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       Error(_) -> Error("Invalid body recieved - Companions")
     })
 
+    io.debug("companions")
+    io.debug(companions)
+
     use user <- result.try({
       case user.get_user_by_id(confirmed_user.user_id) {
         Ok(user) -> Ok(user)
         Error(_) -> Error("Usuário não encontrado")
       }
     })
+
+    io.debug("user")
+    io.debug(user)
+
+    // let user_is_confirmed =
+    //   result.is_ok(confirmed_user.get_confirmed_user_by_id(user.id))
+    //
+    // use <- bool.guard(
+    //   when: user_is_confirmed,
+    //   return: Error("Usuário já confirmou presença"),
+    // )
 
     use <- bool.guard(
       when: user.is_confirmed,
@@ -134,17 +157,6 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
     })
 
     use _ <- result.try(case
-      confirmed_user.insert_companions_to_db(companions)
-      |> result.all
-    {
-      Ok(_) -> Ok(Nil)
-      Error(err) -> {
-        io.debug(err)
-        Error("Problema salvando companhias no banco de dados")
-      }
-    })
-
-    use _ <- result.try(case
       confirmed_user.insert_confirmed_user_to_db(confirmed_user)
     {
       Ok(_) -> Ok(Nil)
@@ -153,13 +165,33 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       }
     })
 
+    use _ <- result.try(case
+      confirmed_user.insert_companions_to_db(companions)
+      |> result.all
+    {
+      Ok(_) -> Ok(Nil)
+      Error(err) -> {
+        Error("Problema salvando companhias no banco de dados")
+      }
+    })
+
     use inserted_confirmed_user <- result.try(
       confirmed_user.get_confirmed_user_by_id(user.id),
     )
 
+    io.debug("inserted_confirmed_user")
+    io.debug(inserted_confirmed_user)
+
     Ok(
       json.object([
-        #("message", json.string(int.to_string(inserted_confirmed_user.id))),
+        #(
+          "message",
+          json.string(
+            "Presence confirmed. id:"
+            <> inserted_confirmed_user.user_id
+            |> int.to_string,
+          ),
+        ),
       ])
       |> json.to_string_builder,
     )
@@ -167,3 +199,14 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
 
   response.generate_wisp_response(result)
 }
+// fn confirmed_user_to_json(confirmed_user: ConfirmedUser) {
+//   json.object([
+//     #("id", json.int(confirmed_user.id)),
+//     #("user_id", json.int(confirmed_user.user_id)),
+//     #("name", json.string(confirmed_user.name)),
+//     #("invite_name", json.string(confirmed_user.invite_name)),
+//     #("phone", json.string(confirmed_user.phone)),
+//     #("people_count", json.int(confirmed_user.people_count)),
+//     #("comments", json.nullable(confirmed_user.comments, json.string)),
+//   ])
+// }
