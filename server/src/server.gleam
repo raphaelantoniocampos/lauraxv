@@ -5,7 +5,6 @@ import wisp
 import wisp/testing.{default_secret_key_base}
 import wisp/wisp_mist
 
-//TODO: Comentários Confirm Form
 //TODO: Página de Admin (Mostrar número de confirmados e nomes)
 //TODO: Confirmação Login (Botão "tem certeza?")
 
