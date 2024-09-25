@@ -1,11 +1,11 @@
-import client/components/button_class.{button_class}
-import client/pages/login.{login_view}
 import client/state.{
   type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
   ConfirmUpdateCompanionName, ConfirmUpdateInviteName, ConfirmUpdateName,
   ConfirmUpdatePeopleCount, ConfirmUpdatePhone, UserRequestedConfirmPresence,
   message_error_decoder,
 }
+import client/views/components/button_class.{button_class}
+import client/views/login_view.{login_view}
 import gleam/dict
 import gleam/int
 import gleam/json

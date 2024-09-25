@@ -4,15 +4,15 @@ import lustre/attribute.{alt, attribute, class, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, img, main}
 
-fn photo_widget(photo: String) -> Element(a) {
+fn image_widget(image: String) -> Element(a) {
   img([
     class("flex justify-center rounded-lg shadow-lg"),
     alt("Foto"),
-    src(photo),
+    src(image),
   ])
 }
 
-pub fn photos_view(model: Model) -> Element(a) {
+pub fn images_view(model: Model) -> Element(a) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -23,7 +23,7 @@ pub fn photos_view(model: Model) -> Element(a) {
     ),
     div(
       [class("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3")],
-      list.map(model.photos, photo_widget),
+      list.map(model.gallery_images, image_widget),
     ),
   ])
 }

@@ -605,6 +605,10 @@ video {
   margin-left: 3rem;
 }
 
+.ml-6 {
+  margin-left: 1.5rem;
+}
+
 .mt-1 {
   margin-top: 0.25rem;
 }
@@ -707,6 +711,10 @@ video {
 
 .cursor-not-allowed {
   cursor: not-allowed;
+}
+
+.list-disc {
+  list-style-type: disc;
 }
 
 .grid-cols-1 {

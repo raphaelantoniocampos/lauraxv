@@ -2,6 +2,7 @@ import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/regex
 import gleam/result
@@ -14,10 +15,12 @@ import shared.{type ConfirmedUser, ConfirmedUser}
 import wisp.{type Request, type Response}
 
 pub fn users(req: Request) -> Response {
-  use body <- wisp.require_json(req)
-
   case req.method {
-    Post -> create_user(req, body)
+    Get -> list_confirmed_users()
+    Post -> {
+      use body <- wisp.require_json(req)
+      create_user(req, body)
+    }
     _ -> wisp.method_not_allowed([Get, Post])
   }
 }
@@ -29,6 +32,35 @@ pub fn confirm_presence(req: Request) -> Response {
     Post -> do_confirm_presence(req, body)
     _ -> wisp.method_not_allowed([Post])
   }
+}
+
+pub fn confirmed_user_to_json(confirmed_user: ConfirmedUser) {
+  json.object([
+    #("id", json.int(confirmed_user.id)),
+    #("user_id", json.int(confirmed_user.user_id)),
+    #("name", json.string(confirmed_user.name)),
+    #("invite_name", json.string(confirmed_user.invite_name)),
+    #("phone", json.string(confirmed_user.phone)),
+    #("people_count", json.int(confirmed_user.people_count)),
+    #("comments", json.nullable(confirmed_user.comments, json.string)),
+  ])
+}
+
+fn list_confirmed_users() -> Response {
+  let result = {
+    use confirmed_users <- result.try(
+      confirmed_user.get_confirmed_users()
+      |> result.replace_error("Problem listing confirmed users"),
+    )
+
+    json.array(confirmed_users, fn(confirmed_user) {
+      confirmed_user_to_json(confirmed_user)
+    })
+    |> json.to_string_builder
+    |> Ok
+    |> io.debug
+  }
+  response.generate_wisp_response(result)
 }
 
 fn create_user(req: Request, body: dynamic.Dynamic) {

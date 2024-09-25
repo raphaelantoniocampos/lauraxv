@@ -1,5 +1,5 @@
-import client/components/button_class.{button_class}
 import client/state.{type Model, type Msg, UserRequestedConfirmPresence}
+import client/views/components/button_class.{button_class}
 import gleam/int
 import gleam/option.{None, Some}
 import lustre/attribute.{alt, attribute, class, href, id, src}
@@ -20,7 +20,7 @@ pub fn home_view(model: Model) -> Element(Msg) {
       p([class("text-3xl text-white font-bold")], [
         text("Faltam "),
         span([class("text-emerald-300"), id("countdown")], [
-          text(int.to_string(model.countdown)),
+          text(int.to_string(model.event_countdown)),
         ]),
         text(" dias para a festa!"),
       ]),

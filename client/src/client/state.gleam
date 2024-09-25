@@ -8,9 +8,10 @@ import shared.{type ConfirmedUser, type Gift}
 pub type Route {
   Home
   Login
-  GiftsPage
-  EventPage
-  PhotosPage
+  Gifts
+  Event
+  Gallery
+  Admin
   ConfirmPresence
   NotFound
 }
@@ -19,13 +20,12 @@ pub type Model {
   Model(
     route: Route,
     auth_user: Option(AuthUser),
-    sugestion_gifts: List(Gift),
-    unique_gifts: List(Gift),
-    gift_error: Option(String),
-    photos: List(String),
+    gift_status: GiftStatus,
+    gallery_images: List(String),
     login_form: LoginForm,
     confirm_form: ConfirmForm,
-    countdown: Int,
+    event_countdown: Int,
+    admin_settings: AdminSettings,
   )
 }
 
@@ -33,7 +33,8 @@ pub type Msg {
   OnRouteChange(Route)
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
-  PhotosRecieved(Result(List(String), lustre_http.HttpError))
+  ImagesRecieved(Result(List(String), lustre_http.HttpError))
+  ConfirmedUsersRecieved(Result(List(ConfirmedUser), lustre_http.HttpError))
 
   CountdownUpdated(value: Int)
 
@@ -52,9 +53,11 @@ pub type Msg {
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
-  UserOpenedGiftsPage
+  UserOpenedGiftsView
 
-  UserOpenedPhotosPage
+  UserOpenedGalleryView
+
+  AdminOpenedAdminView
 
   UserRequestedSelectGift(gift: Gift, to: Bool)
   SelectGiftResponded(
@@ -115,4 +118,16 @@ pub type ConfirmForm {
     comments: Option(String),
     error: Option(String),
   )
+}
+
+pub type GiftStatus {
+  GiftStatus(
+    sugestion_gifts: List(Gift),
+    unique_gifts: List(Gift),
+    gift_error: Option(String),
+  )
+}
+
+pub type AdminSettings {
+  AdminData(users: List(ConfirmedUser), show_details: Bool)
 }

@@ -1,9 +1,9 @@
-import client/components/button_class.{button_class}
 import client/state.{
   type LoginForm, type Model, type Msg, LoginForm, LoginResponded,
   LoginUpdateEmail, LoginUpdatePassword, LoginUpdateUsername, SignUpResponded,
   UserRequestedLogin, UserRequestedSignUp, message_error_decoder,
 }
+import client/views/components/button_class.{button_class}
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/string

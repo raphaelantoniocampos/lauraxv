@@ -5,32 +5,32 @@ import server/response
 import simplifile
 import wisp.{type Request, type Response}
 
-const dir_path = "priv/static/photos/"
+const dir_path = "priv/static/images/"
 
-pub fn photos(req: Request) -> Response {
+pub fn images(req: Request) -> Response {
   case req.method {
-    Get -> list_photos()
+    Get -> list_images()
     _ -> wisp.method_not_allowed([Get])
   }
 }
 
-pub fn list_photos() {
+pub fn list_images() {
   let result = {
-    use photos <- result.try(
+    use images <- result.try(
       simplifile.read_directory("../client/" <> dir_path)
-      |> result.replace_error("Problem listing photos"),
+      |> result.replace_error("Problem listing images"),
     )
-    photos_to_json(photos)
+    images_to_json(images)
     |> Ok
   }
 
   response.generate_wisp_response(result)
 }
 
-fn photos_to_json(photos: List(String)) {
+fn images_to_json(images: List(String)) {
   // TODO: Update filepath
-  json.array(photos, fn(photo) {
-    json.object([#("src", json.string(dir_path <> photo))])
+  json.array(images, fn(image) {
+    json.object([#("src", json.string(dir_path <> image))])
   })
   |> json.to_string_builder
 }

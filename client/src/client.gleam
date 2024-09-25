@@ -1,24 +1,28 @@
-import client/components/navigation_bar.{navigation_bar}
-import client/pages/confirm_presence.{confirm_presence, confirm_presence_view}
-import client/pages/event.{event_view}
-import client/pages/gifts.{gifts_view, select_gift}
-import client/pages/home.{home_view}
-import client/pages/login.{login, login_view, signup}
-import client/pages/not_found.{not_found_view}
-import client/pages/photos.{photos_view}
 import client/state.{
-  type LoginForm, type Model, type Msg, type Route, AuthUser, AuthUserRecieved,
+  type AdminSettings, type GiftStatus, type LoginForm, type Model, type Msg,
+  type Route, Admin, AdminOpenedAdminView, AuthUser, AuthUserRecieved,
   ConfirmForm, ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
   ConfirmUpdateCompanionName, ConfirmUpdateEmail, ConfirmUpdateError,
   ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, CountdownUpdated, EventPage,
-  GiftUpdateError, GiftsPage, GiftsRecieved, Home, Login, LoginForm,
-  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword,
-  LoginUpdateUsername, Model, NotFound, OnRouteChange, PhotosPage,
-  PhotosRecieved, SelectGiftResponded, SignUpResponded, UserOpenedGiftsPage,
-  UserOpenedPhotosPage, UserRequestedConfirmPresence, UserRequestedLogin,
+  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, ConfirmedUsersRecieved,
+  CountdownUpdated, Event, Gallery, GiftUpdateError, Gifts, GiftsRecieved, Home,
+  ImagesRecieved, Login, LoginForm, LoginResponded, LoginUpdateEmail,
+  LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername, Model, NotFound,
+  OnRouteChange, SelectGiftResponded, SignUpResponded, UserOpenedGalleryView,
+  UserOpenedGiftsView, UserRequestedConfirmPresence, UserRequestedLogin,
   UserRequestedSelectGift, UserRequestedSignUp,
 }
+import client/views/admin_view.{admin_view}
+import client/views/components/navigation_bar.{navigation_bar}
+import client/views/confirm_presence_view.{
+  confirm_presence, confirm_presence_view,
+}
+import client/views/event_view.{event_view}
+import client/views/gallery_view.{gallery_view}
+import client/views/gifts_view.{gifts_view, select_gift}
+import client/views/home_view.{home_view}
+import client/views/login_view.{login, login_view, signup}
+import client/views/not_found_view.{not_found_view}
 import gleam/dict
 import gleam/int
 import gleam/list
@@ -49,19 +53,18 @@ fn init(_) -> #(Model, Effect(Msg)) {
     Model(
       route: get_route(),
       auth_user: None,
-      sugestion_gifts: [],
-      unique_gifts: [],
-      gift_error: None,
-      photos: [],
+      gift_status: GiftStatus([], [], None),
+      gallery_images: [],
       login_form: LoginForm("", "", "", None),
       confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
-      countdown: 0,
+      event_countdown: 0,
+      admin_settings: AdminSettings([], False),
     ),
     effect.batch([
       modem.init(on_url_change),
       get_gifts(),
       update_countdown(),
-      get_photos(),
+      get_images(),
     ]),
   )
 }
@@ -102,14 +105,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
-    PhotosRecieved(photos_result) ->
-      case photos_result {
-        Ok(photos) -> #(Model(..model, photos: photos), effect.none())
+    ImagesRecieved(images_result) ->
+      case images_result {
+        Ok(images) -> #(Model(..model, gallery_images: images), effect.none())
+        Error(_) -> #(model, effect.none())
+      }
+
+    ConfirmedUsersRecieved(confirmed_users_result) ->
+      case confirmed_users_result {
+        Ok(confirmed_users) -> {
+          #(Model(..model, confirmed_users: confirmed_users), effect.none())
+        }
         Error(_) -> #(model, effect.none())
       }
 
     CountdownUpdated(value) -> #(
-      Model(..model, countdown: value),
+      Model(..model, event_countdown: value),
       effect.none(),
     )
 
@@ -219,17 +230,24 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    UserOpenedGiftsPage ->
+    UserOpenedGiftsView ->
       case model.sugestion_gifts, model.unique_gifts {
         [_], [_] -> #(model, effect.none())
         [], [] -> #(model, get_gifts())
         _, _ -> #(model, effect.none())
       }
 
-    UserOpenedPhotosPage ->
-      case model.photos {
+    UserOpenedGalleryView ->
+      case model.gallery_images {
         [_] -> #(model, effect.none())
-        [] -> #(model, get_photos())
+        [] -> #(model, get_images())
+        _ -> #(model, effect.none())
+      }
+
+    AdminOpenedAdminView ->
+      case model.confirmed_users {
+        [_] -> #(model, effect.none())
+        [] -> #(model, get_confirmed_users())
         _ -> #(model, effect.none())
       }
 
@@ -441,10 +459,11 @@ pub fn view(model: Model) -> Element(Msg) {
       div([class("mt-10")], []),
       case model.route {
         Home -> home_view(model)
-        EventPage -> event_view()
-        PhotosPage -> photos_view(model)
-        GiftsPage -> gifts_view(model)
+        Event -> event_view()
+        Gallery -> gallery_view(model)
+        Gifts -> gifts_view(model)
         Login -> login_view(model)
+        Admin -> admin_view(model)
         ConfirmPresence -> confirm_presence_view(model)
         NotFound -> not_found_view()
       },
@@ -468,9 +487,10 @@ fn get_route() -> Route {
   case uri.path |> uri.path_segments {
     [] -> Home
     ["login"] -> Login
-    ["gifts"] -> GiftsPage
-    ["event"] -> EventPage
-    ["photos"] -> PhotosPage
+    ["gifts"] -> Gifts
+    ["event"] -> Event
+    ["gallery"] -> Gallery
+    ["admin"] -> Admin
     ["confirm"] -> ConfirmPresence
     _ -> NotFound
   }
@@ -506,11 +526,28 @@ fn get_gifts() {
   lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
 }
 
-fn get_photos() {
-  let url = server_url <> "/photos"
+fn get_images() {
+  let url = server_url <> "/images"
   let decoder = dynamic.list(dynamic.field("src", dynamic.string))
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, PhotosRecieved))
+  lustre_http.get(url, lustre_http.expect_json(decoder, ImagesRecieved))
+}
+
+fn get_confirmed_users() {
+  let url = server_url <> "/users"
+  let decoder =
+    dynamic.list(dynamic.decode7(
+      ConfirmedUser,
+      dynamic.field("id", dynamic.int),
+      dynamic.field("user_id", dynamic.int),
+      dynamic.field("name", dynamic.string),
+      dynamic.field("invite_name", dynamic.string),
+      dynamic.field("phone", dynamic.string),
+      dynamic.field("people_count", dynamic.int),
+      dynamic.field("comments", dynamic.optional(dynamic.string)),
+    ))
+
+  lustre_http.get(url, lustre_http.expect_json(decoder, ConfirmedUsersRecieved))
 }
 
 fn get_id_from_response(response: String) -> String {

@@ -3,7 +3,7 @@ import gleam/http.{Get, Post}
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/gifts
-import server/routes/photos
+import server/routes/images
 import server/routes/users
 import server/web
 import wisp.{type Request, type Response}
@@ -20,7 +20,7 @@ pub fn handle_request(req: Request) -> Response {
   )
   case wisp.path_segments(req) {
     ["gifts"] -> gifts.gifts(req)
-    ["photos"] -> photos.photos(req)
+    ["images"] -> images.images(req)
     ["users"] -> users.users(req)
     ["confirm"] -> users.confirm_presence(req)
     ["auth", "validate", id_string] -> validate.validate(req, id_string)

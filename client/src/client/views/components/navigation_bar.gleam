@@ -1,5 +1,8 @@
-import client/components/button_class.{button_class}
-import client/state.{type Model, UserOpenedGiftsPage, UserOpenedPhotosPage}
+import client/state.{
+  type Model, AdminOpenedAdminView, Gallery, UserOpenedGalleryView,
+  UserOpenedGiftsView,
+}
+import client/views/components/button_class.{button_class}
 import gleam/option.{None, Some}
 import gleam/string
 import lustre/attribute.{class, href}
@@ -24,6 +27,10 @@ pub fn navigation_bar(model: Model) {
           [text("\u{21B6}")],
         ),
       ]),
+      case model.auth_user {
+        Some(_) -> div([], [])
+        None -> element.none()
+      },
       ul([class("flex space-x-8  font-semibold")], [
         li([], [
           a(
@@ -47,7 +54,7 @@ pub fn navigation_bar(model: Model) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  state.EventPage -> "text-emerald-600"
+                  state.Event -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
@@ -63,13 +70,13 @@ pub fn navigation_bar(model: Model) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  state.GiftsPage -> "text-emerald-600"
+                  state.Gifts -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
               ),
               href("/gifts"),
-              event.on_click(UserOpenedGiftsPage),
+              event.on_click(UserOpenedGiftsView),
             ],
             [text("Presentes")],
           ),
@@ -80,15 +87,15 @@ pub fn navigation_bar(model: Model) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  state.PhotosPage -> "text-emerald-600"
+                  Gallery -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
               ),
-              href("/photos"),
-              event.on_click(UserOpenedPhotosPage),
+              href("/images"),
+              event.on_click(UserOpenedGalleryView),
             ],
-            [text("Fotos")],
+            [text("Galeria")],
           ),
         ]),
       ]),
@@ -126,7 +133,15 @@ pub fn navigation_bar(model: Model) {
                 ])
             },
             span([class("text-pink-600 font-semibold")], [
-              text("Olá, " <> string.capitalise(user.name)),
+              case user.is_admin {
+                True ->
+                  button([], [
+                    a([href("/admin"), event.on_click(AdminOpenedAdminView)], [
+                      text("Olá, " <> string.capitalise(user.name)),
+                    ]),
+                  ])
+                False -> text("Olá, " <> string.capitalise(user.name))
+              },
             ]),
           ])
         }

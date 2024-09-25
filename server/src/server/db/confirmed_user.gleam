@@ -29,6 +29,17 @@ fn get_companion_base_query() {
   |> s.from_table("companion")
 }
 
+pub fn get_confirmed_users() -> Result(List(ConfirmedUser), String) {
+  case
+    get_confirmed_user_base_query()
+    |> s.to_query
+    |> db.execute_read([], confirmed_user_db_decoder())
+  {
+    Ok(confirmed_users) -> Ok(confirmed_users)
+    Error(_) -> Error("Problem getting gifts")
+  }
+}
+
 pub fn get_companions_by_user_id(
   user_id: Int,
 ) -> Result(List(Companion), String) {
