@@ -29,6 +29,17 @@ fn get_companion_base_query() {
   |> s.from_table("companion")
 }
 
+pub fn get_companions() -> Result(List(Companion), String) {
+  case
+    get_companion_base_query()
+    |> s.to_query
+    |> db.execute_read([], companion_db_decoder())
+  {
+    Ok(companions) -> Ok(companions)
+    Error(_) -> Error("Problem getting companions")
+  }
+}
+
 pub fn get_confirmed_users() -> Result(List(ConfirmedUser), String) {
   case
     get_confirmed_user_base_query()
@@ -36,7 +47,7 @@ pub fn get_confirmed_users() -> Result(List(ConfirmedUser), String) {
     |> db.execute_read([], confirmed_user_db_decoder())
   {
     Ok(confirmed_users) -> Ok(confirmed_users)
-    Error(_) -> Error("Problem getting gifts")
+    Error(_) -> Error("Problem getting confirmed users")
   }
 }
 

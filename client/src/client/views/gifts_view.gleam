@@ -148,17 +148,17 @@ pub fn gifts_view(model: Model) -> Element(Msg) {
     ]),
     div(
       [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full")],
-      list.map(model.sugestion_gifts, sugestion_gift),
+      list.map(model.gift_status.sugestion, sugestion_gift),
     ),
     h2([class("text-3xl text-white font-bold mb-6 p-12")], [
       text("Presentes Únicos"),
     ]),
     div(
       [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")],
-      list.map(model.unique_gifts, fn(gift) { unique_gift(model, gift) }),
+      list.map(model.gift_status.unique, fn(gift) { unique_gift(model, gift) }),
     ),
     div([], [
-      case model.gift_error {
+      case model.gift_status.error {
         Some(err) ->
           p([class("text-red-500 text-center")], [text("Erro: " <> err)])
         None -> element.none()

@@ -12,7 +12,7 @@ fn image_widget(image: String) -> Element(a) {
   ])
 }
 
-pub fn images_view(model: Model) -> Element(a) {
+pub fn gallery_view(model: Model) -> Element(a) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [

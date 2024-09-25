@@ -3,6 +3,7 @@ import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
 import gleam/json
+import gleam/list
 import gleam/option
 import gleam/result
 import server/db/gift
@@ -37,8 +38,13 @@ fn list_gifts() -> Response {
       gift.get_gifts()
       |> result.replace_error("Problem listing gifts"),
     )
-
-    json.array(gifts, fn(gift) { gift_to_json(gift) })
+    let separed_gifts = {
+      list.partition(gifts, fn(gift: Gift) { option.is_none(gift.link) })
+    }
+    json.object([
+      #("sugestion_gifts", json.array(separed_gifts.0, gift_to_json)),
+      #("unique_gifts", json.array(separed_gifts.1, gift_to_json)),
+    ])
     |> json.to_string_builder
     |> Ok
   }

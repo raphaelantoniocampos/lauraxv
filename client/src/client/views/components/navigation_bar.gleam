@@ -92,7 +92,7 @@ pub fn navigation_bar(model: Model) {
                 }
                 <> " transition duration-300",
               ),
-              href("/images"),
+              href("/gallery"),
               event.on_click(UserOpenedGalleryView),
             ],
             [text("Galeria")],

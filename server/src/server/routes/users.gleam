@@ -2,16 +2,16 @@ import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/regex
 import gleam/result
 import gleam/string
 import server/db/confirmed_user
 import server/db/user
-import server/db/user_session.{create_user_session}
+
+// import server/db/user_session.{create_user_session}
 import server/response
-import shared.{type ConfirmedUser, ConfirmedUser}
+import shared.{type Companion, type ConfirmedUser, Companion, ConfirmedUser}
 import wisp.{type Request, type Response}
 
 pub fn users(req: Request) -> Response {
@@ -46,6 +46,14 @@ pub fn confirmed_user_to_json(confirmed_user: ConfirmedUser) {
   ])
 }
 
+pub fn companion_to_json(companion: Companion) {
+  json.object([
+    #("id", json.int(companion.id)),
+    #("user_id", json.int(companion.user_id)),
+    #("name", json.string(companion.name)),
+  ])
+}
+
 fn list_confirmed_users() -> Response {
   let result = {
     use confirmed_users <- result.try(
@@ -53,12 +61,18 @@ fn list_confirmed_users() -> Response {
       |> result.replace_error("Problem listing confirmed users"),
     )
 
-    json.array(confirmed_users, fn(confirmed_user) {
-      confirmed_user_to_json(confirmed_user)
-    })
+    use companions <- result.try(
+      confirmed_user.get_companions()
+      |> result.replace_error("Problem listing companions"),
+    )
+
+    json.object([
+      #("users", json.array(confirmed_users, confirmed_user_to_json)),
+      #("companions", json.array(companions, companion_to_json)),
+      #("total", json.int(5)),
+    ])
     |> json.to_string_builder
     |> Ok
-    |> io.debug
   }
   response.generate_wisp_response(result)
 }
@@ -211,14 +225,3 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
 
   response.generate_wisp_response(result)
 }
-// fn confirmed_user_to_json(confirmed_user: ConfirmedUser) {
-//   json.object([
-//     #("id", json.int(confirmed_user.id)),
-//     #("user_id", json.int(confirmed_user.user_id)),
-//     #("name", json.string(confirmed_user.name)),
-//     #("invite_name", json.string(confirmed_user.invite_name)),
-//     #("phone", json.string(confirmed_user.phone)),
-//     #("people_count", json.int(confirmed_user.people_count)),
-//     #("comments", json.nullable(confirmed_user.comments, json.string)),
-//   ])
-// }

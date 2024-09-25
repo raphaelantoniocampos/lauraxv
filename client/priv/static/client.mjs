@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -254,6 +255,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
+  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -445,6 +447,44 @@ function first(list2) {
     return new Ok(x);
   }
 }
+function update_group(f) {
+  return (groups, elem) => {
+    let $ = get(groups, f(elem));
+    if ($.isOk()) {
+      let existing = $[0];
+      return insert(groups, f(elem), prepend(elem, existing));
+    } else {
+      return insert(groups, f(elem), toList([elem]));
+    }
+  };
+}
+function do_filter(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list2.head;
+      let xs = list2.tail;
+      let new_acc = (() => {
+        let $ = fun(x);
+        if ($) {
+          return prepend(x, acc);
+        } else {
+          return acc;
+        }
+      })();
+      loop$list = xs;
+      loop$fun = fun;
+      loop$acc = new_acc;
+    }
+  }
+}
+function filter(list2, predicate) {
+  return do_filter(list2, predicate, toList([]));
+}
 function do_map(loop$list, loop$fun, loop$acc) {
   while (true) {
     let list2 = loop$list;
@@ -596,6 +636,9 @@ function fold(loop$list, loop$initial, loop$fun) {
     }
   }
 }
+function group(list2, key) {
+  return fold(list2, new$(), update_group(key));
+}
 function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
   while (true) {
     let over = loop$over;
@@ -669,35 +712,6 @@ function key_set(list2, key, value3) {
     let rest$1 = list2.tail;
     return prepend(first$1, key_set(rest$1, key, value3));
   }
-}
-function do_partition(loop$list, loop$categorise, loop$trues, loop$falses) {
-  while (true) {
-    let list2 = loop$list;
-    let categorise = loop$categorise;
-    let trues = loop$trues;
-    let falses = loop$falses;
-    if (list2.hasLength(0)) {
-      return [reverse(trues), reverse(falses)];
-    } else {
-      let x = list2.head;
-      let xs = list2.tail;
-      let $ = categorise(x);
-      if ($) {
-        loop$list = xs;
-        loop$categorise = categorise;
-        loop$trues = prepend(x, trues);
-        loop$falses = falses;
-      } else {
-        loop$list = xs;
-        loop$categorise = categorise;
-        loop$trues = trues;
-        loop$falses = prepend(x, falses);
-      }
-    }
-  }
-}
-function partition(list2, categorise) {
-  return do_partition(list2, categorise, toList([]), toList([]));
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
@@ -874,9 +888,9 @@ function bool(data) {
 function shallow_list(value3) {
   return decode_list(value3);
 }
-function optional(decode6) {
+function optional(decode8) {
   return (value3) => {
-    return decode_option(value3, decode6);
+    return decode_option(value3, decode8);
   };
 }
 function any(decoders) {
@@ -1007,6 +1021,26 @@ function decode2(constructor, t1, t2) {
       let a2 = $;
       let b = $1;
       return new Error(concat(toList([all_errors(a2), all_errors(b)])));
+    }
+  };
+}
+function decode3(constructor, t1, t2, t3) {
+  return (value3) => {
+    let $ = t1(value3);
+    let $1 = t2(value3);
+    let $2 = t3(value3);
+    if ($.isOk() && $1.isOk() && $2.isOk()) {
+      let a2 = $[0];
+      let b = $1[0];
+      let c = $2[0];
+      return new Ok(constructor(a2, b, c));
+    } else {
+      let a2 = $;
+      let b = $1;
+      let c = $2;
+      return new Error(
+        concat(toList([all_errors(a2), all_errors(b), all_errors(c)]))
+      );
     }
   };
 }
@@ -2131,6 +2165,38 @@ function upsert(dict, key, fun) {
     return insert(dict, key, _capture);
   })(_pipe$3);
 }
+function do_fold(loop$list, loop$initial, loop$fun) {
+  while (true) {
+    let list2 = loop$list;
+    let initial = loop$initial;
+    let fun = loop$fun;
+    if (list2.hasLength(0)) {
+      return initial;
+    } else {
+      let k = list2.head[0];
+      let v = list2.head[1];
+      let rest = list2.tail;
+      loop$list = rest;
+      loop$initial = fun(initial, k, v);
+      loop$fun = fun;
+    }
+  }
+}
+function fold2(dict, initial, fun) {
+  let _pipe = dict;
+  let _pipe$1 = map_to_list(_pipe);
+  return do_fold(_pipe$1, initial, fun);
+}
+function do_map_values(f, dict) {
+  let f$1 = (dict2, k, v) => {
+    return insert(dict2, k, f(k, v));
+  };
+  let _pipe = dict;
+  return fold2(_pipe, new$(), f$1);
+}
+function map_values(dict, fun) {
+  return do_map_values(fun, dict);
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
 var Uri = class extends CustomType {
@@ -2555,7 +2621,7 @@ function do_decode(json, decoder) {
     }
   );
 }
-function decode3(json, decoder) {
+function decode6(json, decoder) {
   return do_decode(json, decoder);
 }
 function to_string6(json) {
@@ -3965,7 +4031,7 @@ function expect_json(decoder, to_msg) {
       let _pipe$2 = then$(
         _pipe$1,
         (body2) => {
-          let $ = decode3(body2, decoder);
+          let $ = decode6(body2, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -4445,6 +4511,14 @@ var ConfirmedUser = class extends CustomType {
     this.comments = comments;
   }
 };
+var Companion = class extends CustomType {
+  constructor(id2, user_id, name2) {
+    super();
+    this.id = id2;
+    this.user_id = user_id;
+    this.name = name2;
+  }
+};
 var server_url = "http://localhost:8000";
 
 // build/dev/javascript/client/client/state.mjs
@@ -4456,7 +4530,7 @@ var Gifts = class extends CustomType {
 };
 var Event3 = class extends CustomType {
 };
-var Photos = class extends CustomType {
+var Gallery = class extends CustomType {
 };
 var Admin = class extends CustomType {
 };
@@ -4465,19 +4539,16 @@ var ConfirmPresence = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, auth_user, sugestion_gifts, unique_gifts, gift_error, photos, login_form, confirm_form, countdown, confirmed_users, show_data) {
+  constructor(route, auth_user, gift_status, gallery_images, login_form, confirm_form, event_countdown, admin_settings) {
     super();
     this.route = route;
     this.auth_user = auth_user;
-    this.sugestion_gifts = sugestion_gifts;
-    this.unique_gifts = unique_gifts;
-    this.gift_error = gift_error;
-    this.photos = photos;
+    this.gift_status = gift_status;
+    this.gallery_images = gallery_images;
     this.login_form = login_form;
     this.confirm_form = confirm_form;
-    this.countdown = countdown;
-    this.confirmed_users = confirmed_users;
-    this.show_data = show_data;
+    this.event_countdown = event_countdown;
+    this.admin_settings = admin_settings;
   }
 };
 var OnRouteChange = class extends CustomType {
@@ -4498,7 +4569,7 @@ var GiftsRecieved = class extends CustomType {
     this[0] = x0;
   }
 };
-var PhotosRecieved = class extends CustomType {
+var ImagesRecieved = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
@@ -4558,7 +4629,7 @@ var LoginResponded = class extends CustomType {
 };
 var UserOpenedGiftsView = class extends CustomType {
 };
-var UserOpenedPhotosView = class extends CustomType {
+var UserOpenedGalleryView = class extends CustomType {
 };
 var AdminOpenedAdminView = class extends CustomType {
 };
@@ -4683,6 +4754,22 @@ var ConfirmForm = class extends CustomType {
     this.error = error;
   }
 };
+var GiftStatus = class extends CustomType {
+  constructor(sugestion, unique, error) {
+    super();
+    this.sugestion = sugestion;
+    this.unique = unique;
+    this.error = error;
+  }
+};
+var AdminSettings = class extends CustomType {
+  constructor(users, total_confirmed, show_details) {
+    super();
+    this.users = users;
+    this.total_confirmed = total_confirmed;
+    this.show_details = show_details;
+  }
+};
 function message_error_decoder() {
   return decode2(
     (var0, var1) => {
@@ -4690,40 +4777,6 @@ function message_error_decoder() {
     },
     optional_field("message", string),
     optional_field("error", string)
-  );
-}
-
-// build/dev/javascript/lustre/lustre/event.mjs
-function on2(name2, handler) {
-  return on(name2, handler);
-}
-function on_click(msg) {
-  return on2("click", (_) => {
-    return new Ok(msg);
-  });
-}
-function value2(event2) {
-  let _pipe = event2;
-  return field("target", field("value", string))(
-    _pipe
-  );
-}
-function on_input(msg) {
-  return on2(
-    "input",
-    (event2) => {
-      let _pipe = value2(event2);
-      return map3(_pipe, msg);
-    }
-  );
-}
-function on_submit(msg) {
-  return on2(
-    "submit",
-    (event2) => {
-      let $ = prevent_default(event2);
-      return new Ok(msg);
-    }
   );
 }
 
@@ -4759,7 +4812,7 @@ function home_view(model) {
               text("Faltam "),
               span(
                 toList([class$("text-emerald-300"), id("countdown")]),
-                toList([text(to_string2(model.countdown))])
+                toList([text(to_string2(model.event_countdown))])
               ),
               text(" dias para a festa!")
             ])
@@ -4852,6 +4905,40 @@ function home_view(model) {
         ])
       )
     ])
+  );
+}
+
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name2, handler) {
+  return on(name2, handler);
+}
+function on_click(msg) {
+  return on2("click", (_) => {
+    return new Ok(msg);
+  });
+}
+function value2(event2) {
+  let _pipe = event2;
+  return field("target", field("value", string))(
+    _pipe
+  );
+}
+function on_input(msg) {
+  return on2(
+    "input",
+    (event2) => {
+      let _pipe = value2(event2);
+      return map3(_pipe, msg);
+    }
+  );
+}
+function on_submit(msg) {
+  return on2(
+    "submit",
+    (event2) => {
+      let $ = prevent_default(event2);
+      return new Ok(msg);
+    }
   );
 }
 
@@ -5041,7 +5128,7 @@ function login_view(model) {
 }
 
 // build/dev/javascript/client/client/views/admin_view.mjs
-function confi(n) {
+function confi(user) {
   return div(
     toList([]),
     toList([
@@ -5050,11 +5137,11 @@ function confi(n) {
         toList([
           h2(
             toList([class$("text-2xl font-semibold text-pink-700")]),
-            toList([text("${confirmado.name}")])
+            toList([text(user[0].name)])
           ),
           button(
             toList([
-              attribute("data-id", "${confirmado.id}"),
+              attribute("data-id", to_string2(user[0].user_id)),
               class$(
                 "mostrar-detalhes bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
               )
@@ -5066,7 +5153,7 @@ function confi(n) {
       div(
         toList([
           attribute("style", "display: none;"),
-          id("detalhes-${confirmado.id}"),
+          id(to_string2(user[0].user_id)),
           class$("detalhes mt-4")
         ]),
         toList([
@@ -5074,21 +5161,21 @@ function confi(n) {
             toList([]),
             toList([
               strong(toList([]), toList([text("Nome no convite:")])),
-              text("${confirmado.invite_name}")
+              text(user[0].invite_name)
             ])
           ),
           p(
             toList([]),
             toList([
               strong(toList([]), toList([text("Telefone:")])),
-              text("${confirmado.phone}")
+              text(user[0].phone)
             ])
           ),
           p(
             toList([]),
             toList([
               strong(toList([]), toList([text("Total de acompanhantes:")])),
-              text("${confirmado.people_count}")
+              text(to_string2(length(user[1])))
             ])
           ),
           p(
@@ -5131,9 +5218,8 @@ function auth_admin_view(model) {
             toList([
               text(
                 (() => {
-                  let _pipe = model.confirmed_users;
-                  let _pipe$1 = length(_pipe);
-                  return to_string2(_pipe$1);
+                  let _pipe = model.admin_settings.total_confirmed;
+                  return to_string2(_pipe);
                 })()
               )
             ])
@@ -5155,8 +5241,9 @@ function auth_admin_view(model) {
           id("lista_confirmados")
         ]),
         (() => {
-          let _pipe = range(0, 10);
-          return map2(_pipe, confi);
+          let _pipe = model.admin_settings.users;
+          let _pipe$1 = values(_pipe);
+          return map2(_pipe$1, confi);
         })()
       )
     ])
@@ -5281,17 +5368,17 @@ function navigation_bar(model) {
                   class$(
                     "hover:text-emerald-800 " + (() => {
                       let $ = model.route;
-                      if ($ instanceof Photos) {
+                      if ($ instanceof Gallery) {
                         return "text-emerald-600";
                       } else {
                         return "text-pink-600";
                       }
                     })() + " transition duration-300"
                   ),
-                  href("/photos"),
-                  on_click(new UserOpenedPhotosView())
+                  href("/gallery"),
+                  on_click(new UserOpenedGalleryView())
                 ]),
-                toList([text("Fotos")])
+                toList([text("Galeria")])
               )
             ])
           )
@@ -5390,11 +5477,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "assignment_no_match",
+        "let_assert",
         "client/views/confirm_presence_view",
         28,
         "confirm_presence",
-        "Assignment pattern did not match",
+        "Pattern match failed, no pattern matched the value.",
         { value: $ }
       );
     }
@@ -5873,6 +5960,35 @@ function event_view() {
   );
 }
 
+// build/dev/javascript/client/client/views/gallery_view.mjs
+function image_widget(image) {
+  return img(
+    toList([
+      class$("flex justify-center rounded-lg shadow-lg"),
+      alt("Foto"),
+      src(image)
+    ])
+  );
+}
+function gallery_view(model) {
+  return main(
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
+    toList([
+      h1(
+        toList([
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class$("text-5xl text-white font-bold mb-12")
+        ]),
+        toList([text("Fotos do Evento")])
+      ),
+      div(
+        toList([class$("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3")]),
+        map2(model.gallery_images, image_widget)
+      )
+    ])
+  );
+}
+
 // build/dev/javascript/client/client/views/gifts_view.mjs
 function select_gift(model, gift, to2) {
   let $ = model.auth_user;
@@ -6072,7 +6188,7 @@ function gifts_view(model) {
         toList([
           class$("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full")
         ]),
-        map2(model.sugestion_gifts, sugestion_gift)
+        map2(model.gift_status.sugestion, sugestion_gift)
       ),
       h2(
         toList([class$("text-3xl text-white font-bold mb-6 p-12")]),
@@ -6083,7 +6199,7 @@ function gifts_view(model) {
           class$("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")
         ]),
         map2(
-          model.unique_gifts,
+          model.gift_status.unique,
           (gift) => {
             return unique_gift(model, gift);
           }
@@ -6093,7 +6209,7 @@ function gifts_view(model) {
         toList([]),
         toList([
           (() => {
-            let $ = model.gift_error;
+            let $ = model.gift_status.error;
             if ($ instanceof Some) {
               let err = $[0];
               return p(
@@ -6115,35 +6231,6 @@ function not_found_view() {
   return div(
     toList([class$("flex items-center justify-center min-h-screen text-white")]),
     toList([strong(toList([]), toList([text2("404 Not Found")]))])
-  );
-}
-
-// build/dev/javascript/client/client/views/photos_view.mjs
-function photo_widget(photo) {
-  return img(
-    toList([
-      class$("flex justify-center rounded-lg shadow-lg"),
-      alt("Foto"),
-      src(photo)
-    ])
-  );
-}
-function photos_view(model) {
-  return main(
-    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
-    toList([
-      h1(
-        toList([
-          attribute("style", "font-family: 'Pacifico', cursive;"),
-          class$("text-5xl text-white font-bold mb-12")
-        ]),
-        toList([text("Fotos do Evento")])
-      ),
-      div(
-        toList([class$("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3")]),
-        map2(model.photos, photo_widget)
-      )
-    ])
   );
 }
 
@@ -6170,8 +6257,8 @@ function view(model) {
           return home_view(model);
         } else if ($ instanceof Event3) {
           return event_view();
-        } else if ($ instanceof Photos) {
-          return photos_view(model);
+        } else if ($ instanceof Gallery) {
+          return gallery_view(model);
         } else if ($ instanceof Gifts) {
           return gifts_view(model);
         } else if ($ instanceof Login) {
@@ -6197,7 +6284,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 487, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 508, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -6212,8 +6299,8 @@ function get_route2() {
     return new Gifts();
   } else if ($.hasLength(1) && $.head === "event") {
     return new Event3();
-  } else if ($.hasLength(1) && $.head === "photos") {
-    return new Photos();
+  } else if ($.hasLength(1) && $.head === "gallery") {
+    return new Gallery();
   } else if ($.hasLength(1) && $.head === "admin") {
     return new Admin();
   } else if ($.hasLength(1) && $.head === "confirm") {
@@ -6260,32 +6347,39 @@ function get_gifts() {
       field("selected_by", optional(int))
     )
   );
+  let tuple_decoder = decode2(
+    (sugestion, unique) => {
+      return [sugestion, unique];
+    },
+    field("sugestion_gifts", decoder),
+    field("unique_gifts", decoder)
+  );
   return get2(
     url,
     expect_json(
-      decoder,
+      tuple_decoder,
       (var0) => {
         return new GiftsRecieved(var0);
       }
     )
   );
 }
-function get_photos() {
-  let url = server_url + "/photos";
+function get_images() {
+  let url = server_url + "/images";
   let decoder = list(field("src", string));
   return get2(
     url,
     expect_json(
       decoder,
       (var0) => {
-        return new PhotosRecieved(var0);
+        return new ImagesRecieved(var0);
       }
     )
   );
 }
 function get_confirmed_users() {
   let url = server_url + "/users";
-  let decoder = list(
+  let users_decoder = list(
     decode7(
       (var0, var1, var2, var3, var4, var5, var6) => {
         return new ConfirmedUser(var0, var1, var2, var3, var4, var5, var6);
@@ -6299,10 +6393,28 @@ function get_confirmed_users() {
       field("comments", optional(string))
     )
   );
+  let companions_decoder = list(
+    decode3(
+      (var0, var1, var2) => {
+        return new Companion(var0, var1, var2);
+      },
+      field("id", int),
+      field("user_id", int),
+      field("name", string)
+    )
+  );
+  let tuple_decoder = decode3(
+    (users, companions, total) => {
+      return [users, companions, total];
+    },
+    field("users", users_decoder),
+    field("companions", companions_decoder),
+    field("total", int)
+  );
   return get2(
     url,
     expect_json(
-      decoder,
+      tuple_decoder,
       (var0) => {
         return new ConfirmedUsersRecieved(var0);
       }
@@ -6331,41 +6443,71 @@ function update(model, msg) {
     let gifts_result = msg[0];
     if (gifts_result.isOk()) {
       let gifts = gifts_result[0];
-      let gifts_tuple = partition(
-        gifts,
-        (gift) => {
-          let $ = gift.link;
-          if ($ instanceof Some) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-      );
       return [
         model.withFields({
-          sugestion_gifts: gifts_tuple[1],
-          unique_gifts: gifts_tuple[0]
+          gift_status: model.gift_status.withFields({
+            sugestion: gifts[0],
+            unique: gifts[1]
+          })
         }),
         none()
       ];
     } else {
       return [model, none()];
     }
-  } else if (msg instanceof PhotosRecieved) {
-    let photos_result = msg[0];
-    if (photos_result.isOk()) {
-      let photos = photos_result[0];
-      return [model.withFields({ photos }), none()];
+  } else if (msg instanceof ImagesRecieved) {
+    let images_result = msg[0];
+    if (images_result.isOk()) {
+      let images = images_result[0];
+      return [model.withFields({ gallery_images: images }), none()];
     } else {
       return [model, none()];
     }
   } else if (msg instanceof ConfirmedUsersRecieved) {
-    let confirmed_users_result = msg[0];
-    if (confirmed_users_result.isOk()) {
-      let confirmed_users = confirmed_users_result[0];
+    let users_and_companions_result = msg[0];
+    if (users_and_companions_result.isOk()) {
+      let users = users_and_companions_result[0][0];
+      let companions = users_and_companions_result[0][1];
+      let total = users_and_companions_result[0][2];
+      let confirmed_users_dict = (() => {
+        let _pipe = users;
+        let _pipe$1 = group(_pipe, (user) => {
+          return user.user_id;
+        });
+        return map_values(
+          _pipe$1,
+          (user_id, users2) => {
+            let $ = first(users2);
+            if ($.isOk()) {
+              let user = $[0];
+              return [
+                user,
+                (() => {
+                  let _pipe$2 = companions;
+                  return filter(
+                    _pipe$2,
+                    (companion) => {
+                      return companion.user_id === user.user_id;
+                    }
+                  );
+                })()
+              ];
+            } else {
+              return [
+                new ConfirmedUser(0, 0, "", "", "", 0, new None()),
+                toList([])
+              ];
+            }
+          }
+        );
+      })();
       return [
-        model.withFields({ confirmed_users }),
+        model.withFields({
+          admin_settings: model.admin_settings.withFields({
+            users: confirmed_users_dict,
+            total_confirmed: total
+          })
+        }),
         none()
       ];
     } else {
@@ -6373,7 +6515,7 @@ function update(model, msg) {
     }
   } else if (msg instanceof CountdownUpdated) {
     let value3 = msg.value;
-    return [model.withFields({ countdown: value3 }), none()];
+    return [model.withFields({ event_countdown: value3 }), none()];
   } else if (msg instanceof UserRequestedSignUp) {
     return [model, signup(model)];
   } else if (msg instanceof SignUpResponded) {
@@ -6535,8 +6677,8 @@ function update(model, msg) {
       ];
     }
   } else if (msg instanceof UserOpenedGiftsView) {
-    let $ = model.sugestion_gifts;
-    let $1 = model.unique_gifts;
+    let $ = model.gift_status.sugestion;
+    let $1 = model.gift_status.unique;
     if ($.hasLength(1) && $1.hasLength(1)) {
       return [model, none()];
     } else if ($.hasLength(0) && $1.hasLength(0)) {
@@ -6544,20 +6686,18 @@ function update(model, msg) {
     } else {
       return [model, none()];
     }
-  } else if (msg instanceof UserOpenedPhotosView) {
-    let $ = model.photos;
+  } else if (msg instanceof UserOpenedGalleryView) {
+    let $ = model.gallery_images;
     if ($.hasLength(1)) {
       return [model, none()];
     } else if ($.hasLength(0)) {
-      return [model, get_photos()];
+      return [model, get_images()];
     } else {
       return [model, none()];
     }
   } else if (msg instanceof AdminOpenedAdminView) {
-    let $ = model.confirmed_users;
-    if ($.hasLength(1)) {
-      return [model, none()];
-    } else if ($.hasLength(0)) {
+    let $ = model.admin_settings.total_confirmed;
+    if ($ === 0) {
       return [model, get_confirmed_users()];
     } else {
       return [model, none()];
@@ -6614,7 +6754,12 @@ function update(model, msg) {
     }
   } else if (msg instanceof GiftUpdateError) {
     let value3 = msg.value;
-    return [model.withFields({ gift_error: value3 }), none()];
+    return [
+      model.withFields({
+        gift_status: model.gift_status.withFields({ error: value3 })
+      }),
+      none()
+    ];
   } else if (msg instanceof ConfirmUpdateName) {
     let value3 = msg.value;
     return [
@@ -6808,9 +6953,7 @@ function init3(_) {
     new Model2(
       get_route2(),
       new None(),
-      toList([]),
-      toList([]),
-      new None(),
+      new GiftStatus(toList([]), toList([]), new None()),
       toList([]),
       new LoginForm("", "", "", new None()),
       new ConfirmForm(
@@ -6825,15 +6968,14 @@ function init3(_) {
         new None()
       ),
       0,
-      toList([]),
-      false
+      new AdminSettings(new$(), 0, false)
     ),
     batch(
       toList([
         init2(on_url_change),
         get_gifts(),
         update_countdown(),
-        get_photos()
+        get_images()
       ])
     )
   ];

@@ -1,16 +1,17 @@
 import client/state.{
   type AdminSettings, type GiftStatus, type LoginForm, type Model, type Msg,
-  type Route, Admin, AdminOpenedAdminView, AuthUser, AuthUserRecieved,
-  ConfirmForm, ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateCompanionName, ConfirmUpdateEmail, ConfirmUpdateError,
-  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePeopleNames, ConfirmUpdatePhone, ConfirmedUsersRecieved,
-  CountdownUpdated, Event, Gallery, GiftUpdateError, Gifts, GiftsRecieved, Home,
-  ImagesRecieved, Login, LoginForm, LoginResponded, LoginUpdateEmail,
-  LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername, Model, NotFound,
-  OnRouteChange, SelectGiftResponded, SignUpResponded, UserOpenedGalleryView,
-  UserOpenedGiftsView, UserRequestedConfirmPresence, UserRequestedLogin,
-  UserRequestedSelectGift, UserRequestedSignUp,
+  type Route, Admin, AdminOpenedAdminView, AdminSettings, AuthUser,
+  AuthUserRecieved, ConfirmForm, ConfirmPresence, ConfirmPresenceResponded,
+  ConfirmUpdateComments, ConfirmUpdateCompanionName, ConfirmUpdateEmail,
+  ConfirmUpdateError, ConfirmUpdateInviteName, ConfirmUpdateName,
+  ConfirmUpdatePeopleCount, ConfirmUpdatePeopleNames, ConfirmUpdatePhone,
+  ConfirmedUsersRecieved, CountdownUpdated, Event, Gallery, GiftStatus,
+  GiftUpdateError, Gifts, GiftsRecieved, Home, ImagesRecieved, Login, LoginForm,
+  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword,
+  LoginUpdateUsername, Model, NotFound, OnRouteChange, SelectGiftResponded,
+  SignUpResponded, UserOpenedGalleryView, UserOpenedGiftsView,
+  UserRequestedConfirmPresence, UserRequestedLogin, UserRequestedSelectGift,
+  UserRequestedSignUp,
 }
 import client/views/admin_view.{admin_view}
 import client/views/components/navigation_bar.{navigation_bar}
@@ -39,7 +40,9 @@ import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import lustre_http
 import modem
-import shared.{type ConfirmedUser, type Gift, ConfirmedUser, Gift, server_url}
+import shared.{
+  type Companion, type Gift, Companion, ConfirmedUser, Gift, server_url,
+}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -58,7 +61,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       login_form: LoginForm("", "", "", None),
       confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
       event_countdown: 0,
-      admin_settings: AdminSettings([], False),
+      admin_settings: AdminSettings(dict.new(), 0, False),
     ),
     effect.batch([
       modem.init(on_url_change),
@@ -85,19 +88,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     GiftsRecieved(gifts_result) ->
       case gifts_result {
         Ok(gifts) -> {
-          let gifts_tuple = {
-            list.partition(gifts, fn(gift) {
-              case gift.link {
-                Some(_) -> True
-                _ -> False
-              }
-            })
-          }
           #(
             Model(
               ..model,
-              sugestion_gifts: gifts_tuple.1,
-              unique_gifts: gifts_tuple.0,
+              gift_status: GiftStatus(
+                ..model.gift_status,
+                sugestion: gifts.0,
+                unique: gifts.1,
+              ),
             ),
             effect.none(),
           )
@@ -111,10 +109,37 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
-    ConfirmedUsersRecieved(confirmed_users_result) ->
-      case confirmed_users_result {
-        Ok(confirmed_users) -> {
-          #(Model(..model, confirmed_users: confirmed_users), effect.none())
+    ConfirmedUsersRecieved(users_and_companions_result) ->
+      case users_and_companions_result {
+        Ok(#(users, companions, total)) -> {
+          let confirmed_users_dict = {
+            users
+            |> list.group(fn(user) { user.user_id })
+            |> dict.map_values(fn(user_id, users) {
+              case list.first(users) {
+                Ok(user) -> #(
+                  user,
+                  companions
+                    |> list.filter(fn(companion) {
+                      companion.user_id == user.user_id
+                    }),
+                )
+                Error(_) -> #(ConfirmedUser(0, 0, "", "", "", 0, None), [])
+              }
+            })
+          }
+
+          #(
+            Model(
+              ..model,
+              admin_settings: AdminSettings(
+                ..model.admin_settings,
+                users: confirmed_users_dict,
+                total_confirmed: total,
+              ),
+            ),
+            effect.none(),
+          )
         }
         Error(_) -> #(model, effect.none())
       }
@@ -231,7 +256,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
 
     UserOpenedGiftsView ->
-      case model.sugestion_gifts, model.unique_gifts {
+      case model.gift_status.sugestion, model.gift_status.unique {
         [_], [_] -> #(model, effect.none())
         [], [] -> #(model, get_gifts())
         _, _ -> #(model, effect.none())
@@ -245,9 +270,8 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
 
     AdminOpenedAdminView ->
-      case model.confirmed_users {
-        [_] -> #(model, effect.none())
-        [] -> #(model, get_confirmed_users())
+      case model.admin_settings.total_confirmed {
+        0 -> #(model, get_confirmed_users())
         _ -> #(model, effect.none())
       }
 
@@ -288,7 +312,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
 
     GiftUpdateError(value) -> #(
-      Model(..model, gift_error: value),
+      Model(..model, gift_status: GiftStatus(..model.gift_status, error: value)),
       effect.none(),
     )
 
@@ -523,7 +547,13 @@ fn get_gifts() {
       dynamic.field("selected_by", dynamic.optional(dynamic.int)),
     ))
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, GiftsRecieved))
+  let tuple_decoder =
+    dynamic.decode2(
+      fn(sugestion, unique) { #(sugestion, unique) },
+      dynamic.field("sugestion_gifts", decoder),
+      dynamic.field("unique_gifts", decoder),
+    )
+  lustre_http.get(url, lustre_http.expect_json(tuple_decoder, GiftsRecieved))
 }
 
 fn get_images() {
@@ -535,7 +565,7 @@ fn get_images() {
 
 fn get_confirmed_users() {
   let url = server_url <> "/users"
-  let decoder =
+  let users_decoder =
     dynamic.list(dynamic.decode7(
       ConfirmedUser,
       dynamic.field("id", dynamic.int),
@@ -547,7 +577,26 @@ fn get_confirmed_users() {
       dynamic.field("comments", dynamic.optional(dynamic.string)),
     ))
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, ConfirmedUsersRecieved))
+  let companions_decoder =
+    dynamic.list(dynamic.decode3(
+      Companion,
+      dynamic.field("id", dynamic.int),
+      dynamic.field("user_id", dynamic.int),
+      dynamic.field("name", dynamic.string),
+    ))
+
+  let tuple_decoder =
+    dynamic.decode3(
+      fn(users, companions, total) { #(users, companions, total) },
+      dynamic.field("users", users_decoder),
+      dynamic.field("companions", companions_decoder),
+      dynamic.field("total", dynamic.int),
+    )
+
+  lustre_http.get(
+    url,
+    lustre_http.expect_json(tuple_decoder, ConfirmedUsersRecieved),
+  )
 }
 
 fn get_id_from_response(response: String) -> String {

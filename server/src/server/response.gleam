@@ -1,4 +1,3 @@
-import gleam/io
 import gleam/json
 import gleam/string_builder.{type StringBuilder}
 import wisp
@@ -13,7 +12,6 @@ pub fn generate_wisp_response(result: Result(StringBuilder, String)) {
         200,
       )
   }
-  |> io.debug
 }
 
 pub fn error(error: String) {

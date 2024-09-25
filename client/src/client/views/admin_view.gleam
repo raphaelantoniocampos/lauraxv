@@ -8,15 +8,12 @@ import client/views/home_view.{home_view}
 import client/views/login_view.{login_view}
 import gleam/dict
 import gleam/int
-import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, strong, ul}
-import lustre/event
-import lustre_http
-import shared.{server_url}
+import shared.{type Companion, type ConfirmedUser, server_url}
 
 pub fn admin_view(model: Model) {
   case model.auth_user {
@@ -43,8 +40,7 @@ fn auth_admin_view(model: Model) {
       text("Total de convidados: "),
       strong([id("total_confirmed")], [
         text(
-          model.admin_settings.users
-          |> list.length
+          model.admin_settings.total_confirmed
           |> int.to_string,
         ),
       ]),
@@ -60,21 +56,22 @@ fn auth_admin_view(model: Model) {
     ),
     div(
       [class("grid grid-cols-1 gap-6 w-full"), id("lista_confirmados")],
-      list.range(0, 10)
+      model.admin_settings.users
+        |> dict.values
         |> list.map(confi),
     ),
   ])
 }
 
-fn confi(n: Int) {
+fn confi(user: #(ConfirmedUser, List(Companion))) {
   div([], [
     div([class("flex justify-between items-center")], [
       h2([class("text-2xl font-semibold text-pink-700")], [
-        text("${confirmado.name}"),
+        text({ user.0 }.name),
       ]),
       button(
         [
-          attribute("data-id", "${confirmado.id}"),
+          attribute("data-id", { int.to_string({ user.0 }.user_id) }),
           class(
             "mostrar-detalhes bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
           ),
@@ -85,18 +82,18 @@ fn confi(n: Int) {
     div(
       [
         attribute("style", "display: none;"),
-        id("detalhes-${confirmado.id}"),
+        id(int.to_string({ user.0 }.user_id)),
         class("detalhes mt-4"),
       ],
       [
         p([], [
           strong([], [text("Nome no convite:")]),
-          text("${confirmado.invite_name}"),
+          text({ user.0 }.invite_name),
         ]),
-        p([], [strong([], [text("Telefone:")]), text("${confirmado.phone}")]),
+        p([], [strong([], [text("Telefone:")]), text({ user.0 }.phone)]),
         p([], [
           strong([], [text("Total de acompanhantes:")]),
-          text("${confirmado.people_count}"),
+          text(int.to_string(list.length(user.1))),
         ]),
         p([], [
           strong([], [text("Comentários:")]),
