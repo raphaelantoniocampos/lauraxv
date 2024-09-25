@@ -21,6 +21,7 @@ pub type Model {
     auth_user: Option(AuthUser),
     sugestion_gifts: List(Gift),
     unique_gifts: List(Gift),
+    gift_error: Option(String),
     photos: List(String),
     login_form: LoginForm,
     confirm_form: ConfirmForm,
@@ -33,6 +34,8 @@ pub type Msg {
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(List(Gift), lustre_http.HttpError))
   PhotosRecieved(Result(List(String), lustre_http.HttpError))
+
+  CountdownUpdated(value: Int)
 
   UserRequestedSignUp
   SignUpResponded(
@@ -53,12 +56,11 @@ pub type Msg {
 
   UserOpenedPhotosPage
 
-  UserRequestedSelectGift(value: Int)
-
-  UserRequestedConfirmPresence
-  ConfirmPresenceResponded(
+  UserRequestedSelectGift(gift: Gift, to: Bool)
+  SelectGiftResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
+  GiftUpdateError(value: Option(String))
 
   ConfirmUpdateName(value: String)
   ConfirmUpdateInviteName(value: String)
@@ -70,7 +72,10 @@ pub type Msg {
   ConfirmUpdateComments(value: String)
   ConfirmUpdateError(value: Option(String))
 
-  CountdownUpdated(value: Int)
+  UserRequestedConfirmPresence
+  ConfirmPresenceResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
 }
 
 pub type MessageErrorResponse {

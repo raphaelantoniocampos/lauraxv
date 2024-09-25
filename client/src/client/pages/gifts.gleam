@@ -1,13 +1,35 @@
-import client/components/button_class.{button_class}
-import client/state.{type Model, type Msg, UserRequestedSelectGift}
+import client/state.{
+  type Model, type Msg, SelectGiftResponded, UserRequestedSelectGift,
+  message_error_decoder,
+}
 import gleam/int
+import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{alt, attribute, class, disabled, href, rel, src, target}
 import lustre/element.{type Element, text}
-import lustre/element/html.{a, button, div, h1, h2, h3, img, main, span}
+import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p, span}
 import lustre/event
-import shared.{type Gift, Gift}
+import lustre_http
+import modem
+import shared.{type Gift, Gift, server_url}
+
+pub fn select_gift(model: Model, gift: Gift, to: Bool) {
+  case model.auth_user {
+    Some(user) -> {
+      lustre_http.post(
+        server_url <> "/gifts",
+        json.object([
+          #("gift_id", json.int(gift.id)),
+          #("user_id", json.int(user.user_id)),
+          #("to", json.bool(to)),
+        ]),
+        lustre_http.expect_json(message_error_decoder(), SelectGiftResponded),
+      )
+    }
+    None -> modem.push("/login", None, None)
+  }
+}
 
 fn sugestion_gift(gift: Gift) {
   div(
@@ -29,18 +51,18 @@ fn sugestion_gift(gift: Gift) {
   )
 }
 
-fn unique_gift(gift: Gift) {
-  case gift.link, gift.selected_by {
-    Some(link), Some(selected_by) ->
-      case selected_by {
-        0 -> unselected_gift(gift, link)
-        _ -> selected_gift(gift)
-      }
-    _, _ -> selected_gift(gift)
+fn unique_gift(model: Model, gift: Gift) {
+  case gift.link, gift.selected_by, model.auth_user {
+    Some(link), Some(selected_by), Some(user) if selected_by == user.user_id -> {
+      selected_by_user_gift(gift, link)
+    }
+    Some(link), None, _ -> unselected_gift(gift, link)
+    _, Some(_), _ -> selected_gift(gift)
+    _, _, _ -> selected_gift(gift)
   }
 }
 
-fn unselected_gift(gift: Gift, link: String) {
+fn selected_by_user_gift(gift: Gift, link: String) {
   div(
     [
       class(
@@ -48,9 +70,16 @@ fn unselected_gift(gift: Gift, link: String) {
       ),
     ],
     [
+      // div([class("absolute inset-0 bg-emerald-300 opacity-20 rounded-lg")], [
+      //   // div([class("absolute inset-0 flex items-center justify-center")], [
+      // //   span([class("bg-red-800 text-white px-3 py-1 rounded-full z-30")], [
+      // //     text("Selecionado"),
+      // //   ]),
+      // // ]),
+      // ]),
       img([
         // w-full h-auto rounded-lg grayscale z-0
-        class("w-full h-70 rounded-lg object-cover z-0"),
+        class("w-full h-48 rounded-lg object-cover z-0"),
         alt("Presente" <> int.to_string(gift.id)),
         src(gift.pic),
       ]),
@@ -67,11 +96,11 @@ fn unselected_gift(gift: Gift, link: String) {
       button(
         [
           class(
-            "mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-full transition duration-300",
+            "mt-3 w-full bg-white-600 hover:bg-emerald-300 text-emerald font-bold py-1 px-3 rounded-full transition duration-300",
           ),
-          event.on_click(UserRequestedSelectGift(gift.id)),
+          event.on_click(UserRequestedSelectGift(gift: gift, to: False)),
         ],
-        [text("Escolher")],
+        [text("Retirar Escolha")],
       ),
     ],
   )
@@ -80,14 +109,14 @@ fn unselected_gift(gift: Gift, link: String) {
 fn selected_gift(gift: Gift) {
   div([class("relative bg-white p-3 rounded-lg shadow-lg")], [
     div([class("absolute inset-0 bg-black opacity-60 rounded-lg")], [
-      div([class("absolute inset-0 flex items-center justify-center")], [
-        span([class("bg-red-600 text-white px-3 py-1 rounded-full z-20")], [
-          text("Selecionado"),
-        ]),
-      ]),
+      // div([class("absolute inset-0 flex items-center justify-center")], [
+    //   span([class("bg-red-800 text-white px-3 py-1 rounded-full z-30")], [
+    //     text("Selecionado"),
+    //   ]),
+    // ]),
     ]),
     img([
-      class("w-full h-70 rounded-lg grayscale"),
+      class("w-full h-48 rounded-lg object-cover grayscale z-10"),
       alt("Presente" <> int.to_string(gift.id)),
       src(gift.pic),
     ]),
@@ -97,10 +126,10 @@ fn selected_gift(gift: Gift) {
       [
         disabled(True),
         class(
-          "mt-3 w-full bg-emerald-600 text-white font-bold py-1 px-3 rounded-full cursor-not-allowed",
+          "mt-3 w-full bg-pink-600 text-white font-bold py-1 px-3 rounded-full cursor-not-allowed",
         ),
       ],
-      [text("Escolher")],
+      [text("Presente Selecionado")],
     ),
   ])
 }
@@ -126,7 +155,51 @@ pub fn gifts_view(model: Model) -> Element(Msg) {
     ]),
     div(
       [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")],
-      list.map(model.unique_gifts, unique_gift),
+      list.map(model.unique_gifts, fn(gift) { unique_gift(model, gift) }),
     ),
+    div([], [
+      case model.gift_error {
+        Some(err) ->
+          p([class("text-red-500 text-center")], [text("Erro: " <> err)])
+        None -> element.none()
+      },
+    ]),
   ])
+}
+
+fn unselected_gift(gift: Gift, link: String) {
+  div(
+    [
+      class(
+        "relative bg-white p-4 rounded-lg shadow-lg items-center justify-between",
+      ),
+    ],
+    [
+      img([
+        // w-full h-auto rounded-lg grayscale z-0
+        class("w-full h-48 rounded-lg object-cover z-0"),
+        alt("Presente" <> int.to_string(gift.id)),
+        src(gift.pic),
+      ]),
+      h3([class("text-lg font-semibold text-pink-700 mt-2")], [text(gift.name)]),
+      a(
+        [
+          class("text-pink-600 hover:text-pink-800 underline text-center"),
+          rel("noopener noreferrer"),
+          target("_blank"),
+          href(link),
+        ],
+        [text("Ver referência")],
+      ),
+      button(
+        [
+          class(
+            "mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-full transition duration-300",
+          ),
+          event.on_click(UserRequestedSelectGift(gift: gift, to: True)),
+        ],
+        [text("Escolher")],
+      ),
+    ],
+  )
 }

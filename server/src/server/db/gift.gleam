@@ -1,11 +1,12 @@
 import cake/insert as i
 import cake/select as s
+import cake/update as u
 import cake/where as w
 import gleam/dynamic
 import gleam/list
 import gleam/result
 import server/db
-import shared.{type Gift, Gift}
+import shared.{type Gift, type SelectGift, Gift, SelectGift}
 import sqlight
 
 fn get_gifts_base_query() {
@@ -59,4 +60,23 @@ pub fn get_gift_by_id(gift_id: Int) -> Result(Gift, String) {
     Ok(gift) -> Ok(gift)
     Error(_) -> Error("No gift found when getting gift by id")
   }
+}
+
+pub fn set_selected_by(select_gift: SelectGift) {
+  let set_to = case select_gift.to {
+    True -> u.set_int("selected_by", select_gift.user_id)
+    False -> u.set_null("selected_by")
+  }
+
+  let args = case select_gift.to {
+    True -> [sqlight.int(select_gift.user_id), sqlight.int(select_gift.gift_id)]
+    False -> [sqlight.null(), sqlight.int(select_gift.gift_id)]
+  }
+  u.new()
+  |> u.table("gift")
+  |> u.sets([set_to])
+  |> u.where(w.eq(w.col("id"), w.int(select_gift.gift_id)))
+  |> u.to_query
+  |> db.execute_write(args, gift_db_decoder())
+  |> result.replace_error("Problem with updating gift selected_by status")
 }

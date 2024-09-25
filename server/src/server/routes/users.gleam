@@ -2,7 +2,6 @@ import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/regex
 import gleam/result
@@ -109,7 +108,6 @@ fn create_user(req: Request, body: dynamic.Dynamic) {
 
 fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
   let result = {
-    io.debug(body)
     use confirmed_user <- result.try(case
       confirmed_user.decode_confirmed_user(body)
     {
@@ -122,26 +120,12 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       Error(_) -> Error("Invalid body recieved - Companions")
     })
 
-    io.debug("companions")
-    io.debug(companions)
-
     use user <- result.try({
       case user.get_user_by_id(confirmed_user.user_id) {
         Ok(user) -> Ok(user)
         Error(_) -> Error("Usuário não encontrado")
       }
     })
-
-    io.debug("user")
-    io.debug(user)
-
-    // let user_is_confirmed =
-    //   result.is_ok(confirmed_user.get_confirmed_user_by_id(user.id))
-    //
-    // use <- bool.guard(
-    //   when: user_is_confirmed,
-    //   return: Error("Usuário já confirmou presença"),
-    // )
 
     use <- bool.guard(
       when: user.is_confirmed,
@@ -150,8 +134,7 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
 
     use _ <- result.try(case user.set_is_confirmed(user.id, True) {
       Ok(_) -> Ok(Nil)
-      Error(err) -> {
-        io.debug(err)
+      Error(_) -> {
         Error("Problema configurando presença do usuário")
       }
     })
@@ -170,7 +153,7 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
       |> result.all
     {
       Ok(_) -> Ok(Nil)
-      Error(err) -> {
+      Error(_) -> {
         Error("Problema salvando companhias no banco de dados")
       }
     })
@@ -178,9 +161,6 @@ fn do_confirm_presence(req: Request, body: dynamic.Dynamic) {
     use inserted_confirmed_user <- result.try(
       confirmed_user.get_confirmed_user_by_id(user.id),
     )
-
-    io.debug("inserted_confirmed_user")
-    io.debug(inserted_confirmed_user)
 
     Ok(
       json.object([

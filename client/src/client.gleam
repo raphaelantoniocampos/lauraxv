@@ -1,7 +1,7 @@
 import client/components/navigation_bar.{navigation_bar}
 import client/pages/confirm_presence.{confirm_presence, confirm_presence_view}
 import client/pages/event.{event_view}
-import client/pages/gifts.{gifts_view}
+import client/pages/gifts.{gifts_view, select_gift}
 import client/pages/home.{home_view}
 import client/pages/login.{login, login_view, signup}
 import client/pages/not_found.{not_found_view}
@@ -12,11 +12,12 @@ import client/state.{
   ConfirmUpdateCompanionName, ConfirmUpdateEmail, ConfirmUpdateError,
   ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
   ConfirmUpdatePeopleNames, ConfirmUpdatePhone, CountdownUpdated, EventPage,
-  GiftsPage, GiftsRecieved, Home, Login, LoginForm, LoginResponded,
-  LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername,
-  Model, NotFound, OnRouteChange, PhotosPage, PhotosRecieved, SignUpResponded,
-  UserOpenedGiftsPage, UserOpenedPhotosPage, UserRequestedConfirmPresence,
-  UserRequestedLogin, UserRequestedSelectGift, UserRequestedSignUp,
+  GiftUpdateError, GiftsPage, GiftsRecieved, Home, Login, LoginForm,
+  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword,
+  LoginUpdateUsername, Model, NotFound, OnRouteChange, PhotosPage,
+  PhotosRecieved, SelectGiftResponded, SignUpResponded, UserOpenedGiftsPage,
+  UserOpenedPhotosPage, UserRequestedConfirmPresence, UserRequestedLogin,
+  UserRequestedSelectGift, UserRequestedSignUp,
 }
 import gleam/dict
 import gleam/int
@@ -50,6 +51,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       auth_user: None,
       sugestion_gifts: [],
       unique_gifts: [],
+      gift_error: None,
       photos: [],
       login_form: LoginForm("", "", "", None),
       confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
@@ -82,9 +84,9 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Ok(gifts) -> {
           let gifts_tuple = {
             list.partition(gifts, fn(gift) {
-              case gift.link, gift.selected_by {
-                Some(_), Some(_) -> True
-                _, _ -> False
+              case gift.link {
+                Some(_) -> True
+                _ -> False
               }
             })
           }
@@ -106,50 +108,12 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
-    UserRequestedLogin -> #(model, login(model))
+    CountdownUpdated(value) -> #(
+      Model(..model, countdown: value),
+      effect.none(),
+    )
 
     UserRequestedSignUp -> #(model, signup(model))
-
-    LoginResponded(resp_result) ->
-      case resp_result {
-        Ok(resp) ->
-          case resp.message, resp.error {
-            _, Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
-            )
-            Some(response), None -> #(
-              Model(..model, login_form: LoginForm("", "", "", None)),
-              effect.batch([
-                modem.push("/", None, None),
-                get_auth_user(
-                  response
-                  |> string.drop_left(14),
-                ),
-              ]),
-            )
-            _, _ -> #(
-              model,
-              effect.from(fn(dispatch) {
-                dispatch(
-                  LoginUpdateError(Some(
-                    "Problemas no servidor, por favor tente mais tarde.",
-                  )),
-                )
-              }),
-            )
-          }
-        Error(_) -> #(
-          model,
-          effect.from(fn(dispatch) {
-            dispatch(
-              LoginUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          }),
-        )
-      }
 
     SignUpResponded(resp_result) ->
       case resp_result {
@@ -162,7 +126,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
                   modem.push("/", None, None),
                   get_auth_user(
                     response
-                    |> string.drop_left(14),
+                    |> get_id_from_response,
                   ),
                 ]),
               )
@@ -212,40 +176,31 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    CountdownUpdated(value) -> #(
-      Model(..model, countdown: value),
-      effect.none(),
-    )
+    UserRequestedLogin -> #(model, login(model))
 
-    UserRequestedConfirmPresence -> #(model, confirm_presence(model))
-
-    ConfirmPresenceResponded(resp_result) ->
+    LoginResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
-            Some(response), None -> {
-              #(
-                model,
-                effect.batch([
-                  modem.push("/", None, None),
-                  get_auth_user(
-                    response
-                    |> string.drop_left(23),
-                  ),
-                ]),
-              )
-            }
             _, Some(err) -> #(
               model,
-              effect.from(fn(dispatch) {
-                dispatch(ConfirmUpdateError(Some(err)))
-              }),
+              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+            )
+            Some(response), None -> #(
+              Model(..model, login_form: LoginForm("", "", "", None)),
+              effect.batch([
+                modem.push("/", None, None),
+                get_auth_user(
+                  response
+                  |> get_id_from_response,
+                ),
+              ]),
             )
             _, _ -> #(
               model,
               effect.from(fn(dispatch) {
                 dispatch(
-                  ConfirmUpdateError(Some(
+                  LoginUpdateError(Some(
                     "Problemas no servidor, por favor tente mais tarde.",
                   )),
                 )
@@ -256,13 +211,68 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
           model,
           effect.from(fn(dispatch) {
             dispatch(
-              ConfirmUpdateError(Some(
+              LoginUpdateError(Some(
                 "Problemas no servidor, por favor tente mais tarde.",
               )),
             )
           }),
         )
       }
+
+    UserOpenedGiftsPage ->
+      case model.sugestion_gifts, model.unique_gifts {
+        [_], [_] -> #(model, effect.none())
+        [], [] -> #(model, get_gifts())
+        _, _ -> #(model, effect.none())
+      }
+
+    UserOpenedPhotosPage ->
+      case model.photos {
+        [_] -> #(model, effect.none())
+        [] -> #(model, get_photos())
+        _ -> #(model, effect.none())
+      }
+
+    UserRequestedSelectGift(gift, to) -> #(model, select_gift(model, gift, to))
+
+    //TODO: 
+    SelectGiftResponded(resp_result) -> {
+      case resp_result {
+        Ok(resp) ->
+          case resp.message, resp.error {
+            _, Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) { dispatch(GiftUpdateError(Some(err))) }),
+            )
+            Some(_), None -> #(model, get_gifts())
+            _, _ -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(
+                  GiftUpdateError(Some(
+                    "Problemas no servidor, por favor tente mais tarde.",
+                  )),
+                )
+              }),
+            )
+          }
+        Error(_) -> #(
+          model,
+          effect.from(fn(dispatch) {
+            dispatch(
+              GiftUpdateError(Some(
+                "Problemas no servidor, por favor tente mais tarde.",
+              )),
+            )
+          }),
+        )
+      }
+    }
+
+    GiftUpdateError(value) -> #(
+      Model(..model, gift_error: value),
+      effect.none(),
+    )
 
     ConfirmUpdateName(value) -> #(
       Model(
@@ -369,20 +379,51 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    UserRequestedSelectGift(_value) -> #(model, effect.none())
+    UserRequestedConfirmPresence -> #(model, confirm_presence(model))
 
-    UserOpenedGiftsPage ->
-      case model.sugestion_gifts, model.unique_gifts {
-        [_], [_] -> #(model, effect.none())
-        [], [] -> #(model, get_gifts())
-        _, _ -> #(model, effect.none())
-      }
-
-    UserOpenedPhotosPage ->
-      case model.photos {
-        [_] -> #(model, effect.none())
-        [] -> #(model, get_photos())
-        _ -> #(model, effect.none())
+    ConfirmPresenceResponded(resp_result) ->
+      case resp_result {
+        Ok(resp) ->
+          case resp.message, resp.error {
+            Some(response), None -> {
+              #(
+                model,
+                effect.batch([
+                  modem.push("/confirm", None, None),
+                  get_auth_user(
+                    response
+                    |> get_id_from_response,
+                  ),
+                ]),
+              )
+            }
+            _, Some(err) -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(ConfirmUpdateError(Some(err)))
+              }),
+            )
+            _, _ -> #(
+              model,
+              effect.from(fn(dispatch) {
+                dispatch(
+                  ConfirmUpdateError(Some(
+                    "Problemas no servidor, por favor tente mais tarde.",
+                  )),
+                )
+              }),
+            )
+          }
+        Error(_) -> #(
+          model,
+          effect.from(fn(dispatch) {
+            dispatch(
+              ConfirmUpdateError(Some(
+                "Problemas no servidor, por favor tente mais tarde.",
+              )),
+            )
+          }),
+        )
       }
   }
 }
@@ -470,6 +511,13 @@ fn get_photos() {
   let decoder = dynamic.list(dynamic.field("src", dynamic.string))
 
   lustre_http.get(url, lustre_http.expect_json(decoder, PhotosRecieved))
+}
+
+fn get_id_from_response(response: String) -> String {
+  response
+  |> string.trim
+  |> string.crop(":")
+  |> string.drop_left(1)
 }
 
 pub fn update_countdown() {

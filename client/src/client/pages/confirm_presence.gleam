@@ -11,7 +11,6 @@ import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
-import gleam/string
 import lustre/attribute.{
   attribute, class, for, href, id, max, min, name, pattern, placeholder,
   required, type_, value,
@@ -254,16 +253,6 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       list.range(0, model.confirm_form.people_count - 1)
                         |> list.map(fn(n) { name_box_element(model, n) }),
                     ),
-                    div([class("py-2")], [
-                      text(
-                        model.confirm_form.people_names
-                        |> dict.values
-                        |> string.concat,
-                      ),
-                      div([class("py-1")], [
-                        text(model.confirm_form.companion_name),
-                      ]),
-                    ]),
                   ]),
                   div([], [
                     label(
@@ -280,7 +269,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       name("comments"),
                       id("comments"),
                       type_("text"),
-                      // event.on_input(ConfirmUpdateComments),
+                      event.on_input(ConfirmUpdateComments),
                     ]),
                   ]),
                   div([class("flex items-center justify-center")], [

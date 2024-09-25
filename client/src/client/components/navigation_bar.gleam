@@ -92,9 +92,9 @@ pub fn navigation_bar(model: Model) {
           ),
         ]),
       ]),
-      div([], [
-        case model.auth_user {
-          None -> {
+      case model.auth_user {
+        None -> {
+          div([], [
             span([class("min-w-5 text-pink-600 font-semibold")], [
               a(
                 [
@@ -110,27 +110,27 @@ pub fn navigation_bar(model: Model) {
                 ],
                 [text("Login")],
               ),
-            ])
-          }
-          Some(user) -> {
-            div([class("flex items-center space-x-4")], [
-              case user.is_confirmed {
-                True ->
-                  span([class("text-emerald-600 font-semibold")], [
-                    text("Presença Confirmada"),
-                  ])
-                False ->
-                  button([button_class("40")], [
-                    a([href("/confirm")], [text("Confirme sua presença")]),
-                  ])
-              },
-              span([class("text-pink-600 font-semibold")], [
-                text("Olá, " <> string.capitalise(user.name)),
-              ]),
-            ])
-          }
-        },
-      ]),
+            ]),
+          ])
+        }
+        Some(user) -> {
+          div([class("flex items-center space-x-4")], [
+            case user.is_confirmed {
+              True ->
+                span([class("text-emerald-600 font-semibold")], [
+                  text("Presença Confirmada"),
+                ])
+              False ->
+                button([button_class("10")], [
+                  a([href("/confirm")], [text("Confirme sua presença")]),
+                ])
+            },
+            span([class("text-pink-600 font-semibold")], [
+              text("Olá, " <> string.capitalise(user.name)),
+            ]),
+          ])
+        }
+      },
     ],
   )
 }

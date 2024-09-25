@@ -5,20 +5,21 @@ import wisp
 import wisp/testing.{default_secret_key_base}
 import wisp/wisp_mist
 
-//TODO: Adicionar Selecionar/Deselecionar Presente
+//TODO: Comentários Confirm Form
 //TODO: Página de Admin (Mostrar número de confirmados e nomes)
 //TODO: Confirmação Login (Botão "tem certeza?")
 
 //TODO: Refatoração (limpar código)
 //TODO: Documentação
 
+//TODO: Chave Pix no BD
 //TODO: Ultimos testes
+//TODO: Criar secret key
 //TODO: Deploy
 
 pub fn main() {
   wisp.configure_logger()
 
-  //TODO: Criar secret key
   // let secret_key_base = wisp.random_string(64)
 
   let assert Ok(_) =

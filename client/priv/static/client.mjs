@@ -39,7 +39,6 @@ var List = class {
     }
     return desired === 0;
   }
-  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -255,7 +254,6 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
-  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -774,6 +772,9 @@ function concat3(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
+}
+function trim2(string3) {
+  return trim(string3);
 }
 function pop_grapheme2(string3) {
   return pop_grapheme(string3);
@@ -1827,6 +1828,9 @@ function concat2(xs) {
   }
   return result;
 }
+function crop_string(string3, substring) {
+  return string3.substring(string3.indexOf(substring));
+}
 function starts_with(haystack, needle) {
   return haystack.startsWith(needle);
 }
@@ -1852,6 +1856,15 @@ var unicode_whitespaces = [
 ].join();
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
+function trim(string3) {
+  return trim_left(trim_right(string3));
+}
+function trim_left(string3) {
+  return string3.replace(left_trim_regex, "");
+}
+function trim_right(string3) {
+  return string3.replace(right_trim_regex, "");
+}
 function truncate(float3) {
   return Math.trunc(float3);
 }
@@ -2491,6 +2504,9 @@ function to_string6(json) {
   return json_to_string(json);
 }
 function string2(input2) {
+  return identity2(input2);
+}
+function bool2(input2) {
   return identity2(input2);
 }
 function int2(input2) {
@@ -4418,12 +4434,13 @@ var ConfirmPresence = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, auth_user, sugestion_gifts, unique_gifts, photos, login_form, confirm_form, countdown) {
+  constructor(route, auth_user, sugestion_gifts, unique_gifts, gift_error, photos, login_form, confirm_form, countdown) {
     super();
     this.route = route;
     this.auth_user = auth_user;
     this.sugestion_gifts = sugestion_gifts;
     this.unique_gifts = unique_gifts;
+    this.gift_error = gift_error;
     this.photos = photos;
     this.login_form = login_form;
     this.confirm_form = confirm_form;
@@ -4452,6 +4469,12 @@ var PhotosRecieved = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
+  }
+};
+var CountdownUpdated = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
   }
 };
 var UserRequestedSignUp = class extends CustomType {
@@ -4499,17 +4522,22 @@ var UserOpenedGiftsPage = class extends CustomType {
 var UserOpenedPhotosPage = class extends CustomType {
 };
 var UserRequestedSelectGift = class extends CustomType {
-  constructor(value3) {
+  constructor(gift, to2) {
     super();
-    this.value = value3;
+    this.gift = gift;
+    this.to = to2;
   }
 };
-var UserRequestedConfirmPresence = class extends CustomType {
-};
-var ConfirmPresenceResponded = class extends CustomType {
+var SelectGiftResponded = class extends CustomType {
   constructor(resp_result) {
     super();
     this.resp_result = resp_result;
+  }
+};
+var GiftUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
   }
 };
 var ConfirmUpdateName = class extends CustomType {
@@ -4567,10 +4595,12 @@ var ConfirmUpdateError = class extends CustomType {
     this.value = value3;
   }
 };
-var CountdownUpdated = class extends CustomType {
-  constructor(value3) {
+var UserRequestedConfirmPresence = class extends CustomType {
+};
+var ConfirmPresenceResponded = class extends CustomType {
+  constructor(resp_result) {
     super();
-    this.value = value3;
+    this.resp_result = resp_result;
   }
 };
 var MessageErrorResponse = class extends CustomType {
@@ -4734,13 +4764,13 @@ function navigation_bar(model) {
           )
         ])
       ),
-      div(
-        toList([]),
-        toList([
-          (() => {
-            let $ = model.auth_user;
-            if ($ instanceof None) {
-              return span(
+      (() => {
+        let $ = model.auth_user;
+        if ($ instanceof None) {
+          return div(
+            toList([]),
+            toList([
+              span(
                 toList([class$("min-w-5 text-pink-600 font-semibold")]),
                 toList([
                   a(
@@ -4760,41 +4790,41 @@ function navigation_bar(model) {
                     toList([text("Login")])
                   )
                 ])
-              );
-            } else {
-              let user = $[0];
-              return div(
-                toList([class$("flex items-center space-x-4")]),
-                toList([
-                  (() => {
-                    let $1 = user.is_confirmed;
-                    if ($1) {
-                      return span(
-                        toList([class$("text-emerald-600 font-semibold")]),
-                        toList([text("Presen\xE7a Confirmada")])
-                      );
-                    } else {
-                      return button(
-                        toList([button_class("40")]),
-                        toList([
-                          a(
-                            toList([href("/confirm")]),
-                            toList([text("Confirme sua presen\xE7a")])
-                          )
-                        ])
-                      );
-                    }
-                  })(),
-                  span(
-                    toList([class$("text-pink-600 font-semibold")]),
-                    toList([text("Ol\xE1, " + capitalise(user.name))])
-                  )
-                ])
-              );
-            }
-          })()
-        ])
-      )
+              )
+            ])
+          );
+        } else {
+          let user = $[0];
+          return div(
+            toList([class$("flex items-center space-x-4")]),
+            toList([
+              (() => {
+                let $1 = user.is_confirmed;
+                if ($1) {
+                  return span(
+                    toList([class$("text-emerald-600 font-semibold")]),
+                    toList([text("Presen\xE7a Confirmada")])
+                  );
+                } else {
+                  return button(
+                    toList([button_class("10")]),
+                    toList([
+                      a(
+                        toList([href("/confirm")]),
+                        toList([text("Confirme sua presen\xE7a")])
+                      )
+                    ])
+                  );
+                }
+              })(),
+              span(
+                toList([class$("text-pink-600 font-semibold")]),
+                toList([text("Ol\xE1, " + capitalise(user.name))])
+              )
+            ])
+          );
+        }
+      })()
     ])
   );
 }
@@ -4990,11 +5020,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "let_assert",
+        "assignment_no_match",
         "client/pages/confirm_presence",
-        29,
+        28,
         "confirm_presence",
-        "Pattern match failed, no pattern matched the value.",
+        "Assignment pattern did not match",
         { value: $ }
       );
     }
@@ -5321,22 +5351,6 @@ function confirm_presence_view(model) {
                               }
                             );
                           })()
-                        ),
-                        div(
-                          toList([class$("py-2")]),
-                          toList([
-                            text(
-                              (() => {
-                                let _pipe = model.confirm_form.people_names;
-                                let _pipe$1 = values(_pipe);
-                                return concat3(_pipe$1);
-                              })()
-                            ),
-                            div(
-                              toList([class$("py-1")]),
-                              toList([text(model.confirm_form.companion_name)])
-                            )
-                          ])
                         )
                       ])
                     ),
@@ -5357,7 +5371,12 @@ function confirm_presence_view(model) {
                             ),
                             name("comments"),
                             id("comments"),
-                            type_("text")
+                            type_("text"),
+                            on_input(
+                              (var0) => {
+                                return new ConfirmUpdateComments(var0);
+                              }
+                            )
                           ])
                         )
                       ])
@@ -5485,6 +5504,30 @@ function event_view() {
 }
 
 // build/dev/javascript/client/client/pages/gifts.mjs
+function select_gift(model, gift, to2) {
+  let $ = model.auth_user;
+  if ($ instanceof Some) {
+    let user = $[0];
+    return post(
+      server_url + "/gifts",
+      object2(
+        toList([
+          ["gift_id", int2(gift.id)],
+          ["user_id", int2(user.user_id)],
+          ["to", bool2(to2)]
+        ])
+      ),
+      expect_json(
+        message_error_decoder(),
+        (var0) => {
+          return new SelectGiftResponded(var0);
+        }
+      )
+    );
+  } else {
+    return push("/login", new None(), new None());
+  }
+}
 function sugestion_gift(gift) {
   return div(
     toList([
@@ -5507,6 +5550,81 @@ function sugestion_gift(gift) {
     ])
   );
 }
+function selected_by_user_gift(gift, link) {
+  return div(
+    toList([
+      class$(
+        "relative bg-white p-4 rounded-lg shadow-lg items-center justify-between"
+      )
+    ]),
+    toList([
+      img(
+        toList([
+          class$("w-full h-48 rounded-lg object-cover z-0"),
+          alt("Presente" + to_string2(gift.id)),
+          src(gift.pic)
+        ])
+      ),
+      h3(
+        toList([class$("text-lg font-semibold text-pink-700 mt-2")]),
+        toList([text(gift.name)])
+      ),
+      a(
+        toList([
+          class$("text-pink-600 hover:text-pink-800 underline text-center"),
+          rel("noopener noreferrer"),
+          target("_blank"),
+          href(link)
+        ]),
+        toList([text("Ver refer\xEAncia")])
+      ),
+      button(
+        toList([
+          class$(
+            "mt-3 w-full bg-white-600 hover:bg-emerald-300 text-emerald font-bold py-1 px-3 rounded-full transition duration-300"
+          ),
+          on_click(new UserRequestedSelectGift(gift, false))
+        ]),
+        toList([text("Retirar Escolha")])
+      )
+    ])
+  );
+}
+function selected_gift(gift) {
+  return div(
+    toList([class$("relative bg-white p-3 rounded-lg shadow-lg")]),
+    toList([
+      div(
+        toList([class$("absolute inset-0 bg-black opacity-60 rounded-lg")]),
+        toList([])
+      ),
+      img(
+        toList([
+          class$("w-full h-48 rounded-lg object-cover grayscale z-10"),
+          alt("Presente" + to_string2(gift.id)),
+          src(gift.pic)
+        ])
+      ),
+      h3(
+        toList([class$("text-lg font-semibold text-pink-300 mt-2")]),
+        toList([text(gift.name)])
+      ),
+      a(
+        toList([class$("text-pink-300 underline")]),
+        toList([text("Ver refer\xEAncia")])
+      ),
+      button(
+        toList([
+          disabled(true),
+          class$(
+            "mt-3 w-full bg-pink-600 text-white font-bold py-1 px-3 rounded-full cursor-not-allowed"
+          )
+        ]),
+        toList([text("Presente Selecionado")])
+      )
+    ])
+  );
+}
 function unselected_gift(gift, link) {
   return div(
     toList([
@@ -5517,7 +5635,7 @@ function unselected_gift(gift, link) {
     toList([
       img(
         toList([
-          class$("w-full h-70 rounded-lg object-cover z-0"),
+          class$("w-full h-48 rounded-lg object-cover z-0"),
           alt("Presente" + to_string2(gift.id)),
           src(gift.pic)
         ])
@@ -5540,71 +5658,27 @@ function unselected_gift(gift, link) {
           class$(
             "mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-full transition duration-300"
           ),
-          on_click(new UserRequestedSelectGift(gift.id))
+          on_click(new UserRequestedSelectGift(gift, true))
         ]),
         toList([text("Escolher")])
       )
     ])
   );
 }
-function selected_gift(gift) {
-  return div(
-    toList([class$("relative bg-white p-3 rounded-lg shadow-lg")]),
-    toList([
-      div(
-        toList([class$("absolute inset-0 bg-black opacity-60 rounded-lg")]),
-        toList([
-          div(
-            toList([class$("absolute inset-0 flex items-center justify-center")]),
-            toList([
-              span(
-                toList([
-                  class$("bg-red-600 text-white px-3 py-1 rounded-full z-20")
-                ]),
-                toList([text("Selecionado")])
-              )
-            ])
-          )
-        ])
-      ),
-      img(
-        toList([
-          class$("w-full h-70 rounded-lg grayscale"),
-          alt("Presente" + to_string2(gift.id)),
-          src(gift.pic)
-        ])
-      ),
-      h3(
-        toList([class$("text-lg font-semibold text-pink-300 mt-2")]),
-        toList([text(gift.name)])
-      ),
-      a(
-        toList([class$("text-pink-300 underline")]),
-        toList([text("Ver refer\xEAncia")])
-      ),
-      button(
-        toList([
-          disabled(true),
-          class$(
-            "mt-3 w-full bg-emerald-600 text-white font-bold py-1 px-3 rounded-full cursor-not-allowed"
-          )
-        ]),
-        toList([text("Escolher")])
-      )
-    ])
-  );
-}
-function unique_gift(gift) {
+function unique_gift(model, gift) {
   let $ = gift.link;
   let $1 = gift.selected_by;
-  if ($ instanceof Some && $1 instanceof Some) {
+  let $2 = model.auth_user;
+  if ($ instanceof Some && $1 instanceof Some && $2 instanceof Some && $1[0] === $2[0].user_id) {
     let link = $[0];
     let selected_by = $1[0];
-    if (selected_by === 0) {
-      return unselected_gift(gift, link);
-    } else {
-      return selected_gift(gift);
-    }
+    let user = $2[0];
+    return selected_by_user_gift(gift, link);
+  } else if ($ instanceof Some && $1 instanceof None) {
+    let link = $[0];
+    return unselected_gift(gift, link);
+  } else if ($1 instanceof Some) {
+    return selected_gift(gift);
   } else {
     return selected_gift(gift);
   }
@@ -5638,7 +5712,29 @@ function gifts_view(model) {
         toList([
           class$("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")
         ]),
-        map2(model.unique_gifts, unique_gift)
+        map2(
+          model.unique_gifts,
+          (gift) => {
+            return unique_gift(model, gift);
+          }
+        )
+      ),
+      div(
+        toList([]),
+        toList([
+          (() => {
+            let $ = model.gift_error;
+            if ($ instanceof Some) {
+              let err = $[0];
+              return p(
+                toList([class$("text-red-500 text-center")]),
+                toList([text("Erro: " + err)])
+              );
+            } else {
+              return none2();
+            }
+          })()
+        ])
       )
     ])
   );
@@ -5850,7 +5946,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 424, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 465, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -5934,6 +6030,12 @@ function get_photos() {
     )
   );
 }
+function get_id_from_response(response) {
+  let _pipe = response;
+  let _pipe$1 = trim2(_pipe);
+  let _pipe$2 = crop_string(_pipe$1, ":");
+  return drop_left(_pipe$2, 1);
+}
 function update(model, msg) {
   if (msg instanceof OnRouteChange) {
     let route = msg[0];
@@ -5954,8 +6056,7 @@ function update(model, msg) {
         gifts,
         (gift) => {
           let $ = gift.link;
-          let $1 = gift.selected_by;
-          if ($ instanceof Some && $1 instanceof Some) {
+          if ($ instanceof Some) {
             return true;
           } else {
             return false;
@@ -5980,70 +6081,11 @@ function update(model, msg) {
     } else {
       return [model, none()];
     }
-  } else if (msg instanceof UserRequestedLogin) {
-    return [model, login(model)];
+  } else if (msg instanceof CountdownUpdated) {
+    let value3 = msg.value;
+    return [model.withFields({ countdown: value3 }), none()];
   } else if (msg instanceof UserRequestedSignUp) {
     return [model, signup(model)];
-  } else if (msg instanceof LoginResponded) {
-    let resp_result = msg.resp_result;
-    if (resp_result.isOk()) {
-      let resp = resp_result[0];
-      let $ = resp.message;
-      let $1 = resp.error;
-      if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new LoginUpdateError(new Some(err)));
-            }
-          )
-        ];
-      } else if ($ instanceof Some && $1 instanceof None) {
-        let response = $[0];
-        return [
-          model.withFields({ login_form: new LoginForm("", "", "", new None()) }),
-          batch(
-            toList([
-              push("/", new None(), new None()),
-              get_auth_user(
-                (() => {
-                  let _pipe = response;
-                  return drop_left(_pipe, 14);
-                })()
-              )
-            ])
-          )
-        ];
-      } else {
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(
-                new LoginUpdateError(
-                  new Some("Problemas no servidor, por favor tente mais tarde.")
-                )
-              );
-            }
-          )
-        ];
-      }
-    } else {
-      return [
-        model,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new LoginUpdateError(
-                new Some("Problemas no servidor, por favor tente mais tarde.")
-              )
-            );
-          }
-        )
-      ];
-    }
   } else if (msg instanceof SignUpResponded) {
     let resp_result = msg.resp_result;
     if (resp_result.isOk()) {
@@ -6060,7 +6102,7 @@ function update(model, msg) {
               get_auth_user(
                 (() => {
                   let _pipe = response;
-                  return drop_left(_pipe, 14);
+                  return get_id_from_response(_pipe);
                 })()
               )
             ])
@@ -6140,41 +6182,38 @@ function update(model, msg) {
       }),
       none()
     ];
-  } else if (msg instanceof CountdownUpdated) {
-    let value3 = msg.value;
-    return [model.withFields({ countdown: value3 }), none()];
-  } else if (msg instanceof UserRequestedConfirmPresence) {
-    return [model, confirm_presence(model)];
-  } else if (msg instanceof ConfirmPresenceResponded) {
+  } else if (msg instanceof UserRequestedLogin) {
+    return [model, login(model)];
+  } else if (msg instanceof LoginResponded) {
     let resp_result = msg.resp_result;
     if (resp_result.isOk()) {
       let resp = resp_result[0];
       let $ = resp.message;
       let $1 = resp.error;
-      if ($ instanceof Some && $1 instanceof None) {
-        let response = $[0];
+      if ($1 instanceof Some) {
+        let err = $1[0];
         return [
           model,
+          from2(
+            (dispatch) => {
+              return dispatch(new LoginUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else if ($ instanceof Some && $1 instanceof None) {
+        let response = $[0];
+        return [
+          model.withFields({ login_form: new LoginForm("", "", "", new None()) }),
           batch(
             toList([
               push("/", new None(), new None()),
               get_auth_user(
                 (() => {
                   let _pipe = response;
-                  return drop_left(_pipe, 23);
+                  return get_id_from_response(_pipe);
                 })()
               )
             ])
-          )
-        ];
-      } else if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new ConfirmUpdateError(new Some(err)));
-            }
           )
         ];
       } else {
@@ -6183,7 +6222,7 @@ function update(model, msg) {
           from2(
             (dispatch) => {
               return dispatch(
-                new ConfirmUpdateError(
+                new LoginUpdateError(
                   new Some("Problemas no servidor, por favor tente mais tarde.")
                 )
               );
@@ -6197,7 +6236,7 @@ function update(model, msg) {
         from2(
           (dispatch) => {
             return dispatch(
-              new ConfirmUpdateError(
+              new LoginUpdateError(
                 new Some("Problemas no servidor, por favor tente mais tarde.")
               )
             );
@@ -6205,6 +6244,78 @@ function update(model, msg) {
         )
       ];
     }
+  } else if (msg instanceof UserOpenedGiftsPage) {
+    let $ = model.sugestion_gifts;
+    let $1 = model.unique_gifts;
+    if ($.hasLength(1) && $1.hasLength(1)) {
+      return [model, none()];
+    } else if ($.hasLength(0) && $1.hasLength(0)) {
+      return [model, get_gifts()];
+    } else {
+      return [model, none()];
+    }
+  } else if (msg instanceof UserOpenedPhotosPage) {
+    let $ = model.photos;
+    if ($.hasLength(1)) {
+      return [model, none()];
+    } else if ($.hasLength(0)) {
+      return [model, get_photos()];
+    } else {
+      return [model, none()];
+    }
+  } else if (msg instanceof UserRequestedSelectGift) {
+    let gift = msg.gift;
+    let to2 = msg.to;
+    return [model, select_gift(model, gift, to2)];
+  } else if (msg instanceof SelectGiftResponded) {
+    let resp_result = msg.resp_result;
+    if (resp_result.isOk()) {
+      let resp = resp_result[0];
+      let $ = resp.message;
+      let $1 = resp.error;
+      if ($1 instanceof Some) {
+        let err = $1[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new GiftUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else if ($ instanceof Some && $1 instanceof None) {
+        return [model, get_gifts()];
+      } else {
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(
+                new GiftUpdateError(
+                  new Some("Problemas no servidor, por favor tente mais tarde.")
+                )
+              );
+            }
+          )
+        ];
+      }
+    } else {
+      return [
+        model,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new GiftUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ];
+    }
+  } else if (msg instanceof GiftUpdateError) {
+    let value3 = msg.value;
+    return [model.withFields({ gift_error: value3 }), none()];
   } else if (msg instanceof ConfirmUpdateName) {
     let value3 = msg.value;
     return [
@@ -6317,26 +6428,67 @@ function update(model, msg) {
       }),
       none()
     ];
-  } else if (msg instanceof UserRequestedSelectGift) {
-    return [model, none()];
-  } else if (msg instanceof UserOpenedGiftsPage) {
-    let $ = model.sugestion_gifts;
-    let $1 = model.unique_gifts;
-    if ($.hasLength(1) && $1.hasLength(1)) {
-      return [model, none()];
-    } else if ($.hasLength(0) && $1.hasLength(0)) {
-      return [model, get_gifts()];
-    } else {
-      return [model, none()];
-    }
+  } else if (msg instanceof UserRequestedConfirmPresence) {
+    return [model, confirm_presence(model)];
   } else {
-    let $ = model.photos;
-    if ($.hasLength(1)) {
-      return [model, none()];
-    } else if ($.hasLength(0)) {
-      return [model, get_photos()];
+    let resp_result = msg.resp_result;
+    if (resp_result.isOk()) {
+      let resp = resp_result[0];
+      let $ = resp.message;
+      let $1 = resp.error;
+      if ($ instanceof Some && $1 instanceof None) {
+        let response = $[0];
+        return [
+          model,
+          batch(
+            toList([
+              push("/confirm", new None(), new None()),
+              get_auth_user(
+                (() => {
+                  let _pipe = response;
+                  return get_id_from_response(_pipe);
+                })()
+              )
+            ])
+          )
+        ];
+      } else if ($1 instanceof Some) {
+        let err = $1[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new ConfirmUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else {
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(
+                new ConfirmUpdateError(
+                  new Some("Problemas no servidor, por favor tente mais tarde.")
+                )
+              );
+            }
+          )
+        ];
+      }
     } else {
-      return [model, none()];
+      return [
+        model,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new ConfirmUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ];
     }
   }
 }
@@ -6359,6 +6511,7 @@ function init3(_) {
       new None(),
       toList([]),
       toList([]),
+      new None(),
       toList([]),
       new LoginForm("", "", "", new None()),
       new ConfirmForm(

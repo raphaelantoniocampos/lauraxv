@@ -12,6 +12,10 @@ pub type Gift {
   )
 }
 
+pub type SelectGift {
+  SelectGift(gift_id: Int, user_id: Int, to: Bool)
+}
+
 pub type User {
   User(
     id: Int,

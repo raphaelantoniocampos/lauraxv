@@ -1,15 +1,10 @@
 import cake/insert as i
 import cake/select as s
 import cake/where as w
-import decode
 import gleam/dynamic
-import gleam/io
-import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
-import gleam/string
-import gleam/string_builder
 import server/db
 import shared.{type Companion, type ConfirmedUser, Companion, ConfirmedUser}
 import sqlight

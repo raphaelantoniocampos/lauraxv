@@ -1,7 +1,6 @@
 import cake
 import cake/dialect/sqlite_dialect
 import gleam/dynamic.{type Dynamic}
-import gleam/io
 import sqlight
 
 const conn_path = "file:db.sqlite3?mode=rw"
@@ -34,5 +33,4 @@ pub fn execute_write(
   use connection <- sqlight.with_connection(conn_path)
   let rows = sqlight.query(prepared_statement, connection, arguments, decoder)
   rows
-  |> io.debug
 }

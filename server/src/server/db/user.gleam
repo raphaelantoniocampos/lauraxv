@@ -5,7 +5,6 @@ import cake/update as u
 import cake/where as w
 import gleam/bool
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
