@@ -27,18 +27,21 @@ pub type User {
   )
 }
 
-pub type ConfirmedUser {
-  ConfirmedUser(
-    id: Int,
+pub type Confirmation {
+  Confirmation(
     user_id: Int,
     name: String,
     invite_name: String,
     phone: String,
-    people_count: Int,
     comments: Option(String),
+    people_names: People,
   )
 }
 
-pub type Companion {
-  Companion(id: Int, user_id: Int, name: String)
+pub type People {
+  People(List(Person))
+}
+
+pub type Person {
+  Person(confirmation_id: Int, name: String)
 }

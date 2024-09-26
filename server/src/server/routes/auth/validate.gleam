@@ -3,26 +3,23 @@ import gleam/int
 import gleam/json
 import gleam/result
 import server/db/user
-import server/db/user_session
 import server/response
 import wisp.{type Request, type Response}
 
 pub fn validate(req: Request, id_string: String) -> Response {
   case req.method {
-    Get -> validate_session(req, id_string)
+    Get -> validate_session(id_string)
     _ -> wisp.method_not_allowed([Get])
   }
 }
 
-fn validate_session(req: Request, id_string: String) -> Response {
+fn validate_session(id_string: String) -> Response {
   let result = {
-    let user_id = case user_session.get_user_id_from_session(req) {
-      Ok(user_id) -> user_id
-      Error(_) ->
-        case int.parse(id_string) {
-          Ok(user_id) -> user_id
-          Error(_) -> -1
-        }
+    let user_id = {
+      case int.parse(id_string) {
+        Ok(user_id) -> user_id
+        Error(_) -> -1
+      }
     }
 
     use user <- result.try(user.get_user_by_id(user_id))

@@ -1,7 +1,7 @@
 import client/state.{
   type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateCompanionName, ConfirmUpdateInviteName, ConfirmUpdateName,
-  ConfirmUpdatePeopleCount, ConfirmUpdatePhone, UserRequestedConfirmPresence,
+  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
+  ConfirmUpdatePersonName, ConfirmUpdatePhone, UserRequestedConfirmPresence,
   message_error_decoder,
 }
 import client/views/home_view.{home_view}
@@ -13,7 +13,7 @@ import gleam/option.{None, Some}
 import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, strong, ul}
-import shared.{type Companion, type ConfirmedUser, server_url}
+import shared.{type Confirmation, type People, type Person, server_url}
 
 pub fn admin_view(model: Model) {
   case model.auth_user {
@@ -63,7 +63,7 @@ fn auth_admin_view(model: Model) {
   ])
 }
 
-fn confi(user: #(ConfirmedUser, List(Companion))) {
+fn confi(user: #(Confirmation, People)) {
   div([], [
     div([class("flex justify-between items-center")], [
       h2([class("text-2xl font-semibold text-pink-700")], [

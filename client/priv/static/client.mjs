@@ -39,7 +39,6 @@ var List = class {
     }
     return desired === 0;
   }
-  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -255,7 +254,6 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
-  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -5477,11 +5475,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "let_assert",
+        "assignment_no_match",
         "client/views/confirm_presence_view",
         28,
         "confirm_presence",
-        "Pattern match failed, no pattern matched the value.",
+        "Assignment pattern did not match",
         { value: $ }
       );
     }

@@ -1,7 +1,7 @@
 import client/state.{
   type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateCompanionName, ConfirmUpdateInviteName, ConfirmUpdateName,
-  ConfirmUpdatePeopleCount, ConfirmUpdatePhone, UserRequestedConfirmPresence,
+  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
+  ConfirmUpdatePersonName, ConfirmUpdatePhone, UserRequestedConfirmPresence,
   message_error_decoder,
 }
 import client/views/components/button_class.{button_class}
@@ -41,7 +41,7 @@ pub fn confirm_presence(model: Model) {
       #("people_count", json.int(model.confirm_form.people_count)),
       #(
         "people_names",
-        model.confirm_form.people_names
+        model.confirm_form.people
           |> dict.values
           |> json.array(json.string),
       ),
@@ -77,7 +77,7 @@ fn name_box_element(model: Model, n: Int) {
             id("people_names_" <> string_n),
             type_("name"),
             value(model.confirm_form.name),
-            event.on_input(fn(value) { ConfirmUpdateCompanionName(n, value) }),
+            event.on_input(fn(value) { ConfirmUpdatePersonName(n, value) }),
           ]),
         ])
       }
@@ -98,7 +98,7 @@ fn name_box_element(model: Model, n: Int) {
             name("people_names_" <> string_n),
             id("people_names_" <> string_n),
             type_("name"),
-            event.on_input(fn(value) { ConfirmUpdateCompanionName(n, value) }),
+            event.on_input(fn(value) { ConfirmUpdatePersonName(n, value) }),
           ]),
         ])
       }

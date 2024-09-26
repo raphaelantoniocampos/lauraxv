@@ -1,10 +1,7 @@
 import beecrypt
-import cake/insert as i
-import cake/select as s
-import cake/update as u
-import cake/where as w
 import gleam/bool
 import gleam/dynamic
+import gleam/int
 import gleam/list
 import gleam/result
 import gleam/string
@@ -12,18 +9,10 @@ import server/db
 import shared.{type User, User}
 import sqlight
 
-fn get_user_base_query() {
-  s.new()
-  |> s.selects([
-    s.col("user.id"),
-    s.col("user.username"),
-    s.col("user.email"),
-    s.col("user.password"),
-    s.col("user.is_confirmed"),
-    s.col("user.is_admin"),
-  ])
-  |> s.from_table("user")
-}
+const get_user_base_query = "
+  SELECT user.id, user.username, user.email, user.password, user.is_confirmed, user.is_admin
+FROM 'user'
+"
 
 pub fn user_db_decoder() {
   dynamic.decode6(
@@ -38,11 +27,9 @@ pub fn user_db_decoder() {
 }
 
 pub fn get_user_by_email(email: String) -> Result(User, String) {
+  let sql = get_user_base_query <> "WHERE user.email = " <> "'" <> email <> "'"
   let user = case
-    get_user_base_query()
-    |> s.where(w.eq(w.col("user.email"), w.string(email)))
-    |> s.to_query
-    |> db.execute_read([sqlight.text(email)], user_db_decoder())
+    db.execute_read(sql, [sqlight.text(email)], user_db_decoder())
   {
     Ok(users) -> Ok(list.first(users))
     Error(_) -> Error("Problem getting user by email")
@@ -56,11 +43,14 @@ pub fn get_user_by_email(email: String) -> Result(User, String) {
 }
 
 pub fn get_user_by_id(user_id: Int) -> Result(User, String) {
+  let sql =
+    get_user_base_query
+    <> "WHERE user.email = "
+    <> "'"
+    <> int.to_string(user_id)
+    <> "'"
   let user = case
-    get_user_base_query()
-    |> s.where(w.eq(w.col("user.id"), w.int(user_id)))
-    |> s.to_query
-    |> db.execute_read([sqlight.int(user_id)], user_db_decoder())
+    db.execute_read(sql, [sqlight.int(user_id)], user_db_decoder())
   {
     Ok(users) -> Ok(list.first(users))
     Error(_) -> Error("Problem getting user by id")
@@ -74,13 +64,14 @@ pub fn get_user_by_id(user_id: Int) -> Result(User, String) {
 }
 
 pub fn set_password_for_user(user_id: Int, password: String) {
-  u.new()
-  |> u.table("user")
-  |> u.sets([u.set_string("user.password", beecrypt.hash(password))])
-  |> u.where(w.eq(w.col("user.id"), w.int(user_id)))
-  |> u.to_query
-  |> db.execute_write(
-    [sqlight.text(beecrypt.hash(password)), sqlight.int(user_id)],
+  let hashed_password = beecrypt.hash(password)
+  let sql = "
+    UPDATE user
+    SET password = " <> hashed_password <> "
+    WHERE user.id = " <> int.to_string(user_id)
+  db.execute_write(
+    sql,
+    [sqlight.text(hashed_password), sqlight.int(user_id)],
     user_db_decoder(),
   )
   |> result.replace_error("Problem with updating user password")
@@ -112,13 +103,15 @@ pub fn decode_create_user(
 }
 
 pub fn does_user_with_same_email_exist(create_user: CreateUser) {
+  let sql =
+    get_user_base_query
+    <> "WHERE user.email = "
+    <> "'"
+    <> create_user.email
+    <> "'"
+
   case
-    s.new()
-    |> s.select(s.col("user.email"))
-    |> s.from_table("user")
-    |> s.where(w.eq(w.col("user.email"), w.string(create_user.email)))
-    |> s.to_query
-    |> db.execute_read([sqlight.text(create_user.email)], dynamic.dynamic)
+    db.execute_read(sql, [sqlight.text(create_user.email)], dynamic.dynamic)
   {
     Ok(users) -> Ok(list.length(users) > 0)
     Error(_) -> Error("Problem selecting users with same email")
@@ -126,13 +119,14 @@ pub fn does_user_with_same_email_exist(create_user: CreateUser) {
 }
 
 pub fn does_user_with_same_username_exist(create_user: CreateUser) {
+  let sql =
+    get_user_base_query
+    <> "WHERE user.username = "
+    <> "'"
+    <> create_user.username
+    <> "'"
   case
-    s.new()
-    |> s.select(s.col("user.username"))
-    |> s.from_table("user")
-    |> s.where(w.eq(w.col("user.username"), w.string(create_user.username)))
-    |> s.to_query
-    |> db.execute_read([sqlight.text(create_user.username)], dynamic.dynamic)
+    db.execute_read(sql, [sqlight.text(create_user.username)], dynamic.dynamic)
   {
     Ok(users) -> Ok(list.length(users) > 0)
     Error(_) -> Error("Problem selecting users with same username")
@@ -140,20 +134,11 @@ pub fn does_user_with_same_username_exist(create_user: CreateUser) {
 }
 
 pub fn insert_user_to_db(create_user: CreateUser) {
-  [
-    i.row([
-      i.string(create_user.username),
-      i.string(create_user.email),
-      i.string(create_user.password),
-      i.bool(False),
-      i.bool(False),
-    ]),
-  ]
-  |> i.from_values(table_name: "user", columns: [
-    "username", "email", "password", "is_confirmed", "is_admin",
-  ])
-  |> i.to_query
-  |> db.execute_write(
+  let sql = "
+INSERT INTO user (username, email, password, is_confirmed, is_admin)
+VALUES( " <> create_user.username <> ", " <> create_user.email <> ", " <> create_user.password <> ", 0, 0 ); "
+  db.execute_write(
+    sql,
     [
       sqlight.text(create_user.username),
       sqlight.text(create_user.email),
@@ -166,13 +151,14 @@ pub fn insert_user_to_db(create_user: CreateUser) {
 }
 
 pub fn set_is_confirmed(user_id: Int, to: Bool) {
-  let int_bool = bool.to_int(to)
-  u.new()
-  |> u.table("user")
-  |> u.sets([u.set_bool("is_confirmed", to)])
-  |> u.where(w.eq(w.col("id"), w.int(user_id)))
-  |> u.to_query
-  |> db.execute_write(
+  let int_bool = to |> bool.to_int
+  let sql = "
+    UPDATE user
+    SET is_confirmed = " <> { int_bool |> int.to_string } <> "
+    WHERE user.id = " <> int.to_string(user_id)
+
+  db.execute_write(
+    sql,
     [sqlight.int(int_bool), sqlight.int(user_id)],
     user_db_decoder(),
   )

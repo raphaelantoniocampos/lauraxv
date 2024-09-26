@@ -3,7 +3,7 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import shared.{type Companion, type ConfirmedUser, type Gift}
+import shared.{type Confirmation, type Gift, type People, type Person}
 
 pub type Route {
   Home
@@ -34,8 +34,8 @@ pub type Msg {
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(#(List(Gift), List(Gift)), lustre_http.HttpError))
   ImagesRecieved(Result(List(String), lustre_http.HttpError))
-  ConfirmedUsersRecieved(
-    Result(#(List(ConfirmedUser), List(Companion), Int), lustre_http.HttpError),
+  ConfirmationsRecieved(
+    Result(#(List(Confirmation), People, Int), lustre_http.HttpError),
   )
 
   CountdownUpdated(value: Int)
@@ -72,7 +72,7 @@ pub type Msg {
   ConfirmUpdateEmail(value: String)
   ConfirmUpdatePhone(value: String)
   ConfirmUpdatePeopleCount(value: String)
-  ConfirmUpdateCompanionName(key: Int, value: String)
+  ConfirmUpdatePersonName(key: Int, value: String)
   ConfirmUpdatePeopleNames(value: Dict(Int, String))
   ConfirmUpdateComments(value: String)
   ConfirmUpdateError(value: Option(String))
@@ -115,7 +115,7 @@ pub type ConfirmForm {
     email: String,
     phone: String,
     people_count: Int,
-    companion_name: String,
+    person_name: String,
     people_names: Dict(Int, String),
     comments: Option(String),
     error: Option(String),
@@ -128,7 +128,7 @@ pub type GiftStatus {
 
 pub type AdminSettings {
   AdminSettings(
-    users: Dict(Int, #(ConfirmedUser, List(Companion))),
+    confirmations: List(#(Confirmation, People)),
     total_confirmed: Int,
     show_details: Bool,
   )

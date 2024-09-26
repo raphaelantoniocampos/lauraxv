@@ -7,7 +7,8 @@ import gleam/json
 import gleam/result
 import gleam/string
 import server/db/user.{get_user_by_email}
-import server/db/user_session.{create_user_session}
+
+// import server/db/user_session.{create_user_session}
 import server/response
 import wisp.{type Request, type Response}
 
@@ -15,7 +16,7 @@ pub fn login(req: Request) -> Response {
   use body <- wisp.require_json(req)
 
   case req.method {
-    Post -> do_login(req, body)
+    Post -> do_login(body)
     _ -> wisp.method_not_allowed([Post])
   }
 }
@@ -38,7 +39,7 @@ fn decode_login(json: dynamic.Dynamic) -> Result(Login, dynamic.DecodeErrors) {
   }
 }
 
-fn do_login(req: Request, body: dynamic.Dynamic) {
+fn do_login(body: dynamic.Dynamic) {
   let result = {
     use request_user <- result.try(case decode_login(body) {
       Ok(val) -> Ok(val)
