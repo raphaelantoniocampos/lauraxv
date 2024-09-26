@@ -1,7 +1,7 @@
 import beecrypt
 import gleam/bool
 import gleam/dynamic
-import gleam/int
+import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -9,10 +9,7 @@ import server/db
 import shared.{type User, User}
 import sqlight
 
-const get_user_base_query = "
-  SELECT user.id, user.username, user.email, user.password, user.is_confirmed, user.is_admin
-FROM 'user'
-"
+const get_user_base_query = "SELECT * FROM 'user' "
 
 pub fn user_db_decoder() {
   dynamic.decode6(
@@ -27,7 +24,7 @@ pub fn user_db_decoder() {
 }
 
 pub fn get_user_by_email(email: String) -> Result(User, String) {
-  let sql = get_user_base_query <> "WHERE user.email = " <> "'" <> email <> "'"
+  let sql = get_user_base_query <> "WHERE user.email = ?"
   let user = case
     db.execute_read(sql, [sqlight.text(email)], user_db_decoder())
   {
@@ -43,12 +40,8 @@ pub fn get_user_by_email(email: String) -> Result(User, String) {
 }
 
 pub fn get_user_by_id(user_id: Int) -> Result(User, String) {
-  let sql =
-    get_user_base_query
-    <> "WHERE user.email = "
-    <> "'"
-    <> int.to_string(user_id)
-    <> "'"
+  let sql = get_user_base_query <> "WHERE user.id = ?"
+  io.println(sql)
   let user = case
     db.execute_read(sql, [sqlight.int(user_id)], user_db_decoder())
   {
@@ -65,10 +58,11 @@ pub fn get_user_by_id(user_id: Int) -> Result(User, String) {
 
 pub fn set_password_for_user(user_id: Int, password: String) {
   let hashed_password = beecrypt.hash(password)
-  let sql = "
+  let sql =
+    "
     UPDATE user
-    SET password = " <> hashed_password <> "
-    WHERE user.id = " <> int.to_string(user_id)
+    SET password = ? 
+    WHERE user.id = ?"
   db.execute_write(
     sql,
     [sqlight.text(hashed_password), sqlight.int(user_id)],
@@ -103,12 +97,7 @@ pub fn decode_create_user(
 }
 
 pub fn does_user_with_same_email_exist(create_user: CreateUser) {
-  let sql =
-    get_user_base_query
-    <> "WHERE user.email = "
-    <> "'"
-    <> create_user.email
-    <> "'"
+  let sql = get_user_base_query <> "WHERE user.email = ?"
 
   case
     db.execute_read(sql, [sqlight.text(create_user.email)], dynamic.dynamic)
@@ -119,12 +108,7 @@ pub fn does_user_with_same_email_exist(create_user: CreateUser) {
 }
 
 pub fn does_user_with_same_username_exist(create_user: CreateUser) {
-  let sql =
-    get_user_base_query
-    <> "WHERE user.username = "
-    <> "'"
-    <> create_user.username
-    <> "'"
+  let sql = get_user_base_query <> "WHERE user.username = ?"
   case
     db.execute_read(sql, [sqlight.text(create_user.username)], dynamic.dynamic)
   {
@@ -134,9 +118,10 @@ pub fn does_user_with_same_username_exist(create_user: CreateUser) {
 }
 
 pub fn insert_user_to_db(create_user: CreateUser) {
-  let sql = "
+  let sql =
+    "
 INSERT INTO user (username, email, password, is_confirmed, is_admin)
-VALUES( " <> create_user.username <> ", " <> create_user.email <> ", " <> create_user.password <> ", 0, 0 ); "
+VALUES( ?, ?, ?, ?, ? ); "
   db.execute_write(
     sql,
     [
@@ -152,10 +137,11 @@ VALUES( " <> create_user.username <> ", " <> create_user.email <> ", " <> create
 
 pub fn set_is_confirmed(user_id: Int, to: Bool) {
   let int_bool = to |> bool.to_int
-  let sql = "
+  let sql =
+    "
     UPDATE user
-    SET is_confirmed = " <> { int_bool |> int.to_string } <> "
-    WHERE user.id = " <> int.to_string(user_id)
+    SET is_confirmed = ?
+    WHERE user.id = ?"
 
   db.execute_write(
     sql,

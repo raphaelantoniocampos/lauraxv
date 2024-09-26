@@ -1,13 +1,11 @@
+import gleam/dict
 import gleam/dynamic
-import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import server/db
 
-// import server/db/person
-import shared.{type Confirmation, Confirmation}
+import shared.{type Confirmation, type People, Confirmation, People, Person}
 import sqlight
 
 const get_join_confirmation_query = "
@@ -41,12 +39,47 @@ pub type CreateConfirmation {
   )
 }
 
-pub fn get_confirmations() {
+pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
   let sql = get_join_confirmation_query
   case db.execute_read(sql, [], list_confirmation_db_decoder()) {
     Ok(rows) -> {
-      io.debug(rows)
-      Ok(rows)
+      let total = list.length(rows)
+      let confirmations =
+        rows
+        |> list.group(fn(row) { row.user_id })
+        |> dict.values
+        |> list.map(fn(group) {
+          let people_names =
+            group
+            |> list.filter_map(fn(row) {
+              case row.person_name {
+                Some(name) -> Ok(name)
+                None -> Error("None")
+              }
+            })
+          case group |> list.first {
+            Ok(first_row) ->
+              Confirmation(
+                user_id: first_row.user_id,
+                name: first_row.name,
+                invite_name: first_row.invite_name,
+                phone: first_row.phone,
+                comments: first_row.comments,
+                people_names: people_names,
+              )
+            Error(_) ->
+              Confirmation(
+                user_id: 0,
+                name: "",
+                invite_name: "",
+                phone: "",
+                comments: None,
+                people_names: [],
+              )
+          }
+        })
+
+      Ok(#(total, confirmations))
     }
     Error(_) -> Error("Problem getting confirmations")
   }
@@ -106,9 +139,10 @@ pub fn insert_confirmation_to_db(create_confirmation: CreateConfirmation) {
     Some(comment) -> comment
     None -> "NULL"
   }
-  let sql = "
+  let sql =
+    "
 INSERT INTO user (user_id, name, invite_name, phone, comments)
-VALUES( " <> { create_confirmation.user_id |> int.to_string } <> ", " <> create_confirmation.name <> ", " <> create_confirmation.invite_name <> ", " <> comments <> " ); "
+VALUES( ?, ?, ?, ?, ? ); "
 
   db.execute_write(
     sql,
@@ -126,12 +160,7 @@ VALUES( " <> { create_confirmation.user_id |> int.to_string } <> ", " <> create_
 pub fn get_confirmation_by_user_id(
   user_id: Int,
 ) -> Result(CreateConfirmation, String) {
-  let sql =
-    get_confirmation_base_query
-    <> "WHERE confirmation.user_id = "
-    <> "'"
-    <> int.to_string(user_id)
-    <> "'"
+  let sql = get_confirmation_base_query <> "WHERE confirmation.user_id = ?"
 
   let confirmation = case
     db.execute_read(

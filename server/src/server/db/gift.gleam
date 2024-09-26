@@ -32,8 +32,7 @@ fn gift_db_decoder() {
 }
 
 pub fn get_gift_by_id(gift_id: Int) -> Result(Gift, String) {
-  let sql =
-    get_gifts_base_query <> "WHERE gift.id = " <> { gift_id |> int.to_string }
+  let sql = get_gifts_base_query <> "WHERE gift.id = ?"
   let gift = case
     db.execute_read(sql, [sqlight.int(gift_id)], gift_db_decoder())
   {
@@ -49,16 +48,11 @@ pub fn get_gift_by_id(gift_id: Int) -> Result(Gift, String) {
 }
 
 pub fn set_selected_by(select_gift: SelectGift) {
-  let set_to = case select_gift.to {
-    True -> {
-      select_gift.user_id |> int.to_string
-    }
-    False -> "NULL"
-  }
-  let sql = "
+  let sql =
+    "
     UPDATE gift
-    SET select_by = " <> { set_to } <> "
-    WHERE gift.id = " <> { select_gift.gift_id |> int.to_string }
+    SET select_by = ?
+    WHERE gift.id = ?"
 
   let args = case select_gift.to {
     True -> [sqlight.int(select_gift.user_id), sqlight.int(select_gift.gift_id)]

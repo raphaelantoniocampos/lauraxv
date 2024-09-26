@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -254,6 +255,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
+  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -445,44 +447,6 @@ function first(list2) {
     return new Ok(x);
   }
 }
-function update_group(f) {
-  return (groups, elem) => {
-    let $ = get(groups, f(elem));
-    if ($.isOk()) {
-      let existing = $[0];
-      return insert(groups, f(elem), prepend(elem, existing));
-    } else {
-      return insert(groups, f(elem), toList([elem]));
-    }
-  };
-}
-function do_filter(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list2 = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list2.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list2.head;
-      let xs = list2.tail;
-      let new_acc = (() => {
-        let $ = fun(x);
-        if ($) {
-          return prepend(x, acc);
-        } else {
-          return acc;
-        }
-      })();
-      loop$list = xs;
-      loop$fun = fun;
-      loop$acc = new_acc;
-    }
-  }
-}
-function filter(list2, predicate) {
-  return do_filter(list2, predicate, toList([]));
-}
 function do_map(loop$list, loop$fun, loop$acc) {
   while (true) {
     let list2 = loop$list;
@@ -633,9 +597,6 @@ function fold(loop$list, loop$initial, loop$fun) {
       loop$fun = fun;
     }
   }
-}
-function group(list2, key) {
-  return fold(list2, new$(), update_group(key));
 }
 function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
   while (true) {
@@ -801,6 +762,9 @@ function concat3(strings) {
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
 }
+function join2(strings, separator) {
+  return join(strings, separator);
+}
 function trim2(string3) {
   return trim(string3);
 }
@@ -886,9 +850,9 @@ function bool(data) {
 function shallow_list(value3) {
   return decode_list(value3);
 }
-function optional(decode8) {
+function optional(decode7) {
   return (value3) => {
-    return decode_option(value3, decode8);
+    return decode_option(value3, decode7);
   };
 }
 function any(decoders) {
@@ -1022,26 +986,6 @@ function decode2(constructor, t1, t2) {
     }
   };
 }
-function decode3(constructor, t1, t2, t3) {
-  return (value3) => {
-    let $ = t1(value3);
-    let $1 = t2(value3);
-    let $2 = t3(value3);
-    if ($.isOk() && $1.isOk() && $2.isOk()) {
-      let a2 = $[0];
-      let b = $1[0];
-      let c = $2[0];
-      return new Ok(constructor(a2, b, c));
-    } else {
-      let a2 = $;
-      let b = $1;
-      let c = $2;
-      return new Error(
-        concat(toList([all_errors(a2), all_errors(b), all_errors(c)]))
-      );
-    }
-  };
-}
 function decode4(constructor, t1, t2, t3, t4) {
   return (x) => {
     let $ = t1(x);
@@ -1101,7 +1045,7 @@ function decode5(constructor, t1, t2, t3, t4, t5) {
     }
   };
 }
-function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
+function decode6(constructor, t1, t2, t3, t4, t5, t6) {
   return (x) => {
     let $ = t1(x);
     let $1 = t2(x);
@@ -1109,16 +1053,14 @@ function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
     let $3 = t4(x);
     let $4 = t5(x);
     let $5 = t6(x);
-    let $6 = t7(x);
-    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk() && $5.isOk() && $6.isOk()) {
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk() && $5.isOk()) {
       let a2 = $[0];
       let b = $1[0];
       let c = $2[0];
       let d = $3[0];
       let e = $4[0];
       let f = $5[0];
-      let g = $6[0];
-      return new Ok(constructor(a2, b, c, d, e, f, g));
+      return new Ok(constructor(a2, b, c, d, e, f));
     } else {
       let a2 = $;
       let b = $1;
@@ -1126,7 +1068,6 @@ function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
       let d = $3;
       let e = $4;
       let f = $5;
-      let g = $6;
       return new Error(
         concat(
           toList([
@@ -1135,8 +1076,7 @@ function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
             all_errors(c),
             all_errors(d),
             all_errors(e),
-            all_errors(f),
-            all_errors(g)
+            all_errors(f)
           ])
         )
       );
@@ -1911,6 +1851,16 @@ function add(a2, b) {
 function split(xs, pattern2) {
   return List.fromArray(xs.split(pattern2));
 }
+function join(xs, separator) {
+  const iterator = xs[Symbol.iterator]();
+  let result = iterator.next().value || "";
+  let current = iterator.next();
+  while (!current.done) {
+    result = result + separator + current.value;
+    current = iterator.next();
+  }
+  return result;
+}
 function concat2(xs) {
   let result = "";
   for (const x of xs) {
@@ -2162,38 +2112,6 @@ function upsert(dict, key, fun) {
   return ((_capture) => {
     return insert(dict, key, _capture);
   })(_pipe$3);
-}
-function do_fold(loop$list, loop$initial, loop$fun) {
-  while (true) {
-    let list2 = loop$list;
-    let initial = loop$initial;
-    let fun = loop$fun;
-    if (list2.hasLength(0)) {
-      return initial;
-    } else {
-      let k = list2.head[0];
-      let v = list2.head[1];
-      let rest = list2.tail;
-      loop$list = rest;
-      loop$initial = fun(initial, k, v);
-      loop$fun = fun;
-    }
-  }
-}
-function fold2(dict, initial, fun) {
-  let _pipe = dict;
-  let _pipe$1 = map_to_list(_pipe);
-  return do_fold(_pipe$1, initial, fun);
-}
-function do_map_values(f, dict) {
-  let f$1 = (dict2, k, v) => {
-    return insert(dict2, k, f(k, v));
-  };
-  let _pipe = dict;
-  return fold2(_pipe, new$(), f$1);
-}
-function map_values(dict, fun) {
-  return do_map_values(fun, dict);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
@@ -2619,7 +2537,7 @@ function do_decode(json, decoder) {
     }
   );
 }
-function decode6(json, decoder) {
+function decode3(json, decoder) {
   return do_decode(json, decoder);
 }
 function to_string6(json) {
@@ -4029,7 +3947,7 @@ function expect_json(decoder, to_msg) {
       let _pipe$2 = then$(
         _pipe$1,
         (body2) => {
-          let $ = decode6(body2, decoder);
+          let $ = decode3(body2, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -4497,24 +4415,15 @@ var Gift = class extends CustomType {
     this.selected_by = selected_by;
   }
 };
-var ConfirmedUser = class extends CustomType {
-  constructor(id2, user_id, name2, invite_name, phone, people_count, comments) {
+var Confirmation = class extends CustomType {
+  constructor(user_id, name2, invite_name, phone, comments, people_names) {
     super();
-    this.id = id2;
     this.user_id = user_id;
     this.name = name2;
     this.invite_name = invite_name;
     this.phone = phone;
-    this.people_count = people_count;
     this.comments = comments;
-  }
-};
-var Companion = class extends CustomType {
-  constructor(id2, user_id, name2) {
-    super();
-    this.id = id2;
-    this.user_id = user_id;
-    this.name = name2;
+    this.people_names = people_names;
   }
 };
 var server_url = "http://localhost:8000";
@@ -4573,7 +4482,7 @@ var ImagesRecieved = class extends CustomType {
     this[0] = x0;
   }
 };
-var ConfirmedUsersRecieved = class extends CustomType {
+var ConfirmationsRecieved = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
@@ -4680,7 +4589,7 @@ var ConfirmUpdatePeopleCount = class extends CustomType {
     this.value = value3;
   }
 };
-var ConfirmUpdateCompanionName = class extends CustomType {
+var ConfirmUpdatePersonName = class extends CustomType {
   constructor(key, value3) {
     super();
     this.key = key;
@@ -4739,14 +4648,14 @@ var LoginForm = class extends CustomType {
   }
 };
 var ConfirmForm = class extends CustomType {
-  constructor(name2, invite_name, email, phone, people_count, companion_name, people_names, comments, error) {
+  constructor(name2, invite_name, email, phone, people_count, person_name, people_names, comments, error) {
     super();
     this.name = name2;
     this.invite_name = invite_name;
     this.email = email;
     this.phone = phone;
     this.people_count = people_count;
-    this.companion_name = companion_name;
+    this.person_name = person_name;
     this.people_names = people_names;
     this.comments = comments;
     this.error = error;
@@ -4761,10 +4670,10 @@ var GiftStatus = class extends CustomType {
   }
 };
 var AdminSettings = class extends CustomType {
-  constructor(users, total_confirmed, show_details) {
+  constructor(confirmations, total, show_details) {
     super();
-    this.users = users;
-    this.total_confirmed = total_confirmed;
+    this.confirmations = confirmations;
+    this.total = total;
     this.show_details = show_details;
   }
 };
@@ -5126,7 +5035,7 @@ function login_view(model) {
 }
 
 // build/dev/javascript/client/client/views/admin_view.mjs
-function confi(user) {
+function confi(confirmation) {
   return div(
     toList([]),
     toList([
@@ -5135,11 +5044,17 @@ function confi(user) {
         toList([
           h2(
             toList([class$("text-2xl font-semibold text-pink-700")]),
-            toList([text(user[0].name)])
+            toList([text(confirmation.name)])
           ),
           button(
             toList([
-              attribute("data-id", to_string2(user[0].user_id)),
+              attribute(
+                "data-id",
+                (() => {
+                  let _pipe = confirmation.user_id;
+                  return to_string2(_pipe);
+                })()
+              ),
               class$(
                 "mostrar-detalhes bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
               )
@@ -5151,7 +5066,12 @@ function confi(user) {
       div(
         toList([
           attribute("style", "display: none;"),
-          id(to_string2(user[0].user_id)),
+          id(
+            (() => {
+              let _pipe = confirmation.user_id;
+              return to_string2(_pipe);
+            })()
+          ),
           class$("detalhes mt-4")
         ]),
         toList([
@@ -5159,35 +5079,55 @@ function confi(user) {
             toList([]),
             toList([
               strong(toList([]), toList([text("Nome no convite:")])),
-              text(user[0].invite_name)
+              text(confirmation.invite_name)
             ])
           ),
           p(
             toList([]),
             toList([
               strong(toList([]), toList([text("Telefone:")])),
-              text(user[0].phone)
+              text(confirmation.phone)
             ])
           ),
           p(
             toList([]),
             toList([
               strong(toList([]), toList([text("Total de acompanhantes:")])),
-              text(to_string2(length(user[1])))
+              text(to_string2(length(toList([]))))
             ])
           ),
           p(
             toList([]),
             toList([
               strong(toList([]), toList([text("Coment\xE1rios:")])),
-              text("${confirmado.comments || 'Nenhum'}")
+              text(
+                (() => {
+                  let $ = confirmation.comments;
+                  if ($ instanceof Some) {
+                    let comment = $[0];
+                    return comment;
+                  } else {
+                    return "";
+                  }
+                })()
+              )
             ])
           ),
           ul(
             toList([class$("list-disc ml-6 mt-2")]),
             toList([
               text("${confirmado.companions.map(companion => `"),
-              li(toList([]), toList([text("Companheiro: ${companion.name}")])),
+              li(
+                toList([]),
+                toList([
+                  text(
+                    (() => {
+                      let _pipe = confirmation.people_names;
+                      return join2(_pipe, " ");
+                    })()
+                  )
+                ])
+              ),
               text("`).join('')}\n          ")
             ])
           )
@@ -5216,7 +5156,7 @@ function auth_admin_view(model) {
             toList([
               text(
                 (() => {
-                  let _pipe = model.admin_settings.total_confirmed;
+                  let _pipe = model.admin_settings.total;
                   return to_string2(_pipe);
                 })()
               )
@@ -5239,9 +5179,8 @@ function auth_admin_view(model) {
           id("lista_confirmados")
         ]),
         (() => {
-          let _pipe = model.admin_settings.users;
-          let _pipe$1 = values(_pipe);
-          return map2(_pipe$1, confi);
+          let _pipe = model.admin_settings.confirmations;
+          return map2(_pipe, confi);
         })()
       )
     ])
@@ -5475,11 +5414,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "assignment_no_match",
+        "let_assert",
         "client/views/confirm_presence_view",
         28,
         "confirm_presence",
-        "Assignment pattern did not match",
+        "Pattern match failed, no pattern matched the value.",
         { value: $ }
       );
     }
@@ -5551,7 +5490,7 @@ function name_box_element(model, n) {
                   value(model.confirm_form.name),
                   on_input(
                     (value3) => {
-                      return new ConfirmUpdateCompanionName(n, value3);
+                      return new ConfirmUpdatePersonName(n, value3);
                     }
                   )
                 ])
@@ -5580,7 +5519,7 @@ function name_box_element(model, n) {
                   type_("name"),
                   on_input(
                     (value3) => {
-                      return new ConfirmUpdateCompanionName(n, value3);
+                      return new ConfirmUpdatePersonName(n, value3);
                     }
                   )
                 ])
@@ -6282,7 +6221,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 508, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 489, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -6375,46 +6314,34 @@ function get_images() {
     )
   );
 }
-function get_confirmed_users() {
-  let url = server_url + "/users";
-  let users_decoder = list(
-    decode7(
-      (var0, var1, var2, var3, var4, var5, var6) => {
-        return new ConfirmedUser(var0, var1, var2, var3, var4, var5, var6);
+function get_confirmations() {
+  let url = server_url + "/confirm";
+  let confirmation_decoder = list(
+    decode6(
+      (var0, var1, var2, var3, var4, var5) => {
+        return new Confirmation(var0, var1, var2, var3, var4, var5);
       },
-      field("id", int),
       field("user_id", int),
       field("name", string),
       field("invite_name", string),
       field("phone", string),
-      field("people_count", int),
-      field("comments", optional(string))
+      field("comments", optional(string)),
+      field("people_names", list(string))
     )
   );
-  let companions_decoder = list(
-    decode3(
-      (var0, var1, var2) => {
-        return new Companion(var0, var1, var2);
-      },
-      field("id", int),
-      field("user_id", int),
-      field("name", string)
-    )
-  );
-  let tuple_decoder = decode3(
-    (users, companions, total) => {
-      return [users, companions, total];
+  let tuple_decoder = decode2(
+    (total, confirmations) => {
+      return [total, confirmations];
     },
-    field("users", users_decoder),
-    field("companions", companions_decoder),
-    field("total", int)
+    field("total", int),
+    field("confirmations", confirmation_decoder)
   );
   return get2(
     url,
     expect_json(
       tuple_decoder,
       (var0) => {
-        return new ConfirmedUsersRecieved(var0);
+        return new ConfirmationsRecieved(var0);
       }
     )
   );
@@ -6461,49 +6388,15 @@ function update(model, msg) {
     } else {
       return [model, none()];
     }
-  } else if (msg instanceof ConfirmedUsersRecieved) {
-    let users_and_companions_result = msg[0];
-    if (users_and_companions_result.isOk()) {
-      let users = users_and_companions_result[0][0];
-      let companions = users_and_companions_result[0][1];
-      let total = users_and_companions_result[0][2];
-      let confirmed_users_dict = (() => {
-        let _pipe = users;
-        let _pipe$1 = group(_pipe, (user) => {
-          return user.user_id;
-        });
-        return map_values(
-          _pipe$1,
-          (user_id, users2) => {
-            let $ = first(users2);
-            if ($.isOk()) {
-              let user = $[0];
-              return [
-                user,
-                (() => {
-                  let _pipe$2 = companions;
-                  return filter(
-                    _pipe$2,
-                    (companion) => {
-                      return companion.user_id === user.user_id;
-                    }
-                  );
-                })()
-              ];
-            } else {
-              return [
-                new ConfirmedUser(0, 0, "", "", "", 0, new None()),
-                toList([])
-              ];
-            }
-          }
-        );
-      })();
+  } else if (msg instanceof ConfirmationsRecieved) {
+    let confirmations_result = msg[0];
+    if (confirmations_result.isOk()) {
+      let confirmation_data = confirmations_result[0];
       return [
         model.withFields({
           admin_settings: model.admin_settings.withFields({
-            users: confirmed_users_dict,
-            total_confirmed: total
+            confirmations: confirmation_data[1],
+            total: confirmation_data[0]
           })
         }),
         none()
@@ -6694,9 +6587,9 @@ function update(model, msg) {
       return [model, none()];
     }
   } else if (msg instanceof AdminOpenedAdminView) {
-    let $ = model.admin_settings.total_confirmed;
+    let $ = model.admin_settings.total;
     if ($ === 0) {
-      return [model, get_confirmed_users()];
+      return [model, get_confirmations()];
     } else {
       return [model, none()];
     }
@@ -6819,7 +6712,7 @@ function update(model, msg) {
         )
       ];
     }
-  } else if (msg instanceof ConfirmUpdateCompanionName) {
+  } else if (msg instanceof ConfirmUpdatePersonName) {
     let n = msg.key;
     let value3 = msg.value;
     let people_names = (() => {
@@ -6838,7 +6731,7 @@ function update(model, msg) {
     })();
     return [
       model.withFields({
-        confirm_form: model.confirm_form.withFields({ companion_name: value3 })
+        confirm_form: model.confirm_form.withFields({ person_name: value3 })
       }),
       from2(
         (dispatch) => {
@@ -6966,7 +6859,7 @@ function init3(_) {
         new None()
       ),
       0,
-      new AdminSettings(new$(), 0, false)
+      new AdminSettings(toList([]), 0, false)
     ),
     batch(
       toList([

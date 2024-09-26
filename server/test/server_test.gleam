@@ -1,9 +1,6 @@
-import gleam/dynamic
-import gleam/io
 import gleeunit
 import gleeunit/should
 import server/db/confirmation
-import sqlight
 
 pub fn main() {
   gleeunit.main()
@@ -17,5 +14,4 @@ pub fn hello_world_test() {
 
 pub fn query_test() {
   confirmation.get_confirmations()
-  |> io.debug
 }

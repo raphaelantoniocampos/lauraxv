@@ -2,11 +2,11 @@ import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/result
 import server/db/confirmation
-import server/db/person
 import server/db/user
 
 import server/response
@@ -26,21 +26,19 @@ pub fn confirmation(req: Request) -> Response {
   }
 }
 
-fn confirmation_to_json(confirmation: confirmation.ListConfirmationDBRow) {
+fn confirmation_to_json(confirmation: Confirmation) {
   json.object([
-    // #("id", json.int(confirmation.id)),
     #("user_id", json.int(confirmation.user_id)),
     #("name", json.string(confirmation.name)),
     #("invite_name", json.string(confirmation.invite_name)),
     #("phone", json.string(confirmation.phone)),
-    // #("people_names", json.int(list.length(confirmation.people_names))),
     #("comments", json.nullable(confirmation.comments, json.string)),
+    #("people_names", json.array(confirmation.people_names, json.string)),
   ])
 }
 
 // fn person_to_json(person: Person) {
 //   json.object([
-//     #("id", json.int(person.id)),
 //     #("user_id", json.int(person.user_id)),
 //     #("name", json.string(person.name)),
 //   ])
@@ -48,32 +46,18 @@ fn confirmation_to_json(confirmation: confirmation.ListConfirmationDBRow) {
 
 fn list_confirmations() -> Response {
   let result = {
-    use confirmations <- result.try(
+    use confirmation_data <- result.try(
       confirmation.get_confirmations()
       |> result.replace_error("Problem listing confirmations "),
     )
 
-    // use people <- result.try(
-    //   person.get_people()
-    //   |> result.replace_error("Problem listing people"),
-    // )
-
-    // let people_list = case people {
-    //   People(list) -> list
-    // }
-    // let total = list.length(confirmations) + list.length(people_list)
-    //
-
-    let people_list = []
-    let total = 1
-
     json.object([
-      #("confirmations", json.array(confirmations, confirmation_to_json)),
-      // #("people", json.array(people_list, person_to_json)),
-      #("total", json.int(total)),
+      #("confirmations", json.array(confirmation_data.1, confirmation_to_json)),
+      #("total", json.int(confirmation_data.0)),
     ])
     |> json.to_string_builder
     |> Ok
+    |> io.debug
   }
   response.generate_wisp_response(result)
 }

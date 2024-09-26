@@ -34,14 +34,14 @@ pub type Confirmation {
     invite_name: String,
     phone: String,
     comments: Option(String),
-    people_names: People,
+    people_names: List(String),
   )
 }
 
-pub type People {
-  People(List(Person))
+pub type Person {
+  Person(user_id: Int, name: String)
 }
 
-pub type Person {
-  Person(confirmation_id: Int, name: String)
+pub type ConfirmationData {
+  ConfirmationData(total: Int, confirmations: List(Confirmation))
 }

@@ -41,7 +41,7 @@ pub fn confirm_presence(model: Model) {
       #("people_count", json.int(model.confirm_form.people_count)),
       #(
         "people_names",
-        model.confirm_form.people
+        model.confirm_form.people_names
           |> dict.values
           |> json.array(json.string),
       ),

@@ -6,10 +6,10 @@ import client/state.{
 }
 import client/views/home_view.{home_view}
 import client/views/login_view.{login_view}
-import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/string
 import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, strong, ul}
@@ -40,7 +40,7 @@ fn auth_admin_view(model: Model) {
       text("Total de convidados: "),
       strong([id("total_confirmed")], [
         text(
-          model.admin_settings.total_confirmed
+          model.admin_settings.total
           |> int.to_string,
         ),
       ]),
@@ -56,22 +56,21 @@ fn auth_admin_view(model: Model) {
     ),
     div(
       [class("grid grid-cols-1 gap-6 w-full"), id("lista_confirmados")],
-      model.admin_settings.users
-        |> dict.values
+      model.admin_settings.confirmations
         |> list.map(confi),
     ),
   ])
 }
 
-fn confi(user: #(Confirmation, People)) {
+fn confi(confirmation: Confirmation) {
   div([], [
     div([class("flex justify-between items-center")], [
       h2([class("text-2xl font-semibold text-pink-700")], [
-        text({ user.0 }.name),
+        text(confirmation.name),
       ]),
       button(
         [
-          attribute("data-id", { int.to_string({ user.0 }.user_id) }),
+          attribute("data-id", confirmation.user_id |> int.to_string),
           class(
             "mostrar-detalhes bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
           ),
@@ -82,26 +81,29 @@ fn confi(user: #(Confirmation, People)) {
     div(
       [
         attribute("style", "display: none;"),
-        id(int.to_string({ user.0 }.user_id)),
+        id(confirmation.user_id |> int.to_string),
         class("detalhes mt-4"),
       ],
       [
         p([], [
           strong([], [text("Nome no convite:")]),
-          text({ user.0 }.invite_name),
+          text(confirmation.invite_name),
         ]),
-        p([], [strong([], [text("Telefone:")]), text({ user.0 }.phone)]),
+        p([], [strong([], [text("Telefone:")]), text(confirmation.phone)]),
         p([], [
           strong([], [text("Total de acompanhantes:")]),
-          text(int.to_string(list.length(user.1))),
+          text(int.to_string(list.length([]))),
         ]),
         p([], [
           strong([], [text("Comentários:")]),
-          text("${confirmado.comments || 'Nenhum'}"),
+          text(case confirmation.comments {
+            Some(comment) -> comment
+            None -> ""
+          }),
         ]),
         ul([class("list-disc ml-6 mt-2")], [
           text("${confirmado.companions.map(companion => `"),
-          li([], [text("Companheiro: ${companion.name}")]),
+          li([], [text(confirmation.people_names |> string.join(" "))]),
           text(
             "`).join('')}
           ",

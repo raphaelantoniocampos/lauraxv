@@ -49,6 +49,7 @@ fn do_login(body: dynamic.Dynamic) {
     use user <- result.try({
       case get_user_by_email(request_user.email) {
         Ok(user) -> Ok(user)
+
         Error(_) -> Error("Usuário não encontrado")
       }
     })

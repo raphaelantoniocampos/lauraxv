@@ -40,7 +40,10 @@ import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import lustre_http
 import modem
-import shared.{type Gift, type Person, Confirmation, Gift, Person, server_url}
+import shared.{
+  type ConfirmationData, type Gift, type Person, Confirmation, ConfirmationData,
+  Gift, Person, server_url,
+}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -59,7 +62,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       login_form: LoginForm("", "", "", None),
       confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
       event_countdown: 0,
-      admin_settings: AdminSettings(dict.new(), 0, False),
+      admin_settings: AdminSettings(ConfirmationData(0, []), False),
     ),
     effect.batch([
       modem.init(on_url_change),
@@ -107,42 +110,24 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
-    ConfirmationsRecieved(_) -> #(model, effect.none())
+    ConfirmationsRecieved(confirmations_result) ->
+      case confirmations_result {
+        Ok(confirmation_data) -> {
+          #(
+            Model(
+              ..model,
+              admin_settings: AdminSettings(
+                ..model.admin_settings,
+                confirmations: confirmation_data.1,
+                total: confirmation_data.0,
+              ),
+            ),
+            effect.none(),
+          )
+        }
+        Error(_) -> #(model, effect.none())
+      }
 
-    // ConfirmationsRecieved(users_and_companions_result) ->
-    //   case users_and_companions_result {
-    //     Ok(#(users, companions, total)) -> {
-    //       let confirmed_users_dict = {
-    //         users
-    //         |> list.group(fn(user) { user.user_id })
-    //         |> dict.map_values(fn(user_id, users) {
-    //           case list.first(users) {
-    //             Ok(user) -> #(
-    //               user,
-    //               companions
-    //                 |> list.filter(fn(companion) {
-    //                   companion.user_id == user.user_id
-    //                 }),
-    //             )
-    //             Error(_) -> #(Confirmation(0, 0, "", "", "", 0, None), [])
-    //           }
-    //         })
-    //       }
-    //
-    //       #(
-    //         Model(
-    //           ..model,
-    //           admin_settings: AdminSettings(
-    //             ..model.admin_settings,
-    //             users: confirmed_users_dict,
-    //             total_confirmed: total,
-    //           ),
-    //         ),
-    //         effect.none(),
-    //       )
-    //     }
-    //     Error(_) -> #(model, effect.none())
-    //   }
     CountdownUpdated(value) -> #(
       Model(..model, event_countdown: value),
       effect.none(),
@@ -269,7 +254,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
 
     AdminOpenedAdminView ->
-      case model.admin_settings.total_confirmed {
+      case model.admin_settings.total {
         0 -> #(model, get_confirmations())
         _ -> #(model, effect.none())
       }
@@ -562,34 +547,24 @@ fn get_images() {
   lustre_http.get(url, lustre_http.expect_json(decoder, ImagesRecieved))
 }
 
-fn get_confirmations() {
-  let url = server_url <> "/users"
-  let users_decoder =
-    dynamic.list(dynamic.decode7(
+fn get_confirmation_data() {
+  let url = server_url <> "/confirm"
+  let confirmation_decoder =
+    dynamic.list(dynamic.decode6(
       Confirmation,
-      dynamic.field("id", dynamic.int),
       dynamic.field("user_id", dynamic.int),
       dynamic.field("name", dynamic.string),
       dynamic.field("invite_name", dynamic.string),
       dynamic.field("phone", dynamic.string),
-      dynamic.field("people_count", dynamic.int),
       dynamic.field("comments", dynamic.optional(dynamic.string)),
+      dynamic.field("people_names", dynamic.list(dynamic.string)),
     ))
 
-  let people_decoder =
-    dynamic.list(dynamic.decode3(
-      Person,
-      dynamic.field("id", dynamic.int),
-      dynamic.field("user_id", dynamic.int),
-      dynamic.field("name", dynamic.string),
-    ))
-
-  let tuple_decoder =
-    dynamic.decode3(
-      fn(users, people, total) { #(users, people, total) },
-      dynamic.field("users", users_decoder),
-      dynamic.field("people", people_decoder),
+  let decoder =
+    dynamic.decode2(
+      ConfirmationData,
       dynamic.field("total", dynamic.int),
+      dynamic.field("confirmations", confirmation_decoder),
     )
 
   lustre_http.get(
