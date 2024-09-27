@@ -32,6 +32,11 @@ fn create_user(body: dynamic.Dynamic) {
     )
 
     use <- bool.guard(
+      when: user.password != user.confirm_password,
+      return: Error("Senhas não conferem"),
+    )
+
+    use <- bool.guard(
       when: user_with_same_email_exists,
       return: Error("Usuário com o mesmo email já existe"),
     )
@@ -46,13 +51,13 @@ fn create_user(body: dynamic.Dynamic) {
     )
 
     use <- bool.guard(
-      when: user.username == "" || user.email == "",
-      return: Error("Nome de usuário ou email não pode ser vazio"),
+      when: user.email == "",
+      return: Error("Email não pode ser vazio"),
     )
 
     use <- bool.guard(
-      when: string.length(user.password) < 8,
-      return: Error("Senha não pode ser menor que 8 caracteres"),
+      when: string.length(user.password) < 6,
+      return: Error("Senha não pode ser menor que 6 caracteres"),
     )
 
     use <- bool.guard(

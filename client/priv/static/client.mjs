@@ -4469,6 +4469,13 @@ var Confirmation = class extends CustomType {
     this.people_names = people_names;
   }
 };
+var Comment = class extends CustomType {
+  constructor(name2, comment) {
+    super();
+    this.name = name2;
+    this.comment = comment;
+  }
+};
 var server_url = "http://localhost:8000";
 
 // build/dev/javascript/client/client/state.mjs
@@ -4482,6 +4489,8 @@ var Event3 = class extends CustomType {
 };
 var Gallery = class extends CustomType {
 };
+var Comments = class extends CustomType {
+};
 var Admin = class extends CustomType {
 };
 var ConfirmPresence = class extends CustomType {
@@ -4489,7 +4498,7 @@ var ConfirmPresence = class extends CustomType {
 var NotFound2 = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, auth_user, gift_status, gallery_images, login_form, confirm_form, event_countdown, admin_settings) {
+  constructor(route, auth_user, gift_status, gallery_images, login_form, confirm_form, event_countdown, admin_settings, comments) {
     super();
     this.route = route;
     this.auth_user = auth_user;
@@ -4499,6 +4508,7 @@ var Model2 = class extends CustomType {
     this.confirm_form = confirm_form;
     this.event_countdown = event_countdown;
     this.admin_settings = admin_settings;
+    this.comments = comments;
   }
 };
 var OnRouteChange = class extends CustomType {
@@ -4525,6 +4535,12 @@ var ImagesRecieved = class extends CustomType {
     this[0] = x0;
   }
 };
+var CommentsRecieved = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
 var ConfirmationsRecieved = class extends CustomType {
   constructor(x0) {
     super();
@@ -4535,14 +4551,6 @@ var CountdownUpdated = class extends CustomType {
   constructor(value3) {
     super();
     this.value = value3;
-  }
-};
-var UserRequestedSignUp = class extends CustomType {
-};
-var SignUpResponded = class extends CustomType {
-  constructor(resp_result) {
-    super();
-    this.resp_result = resp_result;
   }
 };
 var LoginUpdateUsername = class extends CustomType {
@@ -4563,15 +4571,29 @@ var LoginUpdatePassword = class extends CustomType {
     this.value = value3;
   }
 };
+var LoginUpdateConfirmPassword = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var LoginUpdateError = class extends CustomType {
   constructor(value3) {
     super();
     this.value = value3;
   }
 };
-var UserRequestedLogin = class extends CustomType {
+var UserRequestedLoginSignUp = class extends CustomType {
 };
 var LoginResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var UserClickedSignUp = class extends CustomType {
+};
+var SignUpResponded = class extends CustomType {
   constructor(resp_result) {
     super();
     this.resp_result = resp_result;
@@ -4690,11 +4712,13 @@ var AuthUser = class extends CustomType {
   }
 };
 var LoginForm = class extends CustomType {
-  constructor(username, email, password, error) {
+  constructor(username, email, password, confirm_password, sign_up, error) {
     super();
     this.username = username;
     this.email = email;
     this.password = password;
+    this.confirm_password = confirm_password;
+    this.sign_up = sign_up;
     this.error = error;
   }
 };
@@ -4898,196 +4922,6 @@ function home_view(model) {
   );
 }
 
-// build/dev/javascript/client/client/views/login_view.mjs
-function login(model) {
-  return post(
-    server_url + "/auth/login",
-    object2(
-      toList([
-        ["email", string2(model.login_form.email)],
-        ["password", string2(model.login_form.password)]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new LoginResponded(var0);
-      }
-    )
-  );
-}
-function signup(model) {
-  return post(
-    server_url + "/users",
-    object2(
-      toList([
-        ["username", string2(lowercase2(model.login_form.username))],
-        ["email", string2(model.login_form.email)],
-        ["password", string2(model.login_form.password)]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new SignUpResponded(var0);
-      }
-    )
-  );
-}
-function login_view(model) {
-  return main(
-    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
-    toList([
-      div(
-        toList([class$("w-full max-w-md p-8 bg-white rounded-lg shadow-lg")]),
-        toList([
-          h1(
-            toList([
-              attribute("style", "font-family: 'Pacifico', cursive;"),
-              class$("text-4xl text-pink-700 font-bold mb-12 text-center")
-            ]),
-            toList([text("Entrar")])
-          ),
-          form(
-            toList([
-              class$("space-y-6"),
-              on_submit(new UserRequestedLogin())
-            ]),
-            toList([
-              div(
-                toList([]),
-                toList([
-                  label(
-                    toList([
-                      class$("block text-sm font-medium text-gray-700"),
-                      for$("username")
-                    ]),
-                    toList([text("Nome de Usu\xE1rio")])
-                  ),
-                  input(
-                    toList([
-                      class$(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
-                      ),
-                      on_input(
-                        (var0) => {
-                          return new LoginUpdateUsername(var0);
-                        }
-                      ),
-                      required(true),
-                      id("username"),
-                      type_("name"),
-                      value(model.login_form.username)
-                    ])
-                  )
-                ])
-              ),
-              div(
-                toList([]),
-                toList([
-                  label(
-                    toList([
-                      class$("block text-sm font-medium text-gray-700"),
-                      for$("email")
-                    ]),
-                    toList([text("Email")])
-                  ),
-                  input(
-                    toList([
-                      class$(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
-                      ),
-                      on_input(
-                        (var0) => {
-                          return new LoginUpdateEmail(var0);
-                        }
-                      ),
-                      id("email"),
-                      type_("email"),
-                      autocomplete("email"),
-                      required(true),
-                      value(model.login_form.email)
-                    ])
-                  )
-                ])
-              ),
-              div(
-                toList([]),
-                toList([
-                  label(
-                    toList([
-                      class$("block text-sm font-medium text-gray-700"),
-                      for$("password")
-                    ]),
-                    toList([text("Senha")])
-                  ),
-                  input(
-                    toList([
-                      class$(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
-                      ),
-                      on_input(
-                        (var0) => {
-                          return new LoginUpdatePassword(var0);
-                        }
-                      ),
-                      id("password"),
-                      type_("password"),
-                      required(true),
-                      value(model.login_form.password)
-                    ])
-                  )
-                ])
-              ),
-              div(
-                toList([class$("flex items-center justify-center")]),
-                toList([
-                  button(
-                    toList([
-                      class$(
-                        "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
-                      ),
-                      type_("submit")
-                    ]),
-                    toList([text("Entrar")])
-                  )
-                ])
-              )
-            ])
-          ),
-          div(
-            toList([class$("flex items-center justify-center")]),
-            toList([
-              text("N\xE3o tem conta?"),
-              button(
-                toList([
-                  class$(
-                    "p-1 text-pink-600 hover:text-pink-800 transition duration-300"
-                  ),
-                  on_click(new UserRequestedSignUp())
-                ]),
-                toList([text("Cadastre-se")])
-              )
-            ])
-          ),
-          (() => {
-            let $ = model.login_form.error;
-            if ($ instanceof Some) {
-              let err = $[0];
-              return p(
-                toList([class$("text-red-500 text-center")]),
-                toList([text("Erro: " + err)])
-              );
-            } else {
-              return none2();
-            }
-          })()
-        ])
-      )
-    ])
-  );
-}
-
 // build/dev/javascript/client/client/views/admin_view.mjs
 function names_text(name2) {
   return li(toList([]), toList([text(name2)]));
@@ -5145,7 +4979,7 @@ function details(confirmation) {
           return p(
             toList([]),
             toList([
-              strong(toList([]), toList([text("Total de acompanhantes: ")])),
+              strong(toList([]), toList([text("Total de pessoas: ")])),
               text(
                 (() => {
                   let _pipe = n;
@@ -5312,6 +5146,81 @@ function admin_view(model) {
   }
 }
 
+// build/dev/javascript/client/client/views/comments_view.mjs
+function comment_list_item(comment) {
+  let $ = comment.name;
+  let $1 = comment.comment;
+  if ($1 instanceof Some && $1[0] !== "") {
+    let name2 = $;
+    let comment$1 = $1[0];
+    return li(
+      toList([]),
+      toList([
+        div(
+          toList([class$("space-y-6")]),
+          toList([
+            div(
+              toList([class$("bg-gray-100 p-6 rounded-lg shadow-inner")]),
+              toList([
+                p(
+                  toList([class$("text-lg font-semibold text-pink-600")]),
+                  toList([text(name2)])
+                ),
+                p(toList([class$("text-gray-600")]), toList([text(comment$1)]))
+              ])
+            )
+          ])
+        )
+      ])
+    );
+  } else {
+    return none2();
+  }
+}
+function comments_view(model) {
+  return main(
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
+    toList([
+      div(
+        toList([class$("text-center mt-12")]),
+        toList([
+          h1(
+            toList([
+              attribute("style", "font-family: 'Pacifico', cursive;"),
+              class$("text-5xl text-white font-bold")
+            ]),
+            toList([text("Coment\xE1rios")])
+          ),
+          p(
+            toList([class$("text-xl text-white mt-4")]),
+            toList([text("Para fazer um coment\xE1rio, confirme sua presen\xE7a")])
+          )
+        ])
+      ),
+      div(
+        toList([
+          class$(
+            "bg-white text-gray-800 rounded-lg shadow-lg p-12 max-w-4xl w-full mx-4 mt-12 border border-gray-200"
+          )
+        ]),
+        toList([
+          h2(
+            toList([class$("text-3xl font-semibold text-pink-600 mb-6")]),
+            toList([text("Coment\xE1rios")])
+          ),
+          ul(
+            toList([]),
+            (() => {
+              let _pipe = model.comments;
+              return map2(_pipe, comment_list_item);
+            })()
+          )
+        ])
+      )
+    ])
+  );
+}
+
 // build/dev/javascript/client/client/views/components/navigation_bar.mjs
 function navigation_bar(model) {
   return nav(
@@ -5429,6 +5338,27 @@ function navigation_bar(model) {
                 toList([text("Galeria")])
               )
             ])
+          ),
+          li(
+            toList([]),
+            toList([
+              a(
+                toList([
+                  class$(
+                    "hover:text-emerald-800 " + (() => {
+                      let $ = model.route;
+                      if ($ instanceof Comments) {
+                        return "text-emerald-600";
+                      } else {
+                        return "text-pink-600";
+                      }
+                    })() + " transition duration-300"
+                  ),
+                  href("/comments")
+                ]),
+                toList([text("Coment\xE1rios")])
+              )
+            ])
           )
         ])
       ),
@@ -5519,6 +5449,280 @@ function navigation_bar(model) {
           );
         }
       })()
+    ])
+  );
+}
+
+// build/dev/javascript/client/client/views/login_view.mjs
+function login(model) {
+  return post(
+    server_url + "/auth/login",
+    object2(
+      toList([
+        ["email", string2(model.login_form.email)],
+        ["password", string2(model.login_form.password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new LoginResponded(var0);
+      }
+    )
+  );
+}
+function signup(model) {
+  return post(
+    server_url + "/users",
+    object2(
+      toList([
+        ["username", string2(lowercase2(model.login_form.username))],
+        ["email", string2(model.login_form.email)],
+        ["password", string2(model.login_form.password)],
+        ["confirm_password", string2(model.login_form.confirm_password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new SignUpResponded(var0);
+      }
+    )
+  );
+}
+function login_view(model) {
+  return main(
+    toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
+    toList([
+      div(
+        toList([class$("w-full max-w-md p-8 bg-white rounded-lg shadow-lg")]),
+        toList([
+          h1(
+            toList([
+              attribute("style", "font-family: 'Pacifico', cursive;"),
+              class$("text-4xl text-pink-700 font-bold mb-12 text-center")
+            ]),
+            toList([text("Entrar")])
+          ),
+          form(
+            toList([
+              class$("space-y-6"),
+              on_submit(new UserRequestedLoginSignUp())
+            ]),
+            toList([
+              (() => {
+                let $ = model.login_form.sign_up;
+                if ($) {
+                  return div(
+                    toList([]),
+                    toList([
+                      label(
+                        toList([
+                          class$("block text-sm font-medium text-gray-700"),
+                          for$("username")
+                        ]),
+                        toList([text("Insira um nome de usu\xE1rio")])
+                      ),
+                      input(
+                        toList([
+                          class$(
+                            "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                          ),
+                          on_input(
+                            (var0) => {
+                              return new LoginUpdateUsername(var0);
+                            }
+                          ),
+                          required(true),
+                          id("username"),
+                          type_("name"),
+                          value(model.login_form.username)
+                        ])
+                      )
+                    ])
+                  );
+                } else {
+                  return none2();
+                }
+              })(),
+              div(
+                toList([]),
+                toList([
+                  label(
+                    toList([
+                      class$("block text-sm font-medium text-gray-700"),
+                      for$("email")
+                    ]),
+                    toList([text("Email")])
+                  ),
+                  input(
+                    toList([
+                      class$(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                      ),
+                      on_input(
+                        (var0) => {
+                          return new LoginUpdateEmail(var0);
+                        }
+                      ),
+                      id("email"),
+                      type_("email"),
+                      autocomplete("email"),
+                      required(true),
+                      value(model.login_form.email)
+                    ])
+                  )
+                ])
+              ),
+              div(
+                toList([]),
+                toList([
+                  label(
+                    toList([
+                      class$("block text-sm font-medium text-gray-700"),
+                      for$("password")
+                    ]),
+                    toList([text("Senha")])
+                  ),
+                  input(
+                    toList([
+                      class$(
+                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                      ),
+                      on_input(
+                        (var0) => {
+                          return new LoginUpdatePassword(var0);
+                        }
+                      ),
+                      id("password"),
+                      type_("password"),
+                      required(true),
+                      value(model.login_form.password)
+                    ])
+                  )
+                ])
+              ),
+              (() => {
+                let $ = model.login_form.sign_up;
+                if ($) {
+                  return div(
+                    toList([]),
+                    toList([
+                      label(
+                        toList([
+                          class$("block text-sm font-medium text-gray-700"),
+                          for$("password")
+                        ]),
+                        toList([text("Confirme sua senha")])
+                      ),
+                      input(
+                        toList([
+                          class$(
+                            "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
+                          ),
+                          on_input(
+                            (var0) => {
+                              return new LoginUpdateConfirmPassword(var0);
+                            }
+                          ),
+                          id("confirm_password"),
+                          type_("password"),
+                          required(true),
+                          value(model.login_form.confirm_password)
+                        ])
+                      )
+                    ])
+                  );
+                } else {
+                  return none2();
+                }
+              })(),
+              (() => {
+                let $ = model.login_form.sign_up;
+                if (!$) {
+                  return div(
+                    toList([class$("flex items-center justify-center")]),
+                    toList([
+                      button(
+                        toList([
+                          class$(
+                            "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                          ),
+                          type_("submit")
+                        ]),
+                        toList([text("Entrar")])
+                      )
+                    ])
+                  );
+                } else {
+                  return div(
+                    toList([class$("flex items-center justify-center")]),
+                    toList([
+                      button(
+                        toList([
+                          class$(
+                            "bg-pink-600 hover:bg-pink-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                          ),
+                          type_("submit")
+                        ]),
+                        toList([text("Cadastre-se")])
+                      )
+                    ])
+                  );
+                }
+              })()
+            ])
+          ),
+          (() => {
+            let $ = model.login_form.sign_up;
+            if (!$) {
+              return div(
+                toList([class$("flex items-center justify-center")]),
+                toList([
+                  text("N\xE3o tem conta?"),
+                  button(
+                    toList([
+                      class$(
+                        "p-1 text-pink-600 hover:text-pink-800 transition duration-300"
+                      ),
+                      on_click(new UserClickedSignUp())
+                    ]),
+                    toList([text("Cadastre-se")])
+                  )
+                ])
+              );
+            } else {
+              return div(
+                toList([class$("flex items-center justify-center")]),
+                toList([
+                  text("Fazer"),
+                  button(
+                    toList([
+                      class$(
+                        "p-1 text-emerald-600 hover:text-emerald-800 transition duration-300"
+                      ),
+                      on_click(new UserClickedSignUp())
+                    ]),
+                    toList([text("Login")])
+                  )
+                ])
+              );
+            }
+          })(),
+          (() => {
+            let $ = model.login_form.error;
+            if ($ instanceof Some) {
+              let err = $[0];
+              return p(
+                toList([class$("text-red-500 text-center")]),
+                toList([text("Erro: " + err)])
+              );
+            } else {
+              return none2();
+            }
+          })()
+        ])
+      )
     ])
   );
 }
@@ -5976,7 +6180,7 @@ function event_view() {
                 toList([text("Hor\xE1rio: 22:00")])
               ),
               h2(
-                toList([class$("text-2xl font-semibold text-emerald-600 mb-4")]),
+                toList([class$("text-2xl font-semibold text-pink-600 mb-4")]),
                 toList([text("Detalhes do Evento")])
               ),
               p(
@@ -5995,7 +6199,7 @@ function event_view() {
                 ])
               ),
               h2(
-                toList([class$("text-2xl font-semibold text-emerald-600 mb-4")]),
+                toList([class$("text-2xl font-semibold text-pink-600 mb-4")]),
                 toList([text("Traje")])
               ),
               p(
@@ -6324,6 +6528,8 @@ function view(model) {
           return gifts_view(model);
         } else if ($ instanceof Login) {
           return login_view(model);
+        } else if ($ instanceof Comments) {
+          return comments_view(model);
         } else if ($ instanceof Admin) {
           return admin_view(model);
         } else if ($ instanceof ConfirmPresence) {
@@ -6345,7 +6551,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 531, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 564, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -6362,6 +6568,8 @@ function get_route2() {
     return new Event3();
   } else if ($.hasLength(1) && $.head === "gallery") {
     return new Gallery();
+  } else if ($.hasLength(1) && $.head === "comments") {
+    return new Comments();
   } else if ($.hasLength(1) && $.head === "admin") {
     return new Admin();
   } else if ($.hasLength(1) && $.head === "confirm") {
@@ -6434,6 +6642,27 @@ function get_images() {
       decoder,
       (var0) => {
         return new ImagesRecieved(var0);
+      }
+    )
+  );
+}
+function get_comments() {
+  let url = server_url + "/comments";
+  let decoder = list(
+    decode2(
+      (var0, var1) => {
+        return new Comment(var0, var1);
+      },
+      field("name", string),
+      field("comment", optional(string))
+    )
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new CommentsRecieved(var0);
       }
     )
   );
@@ -6513,6 +6742,14 @@ function update(model, msg) {
     } else {
       return [model, none()];
     }
+  } else if (msg instanceof CommentsRecieved) {
+    let comments_result = msg[0];
+    if (comments_result.isOk()) {
+      let comments = comments_result[0];
+      return [model.withFields({ comments }), none()];
+    } else {
+      return [model, none()];
+    }
   } else if (msg instanceof ConfirmationsRecieved) {
     let confirmations_result = msg[0];
     if (confirmations_result.isOk()) {
@@ -6545,18 +6782,79 @@ function update(model, msg) {
   } else if (msg instanceof CountdownUpdated) {
     let value3 = msg.value;
     return [model.withFields({ event_countdown: value3 }), none()];
-  } else if (msg instanceof UserRequestedSignUp) {
-    return [model, signup(model)];
-  } else if (msg instanceof SignUpResponded) {
+  } else if (msg instanceof LoginUpdateUsername) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        login_form: model.login_form.withFields({ username: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof LoginUpdateEmail) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        login_form: model.login_form.withFields({ email: value3 })
+      }),
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdateEmail(value3));
+        }
+      )
+    ];
+  } else if (msg instanceof LoginUpdatePassword) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        login_form: model.login_form.withFields({ password: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof LoginUpdateConfirmPassword) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        login_form: model.login_form.withFields({ confirm_password: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof LoginUpdateError) {
+    let value3 = msg.value;
+    return [
+      model.withFields({
+        login_form: model.login_form.withFields({ error: value3 })
+      }),
+      none()
+    ];
+  } else if (msg instanceof UserRequestedLoginSignUp) {
+    let $ = model.login_form.sign_up;
+    if (!$) {
+      return [model, login(model)];
+    } else {
+      return [model, signup(model)];
+    }
+  } else if (msg instanceof LoginResponded) {
     let resp_result = msg.resp_result;
     if (resp_result.isOk()) {
       let resp = resp_result[0];
       let $ = resp.message;
       let $1 = resp.error;
-      if ($ instanceof Some && $1 instanceof None) {
+      if ($1 instanceof Some) {
+        let err = $1[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new LoginUpdateError(new Some(err)));
+            }
+          )
+        ];
+      } else if ($ instanceof Some && $1 instanceof None) {
         let response = $[0];
         return [
-          model.withFields({ login_form: new LoginForm("", "", "", new None()) }),
+          model.withFields({
+            login_form: new LoginForm("", "", "", "", false, new None())
+          }),
           batch(
             toList([
               push("/", new None(), new None()),
@@ -6567,16 +6865,6 @@ function update(model, msg) {
                 })()
               )
             ])
-          )
-        ];
-      } else if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new LoginUpdateError(new Some(err)));
-            }
           )
         ];
       } else {
@@ -6607,64 +6895,27 @@ function update(model, msg) {
         )
       ];
     }
-  } else if (msg instanceof LoginUpdateUsername) {
-    let value3 = msg.value;
+  } else if (msg instanceof UserClickedSignUp) {
     return [
       model.withFields({
-        login_form: model.login_form.withFields({ username: value3 })
+        login_form: model.login_form.withFields({
+          sign_up: negate(model.login_form.sign_up)
+        })
       }),
       none()
     ];
-  } else if (msg instanceof LoginUpdateEmail) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ email: value3 })
-      }),
-      from2(
-        (dispatch) => {
-          return dispatch(new ConfirmUpdateEmail(value3));
-        }
-      )
-    ];
-  } else if (msg instanceof LoginUpdatePassword) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ password: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof LoginUpdateError) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ error: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof UserRequestedLogin) {
-    return [model, login(model)];
-  } else if (msg instanceof LoginResponded) {
+  } else if (msg instanceof SignUpResponded) {
     let resp_result = msg.resp_result;
     if (resp_result.isOk()) {
       let resp = resp_result[0];
       let $ = resp.message;
       let $1 = resp.error;
-      if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new LoginUpdateError(new Some(err)));
-            }
-          )
-        ];
-      } else if ($ instanceof Some && $1 instanceof None) {
+      if ($ instanceof Some && $1 instanceof None) {
         let response = $[0];
         return [
-          model.withFields({ login_form: new LoginForm("", "", "", new None()) }),
+          model.withFields({
+            login_form: new LoginForm("", "", "", "", false, new None())
+          }),
           batch(
             toList([
               push("/", new None(), new None()),
@@ -6675,6 +6926,16 @@ function update(model, msg) {
                 })()
               )
             ])
+          )
+        ];
+      } else if ($1 instanceof Some) {
+        let err = $1[0];
+        return [
+          model,
+          from2(
+            (dispatch) => {
+              return dispatch(new LoginUpdateError(new Some(err)));
+            }
           )
         ];
       } else {
@@ -7018,7 +7279,7 @@ function init3(_) {
       new None(),
       new GiftStatus(toList([]), toList([]), new None()),
       toList([]),
-      new LoginForm("", "", "", new None()),
+      new LoginForm("", "", "", "", false, new None()),
       new ConfirmForm(
         "",
         "",
@@ -7031,14 +7292,16 @@ function init3(_) {
         new None()
       ),
       0,
-      new AdminSettings(0, toList([]), new$(), false)
+      new AdminSettings(0, toList([]), new$(), false),
+      toList([])
     ),
     batch(
       toList([
         init2(on_url_change),
         get_gifts(),
         update_countdown(),
-        get_images()
+        get_images(),
+        get_comments()
       ])
     )
   ];

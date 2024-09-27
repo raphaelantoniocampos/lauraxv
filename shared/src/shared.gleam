@@ -38,3 +38,7 @@ pub type Confirmation {
     people_names: List(String),
   )
 }
+
+pub type Comment {
+  Comment(name: String, comment: Option(String))
+}

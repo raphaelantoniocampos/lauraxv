@@ -1,5 +1,5 @@
 import client/state.{
-  type Model, AdminOpenedAdminView, Gallery, UserOpenedGalleryView,
+  type Model, AdminOpenedAdminView, Comments, Gallery, UserOpenedGalleryView,
   UserOpenedGiftsView,
 }
 import gleam/option.{None, Some}
@@ -95,6 +95,22 @@ pub fn navigation_bar(model: Model) {
               event.on_click(UserOpenedGalleryView),
             ],
             [text("Galeria")],
+          ),
+        ]),
+        li([], [
+          a(
+            [
+              class(
+                "hover:text-emerald-800 "
+                <> case model.route {
+                  Comments -> "text-emerald-600"
+                  _ -> "text-pink-600"
+                }
+                <> " transition duration-300",
+              ),
+              href("/comments"),
+            ],
+            [text("Comentários")],
           ),
         ]),
       ]),

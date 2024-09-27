@@ -70,25 +70,32 @@ pub fn set_password_for_user(user_id: Int, password: String) {
 }
 
 pub type CreateUser {
-  CreateUser(username: String, email: String, password: String)
+  CreateUser(
+    username: String,
+    email: String,
+    password: String,
+    confirm_password: String,
+  )
 }
 
 pub fn decode_create_user(
   json: dynamic.Dynamic,
 ) -> Result(CreateUser, dynamic.DecodeErrors) {
   let decoder =
-    dynamic.decode3(
+    dynamic.decode4(
       CreateUser,
       dynamic.field("username", dynamic.string),
       dynamic.field("email", dynamic.string),
       dynamic.field("password", dynamic.string),
+      dynamic.field("confirm_password", dynamic.string),
     )
   case decoder(json) {
     Ok(create_user) ->
       Ok(CreateUser(
         username: string.lowercase(create_user.username),
         email: string.lowercase(create_user.email),
-        password: beecrypt.hash(create_user.password),
+        password: create_user.password,
+        confirm_password: create_user.confirm_password,
       ))
     Error(error) -> Error(error)
   }
@@ -125,7 +132,7 @@ VALUES( ?, ?, ?, ?, ? ); "
     [
       sqlight.text(create_user.username),
       sqlight.text(create_user.email),
-      sqlight.text(create_user.password),
+      sqlight.text(beecrypt.hash(create_user.password)),
       sqlight.bool(False),
       sqlight.bool(False),
     ],

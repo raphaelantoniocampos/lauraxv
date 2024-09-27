@@ -3,7 +3,7 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import shared.{type Confirmation, type Gift}
+import shared.{type Comment, type Confirmation, type Gift}
 
 pub type Route {
   Home
@@ -11,6 +11,7 @@ pub type Route {
   Gifts
   Event
   Gallery
+  Comments
   Admin
   ConfirmPresence
   NotFound
@@ -26,6 +27,7 @@ pub type Model {
     confirm_form: ConfirmForm,
     event_countdown: Int,
     admin_settings: AdminSettings,
+    comments: List(Comment),
   )
 }
 
@@ -34,24 +36,27 @@ pub type Msg {
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(#(List(Gift), List(Gift)), lustre_http.HttpError))
   ImagesRecieved(Result(List(String), lustre_http.HttpError))
+  CommentsRecieved(Result(List(Comment), lustre_http.HttpError))
   ConfirmationsRecieved(
     Result(#(Int, List(Confirmation)), lustre_http.HttpError),
   )
 
   CountdownUpdated(value: Int)
 
-  UserRequestedSignUp
-  SignUpResponded(
-    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
-  )
-
   LoginUpdateUsername(value: String)
   LoginUpdateEmail(value: String)
   LoginUpdatePassword(value: String)
+  LoginUpdateConfirmPassword(value: String)
   LoginUpdateError(value: Option(String))
 
-  UserRequestedLogin
+  UserRequestedLoginSignUp
   LoginResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
+
+  UserClickedSignUp
+
+  SignUpResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
@@ -108,6 +113,8 @@ pub type LoginForm {
     username: String,
     email: String,
     password: String,
+    confirm_password: String,
+    sign_up: Bool,
     error: Option(String),
   )
 }

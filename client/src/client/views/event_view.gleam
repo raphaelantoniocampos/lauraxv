@@ -27,7 +27,7 @@ pub fn event_view() -> Element(a) {
           text("Pompéu, MG - 14 de Dezembro de 2024"),
         ]),
         p([class("text-lg text-gray-700 mb-8")], [text("Horário: 22:00")]),
-        h2([class("text-2xl font-semibold text-emerald-600 mb-4")], [
+        h2([class("text-2xl font-semibold text-pink-600 mb-4")], [
           text("Detalhes do Evento"),
         ]),
         p([class("text-lg text-gray-700 mb-2")], [
@@ -39,12 +39,7 @@ pub fn event_view() -> Element(a) {
             "O evento será realizado no salão de festas do \"Paiol Mineiro\", um ambiente requintado e aconchegante, perfeito para uma noite inesquecível.",
           ),
         ]),
-        // p([class("text-lg text-gray-700 mb-8")], [
-        //   text("Estacionamento disponível no local."),
-        // ]),
-        h2([class("text-2xl font-semibold text-emerald-600 mb-4")], [
-          text("Traje"),
-        ]),
+        h2([class("text-2xl font-semibold text-pink-600 mb-4")], [text("Traje")]),
         p([class("text-lg text-gray-700 mb-2")], [
           strong([], [text("Traje:")]),
           text("Esporte Fino"),

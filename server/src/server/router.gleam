@@ -2,6 +2,7 @@ import cors_builder as cors
 import gleam/http.{Get, Post}
 import server/routes/auth/login
 import server/routes/auth/validate
+import server/routes/comments
 import server/routes/confirmations
 import server/routes/gifts
 import server/routes/images
@@ -24,6 +25,7 @@ pub fn handle_request(req: Request) -> Response {
     ["images"] -> images.images(req)
     ["users"] -> users.users(req)
     ["confirm"] -> confirmations.confirmation(req)
+    ["comments"] -> comments.comments(req)
     ["auth", "validate", id_string] -> validate.validate(req, id_string)
     ["auth", "login"] -> login.login(req)
     _ -> wisp.not_found()

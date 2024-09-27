@@ -1,11 +1,12 @@
 import gleam/dict
 import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import server/db
 
-import shared.{type Confirmation, Confirmation}
+import shared.{type Comment, type Confirmation, Comment, Confirmation}
 import sqlight
 
 const get_join_confirmation_query = "
@@ -109,10 +110,6 @@ pub fn list_confirmation_db_decoder() {
 }
 
 pub fn insert_confirmation_to_db(create_confirmation: CreateConfirmation) {
-  let comments = case create_confirmation.comments {
-    Some(comment) -> comment
-    None -> "NULL"
-  }
   let sql =
     "
 INSERT INTO confirmation (user_id, name, invite_name, phone, comments)
@@ -231,5 +228,24 @@ pub fn create_person_db_decoder() {
     CreatePerson,
     dynamic.element(0, dynamic.int),
     dynamic.element(1, dynamic.string),
+  )
+}
+
+// SELECT confirmation.user_id, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments
+// FROM 'confirmation'"
+pub fn get_comments() -> Result(List(Comment), String) {
+  let sql =
+    "SELECT confirmation.name, confirmation.comments FROM 'confirmation'"
+  case db.execute_read(sql, [], comment_db_decoder()) {
+    Ok(comments) -> Ok(comments)
+    Error(_) -> Error("Problem getting comments")
+  }
+}
+
+fn comment_db_decoder() {
+  dynamic.decode2(
+    Comment,
+    dynamic.element(0, dynamic.string),
+    dynamic.element(1, dynamic.optional(dynamic.string)),
   )
 }

@@ -1,19 +1,21 @@
 import client/state.{
   type AdminSettings, type GiftStatus, type LoginForm, type Model, type Msg,
   type Route, Admin, AdminClickedShowAll, AdminClickedShowConfirmationDetails,
-  AdminOpenedAdminView, AdminSettings, AuthUser, AuthUserRecieved, ConfirmForm,
-  ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateEmail, ConfirmUpdateError, ConfirmUpdateInviteName,
-  ConfirmUpdateName, ConfirmUpdatePeopleCount, ConfirmUpdatePeopleNames,
-  ConfirmUpdatePersonName, ConfirmUpdatePhone, ConfirmationsRecieved,
-  CountdownUpdated, Event, Gallery, GiftStatus, GiftUpdateError, Gifts,
-  GiftsRecieved, Home, ImagesRecieved, Login, LoginForm, LoginResponded,
-  LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername,
-  Model, NotFound, OnRouteChange, SelectGiftResponded, SignUpResponded,
-  UserOpenedGalleryView, UserOpenedGiftsView, UserRequestedConfirmPresence,
-  UserRequestedLogin, UserRequestedSelectGift, UserRequestedSignUp,
+  AdminOpenedAdminView, AdminSettings, AuthUser, AuthUserRecieved, Comments,
+  CommentsRecieved, ConfirmForm, ConfirmPresence, ConfirmPresenceResponded,
+  ConfirmUpdateComments, ConfirmUpdateEmail, ConfirmUpdateError,
+  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
+  ConfirmUpdatePeopleNames, ConfirmUpdatePersonName, ConfirmUpdatePhone,
+  ConfirmationsRecieved, CountdownUpdated, Event, Gallery, GiftStatus,
+  GiftUpdateError, Gifts, GiftsRecieved, Home, ImagesRecieved, Login, LoginForm,
+  LoginResponded, LoginUpdateConfirmPassword, LoginUpdateEmail, LoginUpdateError,
+  LoginUpdatePassword, LoginUpdateUsername, Model, NotFound, OnRouteChange,
+  SelectGiftResponded, SignUpResponded, UserClickedSignUp, UserOpenedGalleryView,
+  UserOpenedGiftsView, UserRequestedConfirmPresence, UserRequestedLoginSignUp,
+  UserRequestedSelectGift,
 }
 import client/views/admin_view.{admin_view}
+import client/views/comments_view.{comments_view}
 import client/views/components/navigation_bar.{navigation_bar}
 import client/views/confirm_presence_view.{
   confirm_presence, confirm_presence_view,
@@ -41,7 +43,7 @@ import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import lustre_http
 import modem
-import shared.{type Gift, Confirmation, Gift, server_url}
+import shared.{type Comment, type Gift, Comment, Confirmation, Gift, server_url}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -57,16 +59,18 @@ fn init(_) -> #(Model, Effect(Msg)) {
       auth_user: None,
       gift_status: GiftStatus([], [], None),
       gallery_images: [],
-      login_form: LoginForm("", "", "", None),
+      login_form: LoginForm("", "", "", "", False, None),
       confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
       event_countdown: 0,
       admin_settings: AdminSettings(0, [], dict.new(), False),
+      comments: [],
     ),
     effect.batch([
       modem.init(on_url_change),
       get_gifts(),
       update_countdown(),
       get_images(),
+      get_comments(),
     ]),
   )
 }
@@ -108,16 +112,18 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
+    CommentsRecieved(comments_result) ->
+      case comments_result {
+        Ok(comments) -> #(Model(..model, comments: comments), effect.none())
+        Error(_) -> #(model, effect.none())
+      }
+
     ConfirmationsRecieved(confirmations_result) ->
       case confirmations_result {
         Ok(confirmation_data) -> {
           let updated_show_details =
             confirmation_data.1
-            |> list.group(fn(confirmation) {
-              confirmation.id
-              // model.admin_settings.show_confirmation_detail
-              // |> dict.insert(confirmation.user_id, False)
-            })
+            |> list.group(fn(confirmation) { confirmation.id })
             |> dict.map_values(fn(_, _) { False })
           #(
             Model(
@@ -140,27 +146,57 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    UserRequestedSignUp -> #(model, signup(model))
+    LoginUpdateUsername(value) -> #(
+      Model(..model, login_form: LoginForm(..model.login_form, username: value)),
+      effect.none(),
+    )
 
-    SignUpResponded(resp_result) ->
+    LoginUpdateEmail(value) -> #(
+      Model(..model, login_form: LoginForm(..model.login_form, email: value)),
+      effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
+    )
+    LoginUpdatePassword(value) -> #(
+      Model(..model, login_form: LoginForm(..model.login_form, password: value)),
+      effect.none(),
+    )
+
+    LoginUpdateConfirmPassword(value) -> #(
+      Model(
+        ..model,
+        login_form: LoginForm(..model.login_form, confirm_password: value),
+      ),
+      effect.none(),
+    )
+
+    LoginUpdateError(value) -> #(
+      Model(..model, login_form: LoginForm(..model.login_form, error: value)),
+      effect.none(),
+    )
+
+    UserRequestedLoginSignUp -> {
+      case model.login_form.sign_up {
+        False -> #(model, login(model))
+        True -> #(model, signup(model))
+      }
+    }
+
+    LoginResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
-            Some(response), None -> {
-              #(
-                Model(..model, login_form: LoginForm("", "", "", None)),
-                effect.batch([
-                  modem.push("/", None, None),
-                  get_auth_user(
-                    response
-                    |> get_id_from_response,
-                  ),
-                ]),
-              )
-            }
             _, Some(err) -> #(
               model,
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+            )
+            Some(response), None -> #(
+              Model(..model, login_form: LoginForm("", "", "", "", False, None)),
+              effect.batch([
+                modem.push("/", None, None),
+                get_auth_user(
+                  response
+                  |> get_id_from_response,
+                ),
+              ]),
             )
             _, _ -> #(
               model,
@@ -185,43 +221,39 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    LoginUpdateUsername(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, username: value)),
+    UserClickedSignUp -> #(
+      Model(
+        ..model,
+        login_form: LoginForm(
+          ..model.login_form,
+          sign_up: bool.negate(model.login_form.sign_up),
+        ),
+      ),
       effect.none(),
     )
 
-    LoginUpdateEmail(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, email: value)),
-      effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
-    )
-    LoginUpdatePassword(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, password: value)),
-      effect.none(),
-    )
-    LoginUpdateError(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, error: value)),
-      effect.none(),
-    )
-
-    UserRequestedLogin -> #(model, login(model))
-
-    LoginResponded(resp_result) ->
+    SignUpResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
+            Some(response), None -> {
+              #(
+                Model(
+                  ..model,
+                  login_form: LoginForm("", "", "", "", False, None),
+                ),
+                effect.batch([
+                  modem.push("/", None, None),
+                  get_auth_user(
+                    response
+                    |> get_id_from_response,
+                  ),
+                ]),
+              )
+            }
             _, Some(err) -> #(
               model,
               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
-            )
-            Some(response), None -> #(
-              Model(..model, login_form: LoginForm("", "", "", None)),
-              effect.batch([
-                modem.push("/", None, None),
-                get_auth_user(
-                  response
-                  |> get_id_from_response,
-                ),
-              ]),
             )
             _, _ -> #(
               model,
@@ -510,6 +542,7 @@ pub fn view(model: Model) -> Element(Msg) {
         Gallery -> gallery_view(model)
         Gifts -> gifts_view(model)
         Login -> login_view(model)
+        Comments -> comments_view(model)
         Admin -> admin_view(model)
         ConfirmPresence -> confirm_presence_view(model)
         NotFound -> not_found_view()
@@ -537,6 +570,7 @@ fn get_route() -> Route {
     ["gifts"] -> Gifts
     ["event"] -> Event
     ["gallery"] -> Gallery
+    ["comments"] -> Comments
     ["admin"] -> Admin
     ["confirm"] -> ConfirmPresence
     _ -> NotFound
@@ -584,6 +618,18 @@ fn get_images() {
   let decoder = dynamic.list(dynamic.field("src", dynamic.string))
 
   lustre_http.get(url, lustre_http.expect_json(decoder, ImagesRecieved))
+}
+
+fn get_comments() {
+  let url = server_url <> "/comments"
+
+  let decoder =
+    dynamic.list(dynamic.decode2(
+      Comment,
+      dynamic.field("name", dynamic.string),
+      dynamic.field("comment", dynamic.optional(dynamic.string)),
+    ))
+  lustre_http.get(url, lustre_http.expect_json(decoder, CommentsRecieved))
 }
 
 fn get_confirmation_data() {

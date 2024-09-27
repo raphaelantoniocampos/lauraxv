@@ -2,19 +2,15 @@ import client/state.{
   type Model, type Msg, AdminClickedShowAll, AdminClickedShowConfirmationDetails,
 }
 import client/views/home_view.{home_view}
-import client/views/login_view.{login_view}
-import gleam/bool
 import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
-import gleam/result
-import gleam/string
 import lustre/attribute.{attribute, class, id}
-import lustre/element.{type Element, text}
+import lustre/element.{text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
 import lustre/event
-import shared.{type Confirmation, server_url}
+import shared.{type Confirmation}
 
 pub fn admin_view(model: Model) {
   case model.auth_user {
@@ -124,7 +120,7 @@ fn details(confirmation: Confirmation) {
       0 -> element.none()
       n -> {
         p([], [
-          strong([], [text("Total de acompanhantes: ")]),
+          strong([], [text("Total de pessoas: ")]),
           text(n |> int.to_string),
         ])
       }

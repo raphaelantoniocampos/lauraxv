@@ -6,10 +6,8 @@ import wisp/testing.{default_secret_key_base}
 import wisp/wisp_mist
 
 //TODO: Refatoração (limpar código)
-//TODO: Documentação
 
 //TODO: Ultimos testes
-//TODO: Criar secret key
 //TODO: Deploy
 
 pub fn main() {
