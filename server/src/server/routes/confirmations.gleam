@@ -2,17 +2,13 @@ import gleam/bool
 import gleam/dynamic
 import gleam/http.{Get, Post}
 import gleam/int
-import gleam/io
 import gleam/json
-import gleam/list
 import gleam/result
 import server/db/confirmation
 import server/db/user
 
 import server/response
-import shared.{
-  type Confirmation, type People, type Person, Confirmation, People, Person,
-}
+import shared.{type Confirmation, Confirmation}
 import wisp.{type Request, type Response}
 
 pub fn confirmation(req: Request) -> Response {
@@ -28,6 +24,7 @@ pub fn confirmation(req: Request) -> Response {
 
 fn confirmation_to_json(confirmation: Confirmation) {
   json.object([
+    #("id", json.int(confirmation.id)),
     #("user_id", json.int(confirmation.user_id)),
     #("name", json.string(confirmation.name)),
     #("invite_name", json.string(confirmation.invite_name)),
@@ -57,7 +54,6 @@ fn list_confirmations() -> Response {
     ])
     |> json.to_string_builder
     |> Ok
-    |> io.debug
   }
   response.generate_wisp_response(result)
 }
@@ -71,10 +67,10 @@ fn create_confirmation(body: dynamic.Dynamic) {
       Error(_) -> Error("Invalid body recieved - Confirmation")
     })
 
-    // use people <- result.try(case person.decode_people(body) {
-    //   Ok(val) -> Ok(val)
-    //   Error(_) -> Error("Invalid body recieved - People")
-    // })
+    use people <- result.try(case confirmation.decode_create_person(body) {
+      Ok(val) -> Ok(val)
+      Error(_) -> Error("Invalid body recieved - People")
+    })
 
     use user <- result.try({
       case user.get_user_by_id(confirmation.user_id) {
@@ -88,35 +84,30 @@ fn create_confirmation(body: dynamic.Dynamic) {
       return: Error("Usuário já está confirmou presença"),
     )
 
+    use _ <- result.try(case
+      confirmation.insert_confirmation_to_db(confirmation)
+    {
+      Ok(_) -> Ok(Nil)
+      Error(_) -> Error("Problema confirmando presença")
+    })
+
+    use _ <- result.try(case confirmation.insert_people_to_db(people) {
+      Ok(_) -> Ok(Nil)
+      Error(_) -> {
+        Error("Problema salvando pessoas no banco de dados")
+      }
+    })
+
+    use inserted_confirmation <- result.try(
+      confirmation.get_confirmation_by_user_id(user.id),
+    )
+
     use _ <- result.try(case user.set_is_confirmed(user.id, True) {
       Ok(_) -> Ok(Nil)
       Error(_) -> {
         Error("Problema configurando presença do usuário")
       }
     })
-
-    use _ <- result.try(case
-      confirmation.insert_confirmation_to_db(confirmation)
-    {
-      Ok(_) -> Ok(Nil)
-      Error(_) -> {
-        Error("Problema confirmando presença")
-      }
-    })
-
-    // use _ <- result.try(case
-    //   person.insert_people_to_db(people)
-    //   |> result.all
-    // {
-    //   Ok(_) -> Ok(Nil)
-    //   Error(_) -> {
-    //     Error("Problema salvando pessoas no banco de dados")
-    //   }
-    // })
-
-    use inserted_confirmation <- result.try(
-      confirmation.get_confirmation_by_user_id(user.id),
-    )
 
     Ok(
       json.object([

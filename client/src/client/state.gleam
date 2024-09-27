@@ -3,7 +3,7 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import shared.{type Confirmation, type ConfirmationData, type Gift, type Person}
+import shared.{type Confirmation, type Gift}
 
 pub type Route {
   Home
@@ -34,7 +34,9 @@ pub type Msg {
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(#(List(Gift), List(Gift)), lustre_http.HttpError))
   ImagesRecieved(Result(List(String), lustre_http.HttpError))
-  ConfirmationsRecieved(Result(ConfirmationData, lustre_http.HttpError))
+  ConfirmationsRecieved(
+    Result(#(Int, List(Confirmation)), lustre_http.HttpError),
+  )
 
   CountdownUpdated(value: Int)
 
@@ -58,6 +60,10 @@ pub type Msg {
   UserOpenedGalleryView
 
   AdminOpenedAdminView
+
+  AdminClickedShowConfirmationDetails(id: Int)
+
+  AdminClickedShowAll
 
   UserRequestedSelectGift(gift: Gift, to: Bool)
   SelectGiftResponded(
@@ -125,5 +131,10 @@ pub type GiftStatus {
 }
 
 pub type AdminSettings {
-  AdminSettings(confirmation_data: ConfirmationData, show_details: Bool)
+  AdminSettings(
+    total: Int,
+    confirmations: List(Confirmation),
+    show_details: Dict(Int, Bool),
+    show_all: Bool,
+  )
 }

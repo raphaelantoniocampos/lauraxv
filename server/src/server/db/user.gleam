@@ -1,7 +1,6 @@
 import beecrypt
 import gleam/bool
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -41,7 +40,6 @@ pub fn get_user_by_email(email: String) -> Result(User, String) {
 
 pub fn get_user_by_id(user_id: Int) -> Result(User, String) {
   let sql = get_user_base_query <> "WHERE user.id = ?"
-  io.println(sql)
   let user = case
     db.execute_read(sql, [sqlight.int(user_id)], user_db_decoder())
   {

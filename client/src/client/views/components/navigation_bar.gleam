@@ -2,7 +2,6 @@ import client/state.{
   type Model, AdminOpenedAdminView, Gallery, UserOpenedGalleryView,
   UserOpenedGiftsView,
 }
-import client/views/components/button_class.{button_class}
 import gleam/option.{None, Some}
 import gleam/string
 import lustre/attribute.{class, href}
@@ -128,9 +127,14 @@ pub fn navigation_bar(model: Model) {
                   text("Presença Confirmada"),
                 ])
               False ->
-                button([button_class("10")], [
-                  a([href("/confirm")], [text("Confirme sua presença")]),
-                ])
+                button(
+                  [
+                    class(
+                      "bg-emerald-600 hover:bg-emerald-700 min-w-10 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
+                    ),
+                  ],
+                  [a([href("/confirm")], [text("Confirme sua presença")])],
+                )
             },
             span([class("text-pink-600 font-semibold")], [
               case user.is_admin {

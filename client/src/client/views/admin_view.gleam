@@ -1,19 +1,20 @@
 import client/state.{
-  type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePersonName, ConfirmUpdatePhone, UserRequestedConfirmPresence,
-  message_error_decoder,
+  type Model, type Msg, AdminClickedShowAll, AdminClickedShowConfirmationDetails,
 }
 import client/views/home_view.{home_view}
 import client/views/login_view.{login_view}
+import gleam/bool
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/result
 import gleam/string
 import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
-import lustre/element/html.{button, div, h1, h2, li, main, p, strong, ul}
-import shared.{type Confirmation, type People, type Person, server_url}
+import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
+import lustre/event
+import shared.{type Confirmation, server_url}
 
 pub fn admin_view(model: Model) {
   case model.auth_user {
@@ -36,9 +37,9 @@ fn auth_admin_view(model: Model) {
       ],
       [text("Lista de confirmados")],
     ),
-    p([class("text-3xl font-bold text-white mb-6")], [
-      text("Total de convidados: "),
-      strong([id("total_confirmed")], [
+    p([class("text-3xl font-bold mb-6")], [
+      span([class("text-white")], [text("Total de confirmados: ")]),
+      span([class("text-emerald-300")], [
         text(
           model.admin_settings.total
           |> int.to_string,
@@ -48,68 +49,105 @@ fn auth_admin_view(model: Model) {
     button(
       [
         class(
-          "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
+          "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
         ),
         id("show_all"),
+        event.on_click(AdminClickedShowAll),
       ],
       [text("Mostrar todos os dados")],
     ),
-    div(
-      [class("grid grid-cols-1 gap-6 w-full"), id("lista_confirmados")],
-      model.admin_settings.confirmations
-        |> list.map(confi),
-    ),
+    div([class("grid grid-cols-1 gap-6 w-full"), id("lista_confirmados")], {
+      let confirmations = model.admin_settings.confirmations
+      confirmations
+      |> list.map(fn(confirmation) { confirmation_box(model, confirmation) })
+    }),
   ])
 }
 
-fn confi(confirmation: Confirmation) {
-  div([], [
-    div([class("flex justify-between items-center")], [
-      h2([class("text-2xl font-semibold text-pink-700")], [
-        text(confirmation.name),
-      ]),
-      button(
-        [
-          attribute("data-id", confirmation.user_id |> int.to_string),
-          class(
-            "mostrar-detalhes bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
-          ),
-        ],
-        [text("Mostrar detalhes")],
+fn confirmation_box(model: Model, confirmation: Confirmation) {
+  div(
+    [
+      class(
+        "relative bg-white p-6 rounded-lg shadow-lg transition duration-300",
       ),
+    ],
+    [
+      div([class("flex justify-between items-center")], [
+        h2([class("text-2xl font-semibold text-pink-700")], [
+          text(confirmation.name),
+        ]),
+        button(
+          [
+            attribute("data-id", confirmation.id |> int.to_string),
+            class(
+              "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
+            ),
+            event.on_click(AdminClickedShowConfirmationDetails(confirmation.id)),
+          ],
+          [text("Mostrar detalhes")],
+        ),
+      ]),
+      case
+        {
+          model.admin_settings.show_details
+          |> dict.get(confirmation.id)
+        }
+      {
+        Ok(show) ->
+          case show || model.admin_settings.show_all {
+            True -> details(confirmation)
+            False -> element.none()
+          }
+        Error(_) -> element.none()
+      },
+    ],
+  )
+}
+
+fn details(confirmation: Confirmation) {
+  div([id(confirmation.id |> int.to_string), class("detalhes mt-4")], [
+    p([], [
+      strong([], [text("Nome no convite: ")]),
+      text(confirmation.invite_name),
     ]),
-    div(
-      [
-        attribute("style", "display: none;"),
-        id(confirmation.user_id |> int.to_string),
-        class("detalhes mt-4"),
-      ],
-      [
+    p([], [strong([], [text("Telefone: ")]), text(confirmation.phone)]),
+    case confirmation.comments {
+      Some(comment) -> {
+        p([], [strong([], [text("Comentário: ")]), text(comment)])
+      }
+      None -> element.none()
+    },
+    case
+      confirmation.people_names
+      |> list.length
+    {
+      0 -> element.none()
+      n -> {
         p([], [
-          strong([], [text("Nome no convite:")]),
-          text(confirmation.invite_name),
-        ]),
-        p([], [strong([], [text("Telefone:")]), text(confirmation.phone)]),
-        p([], [
-          strong([], [text("Total de acompanhantes:")]),
-          text(int.to_string(list.length([]))),
-        ]),
-        p([], [
-          strong([], [text("Comentários:")]),
-          text(case confirmation.comments {
-            Some(comment) -> comment
-            None -> ""
-          }),
-        ]),
-        ul([class("list-disc ml-6 mt-2")], [
-          text("${confirmado.companions.map(companion => `"),
-          li([], [text(confirmation.people_names |> string.join(" "))]),
-          text(
-            "`).join('')}
-          ",
+          strong([], [text("Total de acompanhantes: ")]),
+          text(n |> int.to_string),
+        ])
+      }
+    },
+    case
+      confirmation.people_names
+      |> list.length
+    {
+      0 -> element.none()
+      _ -> {
+        div([], [
+          strong([], [text("Acompanhantes")]),
+          ul(
+            [class("list-disc ml-6 mt-2")],
+            confirmation.people_names
+              |> list.map(names_text),
           ),
-        ]),
-      ],
-    ),
+        ])
+      }
+    },
   ])
+}
+
+fn names_text(name) {
+  li([], [text(name)])
 }

@@ -39,7 +39,6 @@ var List = class {
     }
     return desired === 0;
   }
-  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -255,11 +254,41 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
-  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
   return error;
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+var Lt = class extends CustomType {
+};
+var Eq = class extends CustomType {
+};
+var Gt = class extends CustomType {
+};
+
+// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
+function negate(bool3) {
+  if (bool3) {
+    return false;
+  } else {
+    return true;
+  }
+}
+function to_int(bool3) {
+  if (!bool3) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+function guard(requirement, consequence, alternative) {
+  if (requirement) {
+    return consequence;
+  } else {
+    return alternative();
+  }
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
@@ -332,14 +361,6 @@ function compile(pattern2, options) {
 function scan(regex, string3) {
   return regex_scan(regex, string3);
 }
-
-// build/dev/javascript/gleam_stdlib/gleam/order.mjs
-var Lt = class extends CustomType {
-};
-var Eq = class extends CustomType {
-};
-var Gt = class extends CustomType {
-};
 
 // build/dev/javascript/gleam_stdlib/gleam/float.mjs
 function truncate2(x) {
@@ -446,6 +467,17 @@ function first(list2) {
     let x = list2.head;
     return new Ok(x);
   }
+}
+function update_group(f) {
+  return (groups, elem) => {
+    let $ = get(groups, f(elem));
+    if ($.isOk()) {
+      let existing = $[0];
+      return insert(groups, f(elem), prepend(elem, existing));
+    } else {
+      return insert(groups, f(elem), toList([elem]));
+    }
+  };
 }
 function do_map(loop$list, loop$fun, loop$acc) {
   while (true) {
@@ -597,6 +629,9 @@ function fold(loop$list, loop$initial, loop$fun) {
       loop$fun = fun;
     }
   }
+}
+function group(list2, key) {
+  return fold(list2, new$(), update_group(key));
 }
 function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
   while (true) {
@@ -762,9 +797,6 @@ function concat3(strings) {
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
 }
-function join2(strings, separator) {
-  return join(strings, separator);
-}
 function trim2(string3) {
   return trim(string3);
 }
@@ -850,9 +882,9 @@ function bool(data) {
 function shallow_list(value3) {
   return decode_list(value3);
 }
-function optional(decode7) {
+function optional(decode6) {
   return (value3) => {
-    return decode_option(value3, decode7);
+    return decode_option(value3, decode6);
   };
 }
 function any(decoders) {
@@ -1045,7 +1077,7 @@ function decode5(constructor, t1, t2, t3, t4, t5) {
     }
   };
 }
-function decode6(constructor, t1, t2, t3, t4, t5, t6) {
+function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
   return (x) => {
     let $ = t1(x);
     let $1 = t2(x);
@@ -1053,14 +1085,16 @@ function decode6(constructor, t1, t2, t3, t4, t5, t6) {
     let $3 = t4(x);
     let $4 = t5(x);
     let $5 = t6(x);
-    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk() && $5.isOk()) {
+    let $6 = t7(x);
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk() && $5.isOk() && $6.isOk()) {
       let a2 = $[0];
       let b = $1[0];
       let c = $2[0];
       let d = $3[0];
       let e = $4[0];
       let f = $5[0];
-      return new Ok(constructor(a2, b, c, d, e, f));
+      let g = $6[0];
+      return new Ok(constructor(a2, b, c, d, e, f, g));
     } else {
       let a2 = $;
       let b = $1;
@@ -1068,6 +1102,7 @@ function decode6(constructor, t1, t2, t3, t4, t5, t6) {
       let d = $3;
       let e = $4;
       let f = $5;
+      let g = $6;
       return new Error(
         concat(
           toList([
@@ -1076,7 +1111,8 @@ function decode6(constructor, t1, t2, t3, t4, t5, t6) {
             all_errors(c),
             all_errors(d),
             all_errors(e),
-            all_errors(f)
+            all_errors(f),
+            all_errors(g)
           ])
         )
       );
@@ -1851,16 +1887,6 @@ function add(a2, b) {
 function split(xs, pattern2) {
   return List.fromArray(xs.split(pattern2));
 }
-function join(xs, separator) {
-  const iterator = xs[Symbol.iterator]();
-  let result = iterator.next().value || "";
-  let current = iterator.next();
-  while (!current.done) {
-    result = result + separator + current.value;
-    current = iterator.next();
-  }
-  return result;
-}
 function concat2(xs) {
   let result = "";
   for (const x of xs) {
@@ -2112,6 +2138,38 @@ function upsert(dict, key, fun) {
   return ((_capture) => {
     return insert(dict, key, _capture);
   })(_pipe$3);
+}
+function do_fold(loop$list, loop$initial, loop$fun) {
+  while (true) {
+    let list2 = loop$list;
+    let initial = loop$initial;
+    let fun = loop$fun;
+    if (list2.hasLength(0)) {
+      return initial;
+    } else {
+      let k = list2.head[0];
+      let v = list2.head[1];
+      let rest = list2.tail;
+      loop$list = rest;
+      loop$initial = fun(initial, k, v);
+      loop$fun = fun;
+    }
+  }
+}
+function fold2(dict, initial, fun) {
+  let _pipe = dict;
+  let _pipe$1 = map_to_list(_pipe);
+  return do_fold(_pipe$1, initial, fun);
+}
+function do_map_values(f, dict) {
+  let f$1 = (dict2, k, v) => {
+    return insert(dict2, k, f(k, v));
+  };
+  let _pipe = dict;
+  return fold2(_pipe, new$(), f$1);
+}
+function map_values(dict, fun) {
+  return do_map_values(fun, dict);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
@@ -2386,22 +2444,6 @@ function to_string4(uri) {
     }
   })();
   return concat3(parts$5);
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
-function to_int(bool3) {
-  if (!bool3) {
-    return 0;
-  } else {
-    return 1;
-  }
-}
-function guard(requirement, consequence, alternative) {
-  if (requirement) {
-    return consequence;
-  } else {
-    return alternative();
-  }
 }
 
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
@@ -4416,8 +4458,9 @@ var Gift = class extends CustomType {
   }
 };
 var Confirmation = class extends CustomType {
-  constructor(user_id, name2, invite_name, phone, comments, people_names) {
+  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
     super();
+    this.id = id2;
     this.user_id = user_id;
     this.name = name2;
     this.invite_name = invite_name;
@@ -4539,6 +4582,14 @@ var UserOpenedGiftsView = class extends CustomType {
 var UserOpenedGalleryView = class extends CustomType {
 };
 var AdminOpenedAdminView = class extends CustomType {
+};
+var AdminClickedShowConfirmationDetails = class extends CustomType {
+  constructor(id2) {
+    super();
+    this.id = id2;
+  }
+};
+var AdminClickedShowAll = class extends CustomType {
 };
 var UserRequestedSelectGift = class extends CustomType {
   constructor(gift, to2) {
@@ -4670,11 +4721,12 @@ var GiftStatus = class extends CustomType {
   }
 };
 var AdminSettings = class extends CustomType {
-  constructor(confirmations, total, show_details) {
+  constructor(total, confirmations, show_details, show_all) {
     super();
-    this.confirmations = confirmations;
     this.total = total;
+    this.confirmations = confirmations;
     this.show_details = show_details;
+    this.show_all = show_all;
   }
 };
 function message_error_decoder() {
@@ -4687,10 +4739,37 @@ function message_error_decoder() {
   );
 }
 
-// build/dev/javascript/client/client/views/components/button_class.mjs
-function button_class(min_w) {
-  return class$(
-    "bg-emerald-600 hover:bg-emerald-700 min-w-" + min_w + " text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name2, handler) {
+  return on(name2, handler);
+}
+function on_click(msg) {
+  return on2("click", (_) => {
+    return new Ok(msg);
+  });
+}
+function value2(event2) {
+  let _pipe = event2;
+  return field("target", field("value", string))(
+    _pipe
+  );
+}
+function on_input(msg) {
+  return on2(
+    "input",
+    (event2) => {
+      let _pipe = value2(event2);
+      return map3(_pipe, msg);
+    }
+  );
+}
+function on_submit(msg) {
+  return on2(
+    "submit",
+    (event2) => {
+      let $ = prevent_default(event2);
+      return new Ok(msg);
+    }
   );
 }
 
@@ -4765,7 +4844,11 @@ function home_view(model) {
                     toList([class$("space-x-4")]),
                     toList([
                       button(
-                        toList([button_class("40")]),
+                        toList([
+                          class$(
+                            "bg-emerald-600 hover:bg-emerald-700 min-w-40\n    text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                          )
+                        ]),
                         toList([
                           a(
                             toList([href("/confirm")]),
@@ -4812,40 +4895,6 @@ function home_view(model) {
         ])
       )
     ])
-  );
-}
-
-// build/dev/javascript/lustre/lustre/event.mjs
-function on2(name2, handler) {
-  return on(name2, handler);
-}
-function on_click(msg) {
-  return on2("click", (_) => {
-    return new Ok(msg);
-  });
-}
-function value2(event2) {
-  let _pipe = event2;
-  return field("target", field("value", string))(
-    _pipe
-  );
-}
-function on_input(msg) {
-  return on2(
-    "input",
-    (event2) => {
-      let _pipe = value2(event2);
-      return map3(_pipe, msg);
-    }
-  );
-}
-function on_submit(msg) {
-  return on2(
-    "submit",
-    (event2) => {
-      let $ = prevent_default(event2);
-      return new Ok(msg);
-    }
   );
 }
 
@@ -4994,7 +5043,12 @@ function login_view(model) {
                 toList([class$("flex items-center justify-center")]),
                 toList([
                   button(
-                    toList([button_class("50"), type_("submit")]),
+                    toList([
+                      class$(
+                        "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                      ),
+                      type_("submit")
+                    ]),
                     toList([text("Entrar")])
                   )
                 ])
@@ -5035,9 +5089,106 @@ function login_view(model) {
 }
 
 // build/dev/javascript/client/client/views/admin_view.mjs
-function confi(confirmation) {
+function names_text(name2) {
+  return li(toList([]), toList([text(name2)]));
+}
+function details(confirmation) {
   return div(
-    toList([]),
+    toList([
+      id(
+        (() => {
+          let _pipe = confirmation.id;
+          return to_string2(_pipe);
+        })()
+      ),
+      class$("detalhes mt-4")
+    ]),
+    toList([
+      p(
+        toList([]),
+        toList([
+          strong(toList([]), toList([text("Nome no convite: ")])),
+          text(confirmation.invite_name)
+        ])
+      ),
+      p(
+        toList([]),
+        toList([
+          strong(toList([]), toList([text("Telefone: ")])),
+          text(confirmation.phone)
+        ])
+      ),
+      (() => {
+        let $ = confirmation.comments;
+        if ($ instanceof Some) {
+          let comment = $[0];
+          return p(
+            toList([]),
+            toList([
+              strong(toList([]), toList([text("Coment\xE1rio: ")])),
+              text(comment)
+            ])
+          );
+        } else {
+          return none2();
+        }
+      })(),
+      (() => {
+        let $ = (() => {
+          let _pipe = confirmation.people_names;
+          return length(_pipe);
+        })();
+        if ($ === 0) {
+          return none2();
+        } else {
+          let n = $;
+          return p(
+            toList([]),
+            toList([
+              strong(toList([]), toList([text("Total de acompanhantes: ")])),
+              text(
+                (() => {
+                  let _pipe = n;
+                  return to_string2(_pipe);
+                })()
+              )
+            ])
+          );
+        }
+      })(),
+      (() => {
+        let $ = (() => {
+          let _pipe = confirmation.people_names;
+          return length(_pipe);
+        })();
+        if ($ === 0) {
+          return none2();
+        } else {
+          return div(
+            toList([]),
+            toList([
+              strong(toList([]), toList([text("Acompanhantes")])),
+              ul(
+                toList([class$("list-disc ml-6 mt-2")]),
+                (() => {
+                  let _pipe = confirmation.people_names;
+                  return map2(_pipe, names_text);
+                })()
+              )
+            ])
+          );
+        }
+      })()
+    ])
+  );
+}
+function confirmation_box(model, confirmation) {
+  return div(
+    toList([
+      class$(
+        "relative bg-white p-6 rounded-lg shadow-lg transition duration-300"
+      )
+    ]),
     toList([
       div(
         toList([class$("flex justify-between items-center")]),
@@ -5051,88 +5202,38 @@ function confi(confirmation) {
               attribute(
                 "data-id",
                 (() => {
-                  let _pipe = confirmation.user_id;
+                  let _pipe = confirmation.id;
                   return to_string2(_pipe);
                 })()
               ),
               class$(
-                "mostrar-detalhes bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+                "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+              ),
+              on_click(
+                new AdminClickedShowConfirmationDetails(confirmation.id)
               )
             ]),
             toList([text("Mostrar detalhes")])
           )
         ])
       ),
-      div(
-        toList([
-          attribute("style", "display: none;"),
-          id(
-            (() => {
-              let _pipe = confirmation.user_id;
-              return to_string2(_pipe);
-            })()
-          ),
-          class$("detalhes mt-4")
-        ]),
-        toList([
-          p(
-            toList([]),
-            toList([
-              strong(toList([]), toList([text("Nome no convite:")])),
-              text(confirmation.invite_name)
-            ])
-          ),
-          p(
-            toList([]),
-            toList([
-              strong(toList([]), toList([text("Telefone:")])),
-              text(confirmation.phone)
-            ])
-          ),
-          p(
-            toList([]),
-            toList([
-              strong(toList([]), toList([text("Total de acompanhantes:")])),
-              text(to_string2(length(toList([]))))
-            ])
-          ),
-          p(
-            toList([]),
-            toList([
-              strong(toList([]), toList([text("Coment\xE1rios:")])),
-              text(
-                (() => {
-                  let $ = confirmation.comments;
-                  if ($ instanceof Some) {
-                    let comment = $[0];
-                    return comment;
-                  } else {
-                    return "";
-                  }
-                })()
-              )
-            ])
-          ),
-          ul(
-            toList([class$("list-disc ml-6 mt-2")]),
-            toList([
-              text("${confirmado.companions.map(companion => `"),
-              li(
-                toList([]),
-                toList([
-                  text(
-                    (() => {
-                      let _pipe = confirmation.people_names;
-                      return join2(_pipe, " ");
-                    })()
-                  )
-                ])
-              ),
-              text("`).join('')}\n          ")
-            ])
-          )
-        ])
-      )
+      (() => {
+        let $ = (() => {
+          let _pipe = model.admin_settings.show_details;
+          return get(_pipe, confirmation.id);
+        })();
+        if ($.isOk()) {
+          let show = $[0];
+          let $1 = show || model.admin_settings.show_all;
+          if ($1) {
+            return details(confirmation);
+          } else {
+            return none2();
+          }
+        } else {
+          return none2();
+        }
+      })()
     ])
   );
 }
@@ -5148,11 +5249,14 @@ function auth_admin_view(model) {
         toList([text("Lista de confirmados")])
       ),
       p(
-        toList([class$("text-3xl font-bold text-white mb-6")]),
+        toList([class$("text-3xl font-bold mb-6")]),
         toList([
-          text("Total de convidados: "),
-          strong(
-            toList([id("total_confirmed")]),
+          span(
+            toList([class$("text-white")]),
+            toList([text("Total de confirmados: ")])
+          ),
+          span(
+            toList([class$("text-emerald-300")]),
             toList([
               text(
                 (() => {
@@ -5167,9 +5271,10 @@ function auth_admin_view(model) {
       button(
         toList([
           class$(
-            "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6"
+            "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6"
           ),
-          id("show_all")
+          id("show_all"),
+          on_click(new AdminClickedShowAll())
         ]),
         toList([text("Mostrar todos os dados")])
       ),
@@ -5179,8 +5284,14 @@ function auth_admin_view(model) {
           id("lista_confirmados")
         ]),
         (() => {
-          let _pipe = model.admin_settings.confirmations;
-          return map2(_pipe, confi);
+          let confirmations = model.admin_settings.confirmations;
+          let _pipe = confirmations;
+          return map2(
+            _pipe,
+            (confirmation) => {
+              return confirmation_box(model, confirmation);
+            }
+          );
         })()
       )
     ])
@@ -5364,7 +5475,11 @@ function navigation_bar(model) {
                   );
                 } else {
                   return button(
-                    toList([button_class("10")]),
+                    toList([
+                      class$(
+                        "bg-emerald-600 hover:bg-emerald-700 min-w-10 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                      )
+                    ]),
                     toList([
                       a(
                         toList([href("/confirm")]),
@@ -5414,16 +5529,21 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "let_assert",
+        "assignment_no_match",
         "client/views/confirm_presence_view",
-        28,
+        27,
         "confirm_presence",
-        "Pattern match failed, no pattern matched the value.",
+        "Assignment pattern did not match",
         { value: $ }
       );
     }
     let user = $[0];
     return user.user_id;
+  })();
+  let people_names = (() => {
+    let _pipe = model.confirm_form.people_names;
+    let _pipe$1 = insert(_pipe, 0, model.confirm_form.name);
+    return values(_pipe$1);
   })();
   return post(
     server_url + "/confirm",
@@ -5438,9 +5558,8 @@ function confirm_presence(model) {
         [
           "people_names",
           (() => {
-            let _pipe = model.confirm_form.people_names;
-            let _pipe$1 = values(_pipe);
-            return array2(_pipe$1, string2);
+            let _pipe = people_names;
+            return array2(_pipe, string2);
           })()
         ],
         [
@@ -5779,7 +5898,12 @@ function confirm_presence_view(model) {
                       toList([class$("flex items-center justify-center")]),
                       toList([
                         button(
-                          toList([button_class("60"), type_("submit")]),
+                          toList([
+                            class$(
+                              "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+                            ),
+                            type_("submit")
+                          ]),
                           toList([text("Enviar Confirma\xE7\xE3o")])
                         )
                       ])
@@ -6221,7 +6345,7 @@ function get_route2() {
       let uri2 = $2[0];
       return uri2;
     } else {
-      throw makeError("panic", "client", 489, "get_route", "Invalid uri", {});
+      throw makeError("panic", "client", 531, "get_route", "Invalid uri", {});
     }
   })();
   let $ = (() => {
@@ -6314,13 +6438,14 @@ function get_images() {
     )
   );
 }
-function get_confirmations() {
+function get_confirmation_data() {
   let url = server_url + "/confirm";
   let confirmation_decoder = list(
-    decode6(
-      (var0, var1, var2, var3, var4, var5) => {
-        return new Confirmation(var0, var1, var2, var3, var4, var5);
+    decode7(
+      (var0, var1, var2, var3, var4, var5, var6) => {
+        return new Confirmation(var0, var1, var2, var3, var4, var5, var6);
       },
+      field("id", int),
       field("user_id", int),
       field("name", string),
       field("invite_name", string),
@@ -6329,7 +6454,7 @@ function get_confirmations() {
       field("people_names", list(string))
     )
   );
-  let tuple_decoder = decode2(
+  let decoder = decode2(
     (total, confirmations) => {
       return [total, confirmations];
     },
@@ -6339,7 +6464,7 @@ function get_confirmations() {
   return get2(
     url,
     expect_json(
-      tuple_decoder,
+      decoder,
       (var0) => {
         return new ConfirmationsRecieved(var0);
       }
@@ -6392,10 +6517,23 @@ function update(model, msg) {
     let confirmations_result = msg[0];
     if (confirmations_result.isOk()) {
       let confirmation_data = confirmations_result[0];
+      let updated_show_details = (() => {
+        let _pipe = confirmation_data[1];
+        let _pipe$1 = group(
+          _pipe,
+          (confirmation) => {
+            return confirmation.id;
+          }
+        );
+        return map_values(_pipe$1, (_, _1) => {
+          return false;
+        });
+      })();
       return [
         model.withFields({
           admin_settings: model.admin_settings.withFields({
             confirmations: confirmation_data[1],
+            show_details: updated_show_details,
             total: confirmation_data[0]
           })
         }),
@@ -6589,10 +6727,44 @@ function update(model, msg) {
   } else if (msg instanceof AdminOpenedAdminView) {
     let $ = model.admin_settings.total;
     if ($ === 0) {
-      return [model, get_confirmations()];
+      return [model, get_confirmation_data()];
     } else {
       return [model, none()];
     }
+  } else if (msg instanceof AdminClickedShowAll) {
+    return [
+      model.withFields({
+        admin_settings: model.admin_settings.withFields({
+          show_all: negate(model.admin_settings.show_all)
+        })
+      }),
+      none()
+    ];
+  } else if (msg instanceof AdminClickedShowConfirmationDetails) {
+    let id$1 = msg.id;
+    let updated_show_details = (() => {
+      let _pipe = model.admin_settings.show_details;
+      return upsert(
+        _pipe,
+        id$1,
+        (key) => {
+          if (key instanceof Some) {
+            let key$1 = key[0];
+            return negate(key$1);
+          } else {
+            return false;
+          }
+        }
+      );
+    })();
+    return [
+      model.withFields({
+        admin_settings: model.admin_settings.withFields({
+          show_details: updated_show_details
+        })
+      }),
+      none()
+    ];
   } else if (msg instanceof UserRequestedSelectGift) {
     let gift = msg.gift;
     let to2 = msg.to;
@@ -6859,7 +7031,7 @@ function init3(_) {
         new None()
       ),
       0,
-      new AdminSettings(toList([]), 0, false)
+      new AdminSettings(0, toList([]), new$(), false)
     ),
     batch(
       toList([

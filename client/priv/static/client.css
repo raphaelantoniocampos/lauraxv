@@ -681,8 +681,16 @@ video {
   min-width: 2.5rem;
 }
 
+.min-w-40 {
+  min-width: 10rem;
+}
+
 .min-w-5 {
   min-width: 1.25rem;
+}
+
+.min-w-60 {
+  min-width: 15rem;
 }
 
 .max-w-2xl {

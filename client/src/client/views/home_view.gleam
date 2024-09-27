@@ -1,5 +1,4 @@
 import client/state.{type Model, type Msg, UserRequestedConfirmPresence}
-import client/views/components/button_class.{button_class}
 import gleam/int
 import gleam/option.{None, Some}
 import lustre/attribute.{alt, attribute, class, href, id, src}
@@ -51,9 +50,15 @@ pub fn home_view(model: Model) -> Element(Msg) {
               ),
             ]),
             div([class("space-x-4")], [
-              button([button_class("40")], [
-                a([href("/confirm")], [text("Confirmar Presença")]),
-              ]),
+              button(
+                [
+                  class(
+                    "bg-emerald-600 hover:bg-emerald-700 min-w-40
+    text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
+                  ),
+                ],
+                [a([href("/confirm")], [text("Confirmar Presença")])],
+              ),
               button(
                 [
                   class(

@@ -1,17 +1,17 @@
 import client/state.{
   type AdminSettings, type GiftStatus, type LoginForm, type Model, type Msg,
-  type Route, Admin, AdminOpenedAdminView, AdminSettings, AuthUser,
-  AuthUserRecieved, ConfirmForm, ConfirmPresence, ConfirmPresenceResponded,
-  ConfirmUpdateComments, ConfirmUpdateEmail, ConfirmUpdateError,
-  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePeopleNames, ConfirmUpdatePersonName, ConfirmUpdatePhone,
-  ConfirmationsRecieved, CountdownUpdated, Event, Gallery, GiftStatus,
-  GiftUpdateError, Gifts, GiftsRecieved, Home, ImagesRecieved, Login, LoginForm,
-  LoginResponded, LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword,
-  LoginUpdateUsername, Model, NotFound, OnRouteChange, SelectGiftResponded,
-  SignUpResponded, UserOpenedGalleryView, UserOpenedGiftsView,
-  UserRequestedConfirmPresence, UserRequestedLogin, UserRequestedSelectGift,
-  UserRequestedSignUp,
+  type Route, Admin, AdminClickedShowAll, AdminClickedShowConfirmationDetails,
+  AdminOpenedAdminView, AdminSettings, AuthUser, AuthUserRecieved, ConfirmForm,
+  ConfirmPresence, ConfirmPresenceResponded, ConfirmUpdateComments,
+  ConfirmUpdateEmail, ConfirmUpdateError, ConfirmUpdateInviteName,
+  ConfirmUpdateName, ConfirmUpdatePeopleCount, ConfirmUpdatePeopleNames,
+  ConfirmUpdatePersonName, ConfirmUpdatePhone, ConfirmationsRecieved,
+  CountdownUpdated, Event, Gallery, GiftStatus, GiftUpdateError, Gifts,
+  GiftsRecieved, Home, ImagesRecieved, Login, LoginForm, LoginResponded,
+  LoginUpdateEmail, LoginUpdateError, LoginUpdatePassword, LoginUpdateUsername,
+  Model, NotFound, OnRouteChange, SelectGiftResponded, SignUpResponded,
+  UserOpenedGalleryView, UserOpenedGiftsView, UserRequestedConfirmPresence,
+  UserRequestedLogin, UserRequestedSelectGift, UserRequestedSignUp,
 }
 import client/views/admin_view.{admin_view}
 import client/views/components/navigation_bar.{navigation_bar}
@@ -24,6 +24,7 @@ import client/views/gifts_view.{gifts_view, select_gift}
 import client/views/home_view.{home_view}
 import client/views/login_view.{login, login_view, signup}
 import client/views/not_found_view.{not_found_view}
+import gleam/bool
 import gleam/dict
 import gleam/int
 import gleam/list
@@ -40,10 +41,7 @@ import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import lustre_http
 import modem
-import shared.{
-  type ConfirmationData, type Gift, type Person, Confirmation, ConfirmationData,
-  Gift, Person, server_url,
-}
+import shared.{type Gift, Confirmation, Gift, server_url}
 
 // This is the entrypoint for our app and wont change much
 pub fn main() {
@@ -62,7 +60,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
       login_form: LoginForm("", "", "", None),
       confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
       event_countdown: 0,
-      admin_settings: AdminSettings(ConfirmationData(0, []), False),
+      admin_settings: AdminSettings(0, [], dict.new(), False),
     ),
     effect.batch([
       modem.init(on_url_change),
@@ -113,12 +111,21 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     ConfirmationsRecieved(confirmations_result) ->
       case confirmations_result {
         Ok(confirmation_data) -> {
+          let updated_show_details =
+            confirmation_data.1
+            |> list.group(fn(confirmation) {
+              confirmation.id
+              // model.admin_settings.show_confirmation_detail
+              // |> dict.insert(confirmation.user_id, False)
+            })
+            |> dict.map_values(fn(_, _) { False })
           #(
             Model(
               ..model,
               admin_settings: AdminSettings(
                 ..model.admin_settings,
                 confirmations: confirmation_data.1,
+                show_details: updated_show_details,
                 total: confirmation_data.0,
               ),
             ),
@@ -255,13 +262,45 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
     AdminOpenedAdminView ->
       case model.admin_settings.total {
-        0 -> #(model, get_confirmations())
+        0 -> #(model, get_confirmation_data())
         _ -> #(model, effect.none())
       }
 
+    AdminClickedShowAll -> #(
+      Model(
+        ..model,
+        admin_settings: AdminSettings(
+          ..model.admin_settings,
+          show_all: bool.negate(model.admin_settings.show_all),
+        ),
+      ),
+      effect.none(),
+    )
+
+    AdminClickedShowConfirmationDetails(id) -> {
+      let updated_show_details =
+        model.admin_settings.show_details
+        |> dict.upsert(id, fn(key) {
+          case key {
+            Some(key) -> bool.negate(key)
+            None -> False
+          }
+        })
+
+      #(
+        Model(
+          ..model,
+          admin_settings: AdminSettings(
+            ..model.admin_settings,
+            show_details: updated_show_details,
+          ),
+        ),
+        effect.none(),
+      )
+    }
+
     UserRequestedSelectGift(gift, to) -> #(model, select_gift(model, gift, to))
 
-    //TODO: 
     SelectGiftResponded(resp_result) -> {
       case resp_result {
         Ok(resp) ->
@@ -550,8 +589,9 @@ fn get_images() {
 fn get_confirmation_data() {
   let url = server_url <> "/confirm"
   let confirmation_decoder =
-    dynamic.list(dynamic.decode6(
+    dynamic.list(dynamic.decode7(
       Confirmation,
+      dynamic.field("id", dynamic.int),
       dynamic.field("user_id", dynamic.int),
       dynamic.field("name", dynamic.string),
       dynamic.field("invite_name", dynamic.string),
@@ -562,15 +602,12 @@ fn get_confirmation_data() {
 
   let decoder =
     dynamic.decode2(
-      ConfirmationData,
+      fn(total, confirmations) { #(total, confirmations) },
       dynamic.field("total", dynamic.int),
       dynamic.field("confirmations", confirmation_decoder),
     )
 
-  lustre_http.get(
-    url,
-    lustre_http.expect_json(tuple_decoder, ConfirmationsRecieved),
-  )
+  lustre_http.get(url, lustre_http.expect_json(decoder, ConfirmationsRecieved))
 }
 
 fn get_id_from_response(response: String) -> String {

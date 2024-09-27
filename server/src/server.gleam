@@ -5,13 +5,9 @@ import wisp
 import wisp/testing.{default_secret_key_base}
 import wisp/wisp_mist
 
-//TODO: Página de Admin (Mostrar número de confirmados e nomes)
-//TODO: Confirmação Login (Botão "tem certeza?")
-
 //TODO: Refatoração (limpar código)
 //TODO: Documentação
 
-//TODO: Chave Pix no BD
 //TODO: Ultimos testes
 //TODO: Criar secret key
 //TODO: Deploy

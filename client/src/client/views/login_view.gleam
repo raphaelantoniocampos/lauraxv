@@ -3,7 +3,6 @@ import client/state.{
   LoginUpdateEmail, LoginUpdatePassword, LoginUpdateUsername, SignUpResponded,
   UserRequestedLogin, UserRequestedSignUp, message_error_decoder,
 }
-import client/views/components/button_class.{button_class}
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/string
@@ -100,7 +99,15 @@ pub fn login_view(model: Model) -> Element(Msg) {
           ]),
         ]),
         div([class("flex items-center justify-center")], [
-          button([button_class("50"), type_("submit")], [text("Entrar")]),
+          button(
+            [
+              class(
+                "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
+              ),
+              type_("submit"),
+            ],
+            [text("Entrar")],
+          ),
         ]),
       ]),
       div([class("flex items-center justify-center")], [

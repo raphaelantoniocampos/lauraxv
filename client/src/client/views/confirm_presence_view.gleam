@@ -4,7 +4,6 @@ import client/state.{
   ConfirmUpdatePersonName, ConfirmUpdatePhone, UserRequestedConfirmPresence,
   message_error_decoder,
 }
-import client/views/components/button_class.{button_class}
 import client/views/login_view.{login_view}
 import gleam/dict
 import gleam/int
@@ -30,6 +29,11 @@ pub fn confirm_presence(model: Model) {
     user.user_id
   }
 
+  let people_names = {
+    model.confirm_form.people_names
+    |> dict.insert(0, model.confirm_form.name)
+    |> dict.values
+  }
   lustre_http.post(
     server_url <> "/confirm",
     json.object([
@@ -41,8 +45,7 @@ pub fn confirm_presence(model: Model) {
       #("people_count", json.int(model.confirm_form.people_count)),
       #(
         "people_names",
-        model.confirm_form.people_names
-          |> dict.values
+        people_names
           |> json.array(json.string),
       ),
       #(
@@ -273,9 +276,15 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                     ]),
                   ]),
                   div([class("flex items-center justify-center")], [
-                    button([button_class("60"), type_("submit")], [
-                      text("Enviar Confirmação"),
-                    ]),
+                    button(
+                      [
+                        class(
+                          "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
+                        ),
+                        type_("submit"),
+                      ],
+                      [text("Enviar Confirmação")],
+                    ),
                   ]),
                   case model.confirm_form.error {
                     Some(err) ->

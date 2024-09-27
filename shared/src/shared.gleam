@@ -29,6 +29,7 @@ pub type User {
 
 pub type Confirmation {
   Confirmation(
+    id: Int,
     user_id: Int,
     name: String,
     invite_name: String,
@@ -36,12 +37,4 @@ pub type Confirmation {
     comments: Option(String),
     people_names: List(String),
   )
-}
-
-pub type Person {
-  Person(user_id: Int, name: String)
-}
-
-pub type ConfirmationData {
-  ConfirmationData(total: Int, confirmations: List(Confirmation))
 }
