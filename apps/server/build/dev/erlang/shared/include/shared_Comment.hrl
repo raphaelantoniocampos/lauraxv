@@ -1,0 +1,1 @@
+-record(comment, {name :: binary(), comment :: gleam@option:option(binary())}).

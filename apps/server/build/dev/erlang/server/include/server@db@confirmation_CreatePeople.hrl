@@ -1,0 +1,1 @@
+-record(create_people, {user_id :: integer(), names :: list(binary())}).

@@ -1,0 +1,12 @@
+{application, rada, [
+    {vsn, "0.4.0"},
+    {applications, [gleam_stdlib,
+                    gleeunit,
+                    nibble]},
+    {description, "A library for dates with no times or time zones"},
+    {modules, [rada@date,
+               rada@date@parse,
+               rada@date@pattern,
+               rada@language]},
+    {registered, []}
+]}.
