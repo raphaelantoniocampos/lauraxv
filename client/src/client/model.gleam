@@ -103,3 +103,36 @@ pub fn update_admin_settings(
 ) -> Model {
   Model(..model, admin_settings: admin_settings)
 }
+
+pub fn update_event_countdown(model: Model, event_countdown: Int) -> Model {
+  Model(..model, event_countdown: event_countdown)
+}
+
+pub fn update_login_username(model: Model, username: String) -> Model {
+  Model(..model, login_form: LoginForm(..model.login_form, username: username))
+}
+
+pub fn update_login_email(model: Model, email: String) -> Model {
+  Model(..model, login_form: LoginForm(..model.login_form, email: email))
+}
+
+pub fn update_login_password(model: Model, password: String) -> Model {
+  Model(..model, login_form: LoginForm(..model.login_form, password: password))
+}
+
+pub fn update_login_confirm_password(
+  model: Model,
+  confirm_password: String,
+) -> Model {
+  Model(
+    ..model,
+    login_form: LoginForm(
+      ..model.login_form,
+      confirm_password: confirm_password,
+    ),
+  )
+}
+
+pub fn update_login_error(model: Model, error: String) -> Model {
+  Model(..model, login_form: LoginForm(..model.login_form, error: Some(error)))
+}

@@ -15,9 +15,7 @@ import client/views/gifts_view.{gifts_view, select_gift}
 import client/views/home_view.{home_view}
 import client/views/login_view.{login, login_view, signup}
 import client/views/not_found_view.{not_found_view}
-import gleam/bool
 import gleam/dict
-import gleam/int
 import gleam/list
 import gleam/string
 import rada/date
@@ -25,7 +23,7 @@ import rada/date
 import common.{type Comment, type Gift, Comment, Confirmation, Gift}
 import env.{get_api_url}
 import gleam/dynamic
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/uri.{type Uri}
 import lustre
 import lustre/attribute.{class, id}
@@ -59,408 +57,433 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
   case msg {
     msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
     msg.AuthUserRecieved(user_result) ->
-      handle_api_result(user_result, model.update_user)
+      handle_api_response(
+        model,
+        user_result,
+        default_transform_data,
+        model.update_user,
+      )
 
     msg.GiftsRecieved(gifts_result) ->
-      handle_api_result(gifts_result, model.update_gifts)
+      handle_api_response(
+        model,
+        gifts_result,
+        default_transform_data,
+        model.update_gifts,
+      )
 
     msg.ImagesRecieved(images_result) ->
-      handle_api_result(images_result, model.update_images)
+      handle_api_response(
+        model,
+        images_result,
+        default_transform_data,
+        model.update_images,
+      )
 
     msg.CommentsRecieved(comments_result) ->
-      handle_api_result(comments_result, model.update_comments)
+      handle_api_response(
+        model,
+        comments_result,
+        default_transform_data,
+        model.update_comments,
+      )
 
     msg.ConfirmationsRecieved(confirmations_result) ->
-      handle_api_result(
+      handle_api_response(
+        model,
         confirmations_result,
-        confirmations_to_admin_settings(model),
+        confirmations_to_admin_settings,
         model.update_admin_settings,
       )
 
-    msg.CountdownUpdated(value) -> #(
-      Model(..model, event_countdown: value),
-      effect.none(),
-    )
+    msg.CountdownUpdated(value) ->
+      model.update_event_countdown(model, value) |> update.none
 
-    msg.LoginUpdateUsername(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, username: value)),
-      effect.none(),
-    )
+    msg.LoginUpdateUsername(value) ->
+      model.update_login_username(model, value) |> update.none
 
-    msg.LoginUpdateEmail(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, email: value)),
-      effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
-    )
-    msg.LoginUpdatePassword(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, password: value)),
-      effect.none(),
-    )
+    msg.LoginUpdateEmail(value) ->
+      model.update_login_email(model, value)
+      |> update.effect(msg.ConfirmUpdateEmail(value))
 
-    msg.LoginUpdateConfirmPassword(value) -> #(
-      Model(
-        ..model,
-        login_form: LoginForm(..model.login_form, confirm_password: value),
-      ),
-      effect.none(),
-    )
+    msg.LoginUpdatePassword(value) ->
+      model.update_login_password(model, value) |> update.none
 
-    msg.LoginUpdateError(value) -> #(
-      Model(..model, login_form: LoginForm(..model.login_form, error: value)),
-      effect.none(),
-    )
-
-    msg.UserRequestedLoginSignUp -> {
-      case model.login_form.sign_up {
-        False -> #(model, login(model))
-        True -> #(model, signup(model))
-      }
-    }
-
-    msg.LoginResponded(resp_result) ->
-      case resp_result {
-        Ok(resp) ->
-          case resp.message, resp.error {
-            _, Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
-            )
-            Some(response), None -> #(
-              Model(..model, login_form: LoginForm("", "", "", "", False, None)),
-              effect.batch([
-                modem.push("/", None, None),
-                get_auth_user(
-                  response
-                  |> get_id_from_response,
-                ),
-              ]),
-            )
-            _, _ -> #(
-              model,
-              effect.from(fn(dispatch) {
-                dispatch(
-                  LoginUpdateError(Some(
-                    "Problemas no servidor, por favor tente mais tarde.",
-                  )),
-                )
-              }),
-            )
-          }
-        Error(_) -> #(
-          model,
-          effect.from(fn(dispatch) {
-            dispatch(
-              LoginUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          }),
-        )
-      }
-
-    msg.UserClickedSignUp -> #(
-      Model(
-        ..model,
-        login_form: LoginForm(
-          ..model.login_form,
-          sign_up: bool.negate(model.login_form.sign_up),
-        ),
-      ),
-      effect.none(),
-    )
-
-    msg.SignUpResponded(resp_result) ->
-      case resp_result {
-        Ok(resp) ->
-          case resp.message, resp.error {
-            Some(response), None -> {
-              #(
-                Model(
-                  ..model,
-                  login_form: LoginForm("", "", "", "", False, None),
-                ),
-                effect.batch([
-                  modem.push("/", None, None),
-                  get_auth_user(
-                    response
-                    |> get_id_from_response,
-                  ),
-                ]),
-              )
-            }
-            _, Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
-            )
-            _, _ -> #(
-              model,
-              effect.from(fn(dispatch) {
-                dispatch(
-                  LoginUpdateError(Some(
-                    "Problemas no servidor, por favor tente mais tarde.",
-                  )),
-                )
-              }),
-            )
-          }
-        Error(_) -> #(
-          model,
-          effect.from(fn(dispatch) {
-            dispatch(
-              LoginUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          }),
-        )
-      }
-
-    msg.UserOpenedGiftsView ->
-      case model.gift_status.sugestion, model.gift_status.unique {
-        [_], [_] -> #(model, effect.none())
-        [], [] -> #(model, get_gifts())
-        _, _ -> #(model, effect.none())
-      }
-
-    msg.UserOpenedGalleryView ->
-      case model.gallery_images {
-        [_] -> #(model, effect.none())
-        [] -> #(model, get_images())
-        _ -> #(model, effect.none())
-      }
-
-    msg.AdminOpenedAdminView ->
-      case model.admin_settings.total {
-        0 -> #(model, get_confirmation_data())
-        _ -> #(model, effect.none())
-      }
-
-    msg.AdminClickedShowAll -> #(
-      Model(
-        ..model,
-        admin_settings: AdminSettings(
-          ..model.admin_settings,
-          show_all: bool.negate(model.admin_settings.show_all),
-        ),
-      ),
-      effect.none(),
-    )
-
-    msg.AdminClickedShowConfirmationDetails(id) -> {
-      let updated_show_details =
-        model.admin_settings.show_details
-        |> dict.upsert(id, fn(key) {
-          case key {
-            Some(key) -> bool.negate(key)
-            None -> False
-          }
-        })
-
-      #(
-        Model(
-          ..model,
-          admin_settings: AdminSettings(
-            ..model.admin_settings,
-            show_details: updated_show_details,
-          ),
-        ),
-        effect.none(),
-      )
-    }
-
-    msg.UserRequestedSelectGift(gift, to) -> #(
-      model,
-      select_gift(model, gift, to),
-    )
-
-    msg.SelectGiftResponded(resp_result) -> {
-      case resp_result {
-        Ok(resp) ->
-          case resp.message, resp.error {
-            _, Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) { dispatch(GiftUpdateError(Some(err))) }),
-            )
-            Some(_), None -> #(model, get_gifts())
-            _, _ -> #(
-              model,
-              effect.from(fn(dispatch) {
-                dispatch(
-                  GiftUpdateError(Some(
-                    "Problemas no servidor, por favor tente mais tarde.",
-                  )),
-                )
-              }),
-            )
-          }
-        Error(_) -> #(
-          model,
-          effect.from(fn(dispatch) {
-            dispatch(
-              GiftUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          }),
-        )
-      }
-    }
-
-    msg.GiftUpdateError(value) -> #(
-      Model(..model, gift_status: GiftStatus(..model.gift_status, error: value)),
-      effect.none(),
-    )
-
-    msg.ConfirmUpdateName(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, name: value),
-      ),
-      effect.none(),
-    )
-
-    msg.ConfirmUpdateInviteName(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, invite_name: value),
-      ),
-      effect.none(),
-    )
-
-    msg.ConfirmUpdateEmail(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, email: value),
-      ),
-      effect.none(),
-    )
-
-    msg.ConfirmUpdatePhone(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, phone: value),
-      ),
-      effect.none(),
-    )
-    msg.ConfirmUpdatePeopleCount(value) -> {
-      case int.parse(value) {
-        Ok(people_count) -> {
-          #(
-            Model(
-              ..model,
-              confirm_form: ConfirmForm(
-                ..model.confirm_form,
-                people_count: people_count,
-              ),
-            ),
-            effect.none(),
-          )
-        }
-        Error(_) -> {
-          #(
-            model,
-            effect.from(fn(dispatch) {
-              dispatch(
-                ConfirmUpdateError(Some(
-                  "O campo \"Quantidade de pessoas\" deve ser um valor inteiro entre 1 e 99",
-                )),
-              )
-            }),
-          )
-        }
-      }
-    }
-
-    msg.ConfirmUpdatePersonName(n, value) -> {
-      let people_names =
-        model.confirm_form.people_names
-        |> dict.upsert(n, fn(key) {
-          case key {
-            Some(_) -> value
-            None -> ""
-          }
-        })
-      #(
-        Model(
-          ..model,
-          confirm_form: ConfirmForm(..model.confirm_form, person_name: value),
-        ),
-        effect.from(fn(dispatch) {
-          dispatch(ConfirmUpdatePeopleNames(people_names))
-        }),
-      )
-    }
-    msg.ConfirmUpdatePeopleNames(value) -> {
-      #(
-        Model(
-          ..model,
-          confirm_form: ConfirmForm(..model.confirm_form, people_names: value),
-        ),
-        effect.none(),
-      )
-    }
-
-    msg.ConfirmUpdateComments(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, comments: Some(value)),
-      ),
-      effect.none(),
-    )
-
-    msg.ConfirmUpdateError(value) -> #(
-      Model(
-        ..model,
-        confirm_form: ConfirmForm(..model.confirm_form, error: value),
-      ),
-      effect.none(),
-    )
-
-    msg.UserRequestedConfirmPresence -> #(model, confirm_presence(model))
-
-    msg.ConfirmPresenceResponded(resp_result) ->
-      case resp_result {
-        Ok(resp) ->
-          case resp.message, resp.error {
-            Some(response), None -> {
-              #(
-                model,
-                effect.batch([
-                  modem.push("/confirm", None, None),
-                  get_auth_user(
-                    response
-                    |> get_id_from_response,
-                  ),
-                ]),
-              )
-            }
-            _, Some(err) -> #(
-              model,
-              effect.from(fn(dispatch) {
-                dispatch(ConfirmUpdateError(Some(err)))
-              }),
-            )
-            _, _ -> #(
-              model,
-              effect.from(fn(dispatch) {
-                dispatch(
-                  ConfirmUpdateError(Some(
-                    "Problemas no servidor, por favor tente mais tarde.",
-                  )),
-                )
-              }),
-            )
-          }
-        Error(_) -> #(
-          model,
-          effect.from(fn(dispatch) {
-            dispatch(
-              ConfirmUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          }),
-        )
-      }
+    //     msg.LoginUpdateEmail(value) -> #(
+    //       Model(..model, login_form: LoginForm(..model.login_form, email: value)),
+    //       effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
+    //     )
+    //     msg.LoginUpdatePassword(value) -> #(
+    //       Model(..model, login_form: LoginForm(..model.login_form, password: value)),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.LoginUpdateConfirmPassword(value) -> #(
+    //       Model(
+    //         ..model,
+    //         login_form: LoginForm(..model.login_form, confirm_password: value),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.LoginUpdateError(value) -> #(
+    //       Model(..model, login_form: LoginForm(..model.login_form, error: value)),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.UserRequestedLoginSignUp -> {
+    //       case model.login_form.sign_up {
+    //         False -> #(model, login(model))
+    //         True -> #(model, signup(model))
+    //       }
+    //     }
+    //
+    //     msg.LoginResponded(resp_result) ->
+    //       case resp_result {
+    //         Ok(resp) ->
+    //           case resp.message, resp.error {
+    //             _, Some(err) -> #(
+    //               model,
+    //               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+    //             )
+    //             Some(response), None -> #(
+    //               Model(..model, login_form: LoginForm("", "", "", "", False, None)),
+    //               effect.batch([
+    //                 modem.push("/", None, None),
+    //                 get_auth_user(
+    //                   response
+    //                   |> get_id_from_response,
+    //                 ),
+    //               ]),
+    //             )
+    //             _, _ -> #(
+    //               model,
+    //               effect.from(fn(dispatch) {
+    //                 dispatch(
+    //                   LoginUpdateError(Some(
+    //                     "Problemas no servidor, por favor tente mais tarde.",
+    //                   )),
+    //                 )
+    //               }),
+    //             )
+    //           }
+    //         Error(_) -> #(
+    //           model,
+    //           effect.from(fn(dispatch) {
+    //             dispatch(
+    //               LoginUpdateError(Some(
+    //                 "Problemas no servidor, por favor tente mais tarde.",
+    //               )),
+    //             )
+    //           }),
+    //         )
+    //       }
+    //
+    //     msg.UserClickedSignUp -> #(
+    //       Model(
+    //         ..model,
+    //         login_form: LoginForm(
+    //           ..model.login_form,
+    //           sign_up: bool.negate(model.login_form.sign_up),
+    //         ),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.SignUpResponded(resp_result) ->
+    //       case resp_result {
+    //         Ok(resp) ->
+    //           case resp.message, resp.error {
+    //             Some(response), None -> {
+    //               #(
+    //                 Model(
+    //                   ..model,
+    //                   login_form: LoginForm("", "", "", "", False, None),
+    //                 ),
+    //                 effect.batch([
+    //                   modem.push("/", None, None),
+    //                   get_auth_user(
+    //                     response
+    //                     |> get_id_from_response,
+    //                   ),
+    //                 ]),
+    //               )
+    //             }
+    //             _, Some(err) -> #(
+    //               model,
+    //               effect.from(fn(dispatch) { dispatch(LoginUpdateError(Some(err))) }),
+    //             )
+    //             _, _ -> #(
+    //               model,
+    //               effect.from(fn(dispatch) {
+    //                 dispatch(
+    //                   LoginUpdateError(Some(
+    //                     "Problemas no servidor, por favor tente mais tarde.",
+    //                   )),
+    //                 )
+    //               }),
+    //             )
+    //           }
+    //         Error(_) -> #(
+    //           model,
+    //           effect.from(fn(dispatch) {
+    //             dispatch(
+    //               LoginUpdateError(Some(
+    //                 "Problemas no servidor, por favor tente mais tarde.",
+    //               )),
+    //             )
+    //           }),
+    //         )
+    //       }
+    //
+    //     msg.UserOpenedGiftsView ->
+    //       case model.gift_status.sugestion, model.gift_status.unique {
+    //         [_], [_] -> #(model, effect.none())
+    //         [], [] -> #(model, get_gifts())
+    //         _, _ -> #(model, effect.none())
+    //       }
+    //
+    //     msg.UserOpenedGalleryView ->
+    //       case model.gallery_images {
+    //         [_] -> #(model, effect.none())
+    //         [] -> #(model, get_images())
+    //         _ -> #(model, effect.none())
+    //       }
+    //
+    //     msg.AdminOpenedAdminView ->
+    //       case model.admin_settings.total {
+    //         0 -> #(model, get_confirmation_data())
+    //         _ -> #(model, effect.none())
+    //       }
+    //
+    //     msg.AdminClickedShowAll -> #(
+    //       Model(
+    //         ..model,
+    //         admin_settings: AdminSettings(
+    //           ..model.admin_settings,
+    //           show_all: bool.negate(model.admin_settings.show_all),
+    //         ),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.AdminClickedShowConfirmationDetails(id) -> {
+    //       let updated_show_details =
+    //         model.admin_settings.show_details
+    //         |> dict.upsert(id, fn(key) {
+    //           case key {
+    //             Some(key) -> bool.negate(key)
+    //             None -> False
+    //           }
+    //         })
+    //
+    //       #(
+    //         Model(
+    //           ..model,
+    //           admin_settings: AdminSettings(
+    //             ..model.admin_settings,
+    //             show_details: updated_show_details,
+    //           ),
+    //         ),
+    //         effect.none(),
+    //       )
+    //     }
+    //
+    //     msg.UserRequestedSelectGift(gift, to) -> #(
+    //       model,
+    //       select_gift(model, gift, to),
+    //     )
+    //
+    //     msg.SelectGiftResponded(resp_result) -> {
+    //       case resp_result {
+    //         Ok(resp) ->
+    //           case resp.message, resp.error {
+    //             _, Some(err) -> #(
+    //               model,
+    //               effect.from(fn(dispatch) { dispatch(GiftUpdateError(Some(err))) }),
+    //             )
+    //             Some(_), None -> #(model, get_gifts())
+    //             _, _ -> #(
+    //               model,
+    //               effect.from(fn(dispatch) {
+    //                 dispatch(
+    //                   GiftUpdateError(Some(
+    //                     "Problemas no servidor, por favor tente mais tarde.",
+    //                   )),
+    //                 )
+    //               }),
+    //             )
+    //           }
+    //         Error(_) -> #(
+    //           model,
+    //           effect.from(fn(dispatch) {
+    //             dispatch(
+    //               GiftUpdateError(Some(
+    //                 "Problemas no servidor, por favor tente mais tarde.",
+    //               )),
+    //             )
+    //           }),
+    //         )
+    //       }
+    //     }
+    //
+    //     msg.GiftUpdateError(value) -> #(
+    //       Model(..model, gift_status: GiftStatus(..model.gift_status, error: value)),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.ConfirmUpdateName(value) -> #(
+    //       Model(
+    //         ..model,
+    //         confirm_form: ConfirmForm(..model.confirm_form, name: value),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.ConfirmUpdateInviteName(value) -> #(
+    //       Model(
+    //         ..model,
+    //         confirm_form: ConfirmForm(..model.confirm_form, invite_name: value),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.ConfirmUpdateEmail(value) -> #(
+    //       Model(
+    //         ..model,
+    //         confirm_form: ConfirmForm(..model.confirm_form, email: value),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.ConfirmUpdatePhone(value) -> #(
+    //       Model(
+    //         ..model,
+    //         confirm_form: ConfirmForm(..model.confirm_form, phone: value),
+    //       ),
+    //       effect.none(),
+    //     )
+    //     msg.ConfirmUpdatePeopleCount(value) -> {
+    //       case int.parse(value) {
+    //         Ok(people_count) -> {
+    //           #(
+    //             Model(
+    //               ..model,
+    //               confirm_form: ConfirmForm(
+    //                 ..model.confirm_form,
+    //                 people_count: people_count,
+    //               ),
+    //             ),
+    //             effect.none(),
+    //           )
+    //         }
+    //         Error(_) -> {
+    //           #(
+    //             model,
+    //             effect.from(fn(dispatch) {
+    //               dispatch(
+    //                 ConfirmUpdateError(Some(
+    //                   "O campo \"Quantidade de pessoas\" deve ser um valor inteiro entre 1 e 99",
+    //                 )),
+    //               )
+    //             }),
+    //           )
+    //         }
+    //       }
+    //     }
+    //
+    //     msg.ConfirmUpdatePersonName(n, value) -> {
+    //       let people_names =
+    //         model.confirm_form.people_names
+    //         |> dict.upsert(n, fn(key) {
+    //           case key {
+    //             Some(_) -> value
+    //             None -> ""
+    //           }
+    //         })
+    //       #(
+    //         Model(
+    //           ..model,
+    //           confirm_form: ConfirmForm(..model.confirm_form, person_name: value),
+    //         ),
+    //         effect.from(fn(dispatch) {
+    //           dispatch(ConfirmUpdatePeopleNames(people_names))
+    //         }),
+    //       )
+    //     }
+    //     msg.ConfirmUpdatePeopleNames(value) -> {
+    //       #(
+    //         Model(
+    //           ..model,
+    //           confirm_form: ConfirmForm(..model.confirm_form, people_names: value),
+    //         ),
+    //         effect.none(),
+    //       )
+    //     }
+    //
+    //     msg.ConfirmUpdateComments(value) -> #(
+    //       Model(
+    //         ..model,
+    //         confirm_form: ConfirmForm(..model.confirm_form, comments: Some(value)),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.ConfirmUpdateError(value) -> #(
+    //       Model(
+    //         ..model,
+    //         confirm_form: ConfirmForm(..model.confirm_form, error: value),
+    //       ),
+    //       effect.none(),
+    //     )
+    //
+    //     msg.UserRequestedConfirmPresence -> #(model, confirm_presence(model))
+    //
+    //     msg.ConfirmPresenceResponded(resp_result) ->
+    //       case resp_result {
+    //         Ok(resp) ->
+    //           case resp.message, resp.error {
+    //             Some(response), None -> {
+    //               #(
+    //                 model,
+    //                 effect.batch([
+    //                   modem.push("/confirm", None, None),
+    //                   get_auth_user(
+    //                     response
+    //                     |> get_id_from_response,
+    //                   ),
+    //                 ]),
+    //               )
+    //             }
+    //             _, Some(err) -> #(
+    //               model,
+    //               effect.from(fn(dispatch) {
+    //                 dispatch(msg.ConfirmUpdateError(Some(err)))
+    //               }),
+    //             )
+    //             _, _ -> #(
+    //               model,
+    //               effect.from(fn(dispatch) {
+    //                 dispatch(
+    //                   msg.ConfirmUpdateError(Some(
+    //                     "Problemas no servidor, por favor tente mais tarde.",
+    //                   )),
+    //                 )
+    //               }),
+    //             )
+    //           }
+    //         Error(_) -> #(
+    //           model,
+    //           effect.from(fn(dispatch) {
+    //             dispatch(
+    //               msg.ConfirmUpdateError(Some(
+    //                 "Problemas no servidor, por favor tente mais tarde.",
+    //               )),
+    //             )
+    //           }),
+    //         )
+    //       }
+    _ -> model |> update.none
   }
 }
 
@@ -496,17 +519,17 @@ pub fn get_auth_user(id_string: String) -> Effect(msg.Msg) {
 
   let decoder =
     dynamic.decode4(
-      AuthUser,
+      model.AuthUser,
       dynamic.field("user_id", dynamic.int),
       dynamic.field("username", dynamic.string),
       dynamic.field("is_confirmed", dynamic.bool),
       dynamic.field("is_admin", dynamic.bool),
     )
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, AuthUserRecieved))
+  lustre_http.get(url, lustre_http.expect_json(decoder, msg.AuthUserRecieved))
 }
 
-fn get_gifts() -> Effect(Msg) {
+fn get_gifts() -> Effect(msg.Msg) {
   let url = get_api_url() <> "/gifts"
   let decoder =
     dynamic.list(dynamic.decode5(
@@ -524,17 +547,20 @@ fn get_gifts() -> Effect(Msg) {
       dynamic.field("sugestion_gifts", decoder),
       dynamic.field("unique_gifts", decoder),
     )
-  lustre_http.get(url, lustre_http.expect_json(tuple_decoder, GiftsRecieved))
+  lustre_http.get(
+    url,
+    lustre_http.expect_json(tuple_decoder, msg.GiftsRecieved),
+  )
 }
 
-fn get_images() -> Effect(Msg) {
+fn get_images() -> Effect(msg.Msg) {
   let url = get_api_url() <> "/images"
   let decoder = dynamic.list(dynamic.field("src", dynamic.string))
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, ImagesRecieved))
+  lustre_http.get(url, lustre_http.expect_json(decoder, msg.ImagesRecieved))
 }
 
-fn get_comments() -> Effect(Msg) {
+fn get_comments() -> Effect(msg.Msg) {
   let url = get_api_url() <> "/comments"
 
   let decoder =
@@ -543,10 +569,10 @@ fn get_comments() -> Effect(Msg) {
       dynamic.field("name", dynamic.string),
       dynamic.field("comment", dynamic.optional(dynamic.string)),
     ))
-  lustre_http.get(url, lustre_http.expect_json(decoder, CommentsRecieved))
+  lustre_http.get(url, lustre_http.expect_json(decoder, msg.CommentsRecieved))
 }
 
-fn get_confirmation_data() -> Effect(Msg) {
+fn get_confirmation_data() -> Effect(msg.Msg) {
   let url = get_api_url() <> "/confirm"
   let confirmation_decoder =
     dynamic.list(dynamic.decode7(
@@ -567,7 +593,10 @@ fn get_confirmation_data() -> Effect(Msg) {
       dynamic.field("confirmations", confirmation_decoder),
     )
 
-  lustre_http.get(url, lustre_http.expect_json(decoder, ConfirmationsRecieved))
+  lustre_http.get(
+    url,
+    lustre_http.expect_json(decoder, msg.ConfirmationsRecieved),
+  )
 }
 
 fn get_id_from_response(response: String) -> String {
@@ -577,7 +606,7 @@ fn get_id_from_response(response: String) -> String {
   |> string.drop_left(1)
 }
 
-pub fn update_countdown() -> Effect(Msg) {
+pub fn update_countdown() -> Effect(msg.Msg) {
   let countdown =
     date.diff(
       date.Days,
@@ -585,29 +614,35 @@ pub fn update_countdown() -> Effect(Msg) {
       date.from_calendar_date(2024, date.Dec, 14),
     )
 
-  effect.from(fn(dispatch) { dispatch(CountdownUpdated(countdown)) })
+  effect.from(fn(dispatch) { dispatch(msg.CountdownUpdated(countdown)) })
 }
 
-fn handle_api_result(
-  api_result: Result(data, lustre_http.HttpError),
-  to_model: Option(fn(model, a) -> b),
-  update_model: fn(data) -> model.Model,
+fn handle_api_response(
+  model: model.Model,
+  response: Result(data, lustre_http.HttpError),
+  transform_data: fn(model.Model, data) -> model_data,
+  apply_update: fn(model.Model, model_data) -> model.Model,
 ) {
-  case api_result {
-    Ok(ok_result) -> {
-      case to_model {
-        Some(to_model) -> {
-          to_model(model, ok_result) |> update_model |> update.none
-        }
-        None -> update_model(ok_result) |> update.none
-      }
+  case response {
+    Ok(api_data) -> {
+      model
+      |> apply_update(model |> transform_data(api_data))
+      |> update.none
     }
-    Error(_) -> model.model |> update.none
+    Error(_) -> model |> update.none
   }
 }
 
-fn confirmations_to_admin_settings(model, confirmation_data) {
-  AdminSettings(
+// Função padrão que não transforma os dados
+fn default_transform_data(_model: model.Model, api_data: data) -> data {
+  api_data
+}
+
+fn confirmations_to_admin_settings(
+  model: model.Model,
+  confirmation_data: #(Int, List(common.Confirmation)),
+) -> model.AdminSettings {
+  model.AdminSettings(
     ..model.admin_settings,
     confirmations: confirmation_data.1,
     show_details: {
@@ -617,4 +652,8 @@ fn confirmations_to_admin_settings(model, confirmation_data) {
     },
     total: confirmation_data.0,
   )
+}
+
+fn gifts_to_gift_status() -> model.GiftStatus {
+  todo
 }
