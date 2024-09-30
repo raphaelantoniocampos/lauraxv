@@ -1,3 +1,4 @@
+import client/router
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/option.{type Option}
@@ -5,34 +6,8 @@ import lustre_http
 
 import common.{type Comment, type Confirmation, type Gift}
 
-pub type Route {
-  Home
-  Login
-  Gifts
-  Event
-  Gallery
-  Comments
-  Admin
-  ConfirmPresence
-  NotFound
-}
-
-pub type Model {
-  Model(
-    route: Route,
-    auth_user: Option(AuthUser),
-    gift_status: GiftStatus,
-    gallery_images: List(String),
-    login_form: LoginForm,
-    confirm_form: ConfirmForm,
-    event_countdown: Int,
-    admin_settings: AdminSettings,
-    comments: List(Comment),
-  )
-}
-
 pub type Msg {
-  OnRouteChange(Route)
+  OnRouteChange(router.Route)
   AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(#(List(Gift), List(Gift)), lustre_http.HttpError))
   ImagesRecieved(Result(List(String), lustre_http.HttpError))
@@ -48,26 +23,19 @@ pub type Msg {
   LoginUpdatePassword(value: String)
   LoginUpdateConfirmPassword(value: String)
   LoginUpdateError(value: Option(String))
-
   UserRequestedLoginSignUp
   LoginResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
-
   UserClickedSignUp
-
   SignUpResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
 
   UserOpenedGiftsView
-
   UserOpenedGalleryView
-
   AdminOpenedAdminView
-
   AdminClickedShowConfirmationDetails(id: Int)
-
   AdminClickedShowAll
 
   UserRequestedSelectGift(gift: Gift, to: Bool)
@@ -85,7 +53,6 @@ pub type Msg {
   ConfirmUpdatePeopleNames(value: Dict(Int, String))
   ConfirmUpdateComments(value: String)
   ConfirmUpdateError(value: Option(String))
-
   UserRequestedConfirmPresence
   ConfirmPresenceResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),

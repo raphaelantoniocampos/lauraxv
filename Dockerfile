@@ -10,7 +10,7 @@ COPY ./common /build/common
 
 RUN mkdir -p /build/server/priv/static/images
 
-COPY ./client/priv/static/images /build/server/priv/static/images
+COPY ./client/priv/static/images /build/server/priv/static/
 
 RUN apk update
 

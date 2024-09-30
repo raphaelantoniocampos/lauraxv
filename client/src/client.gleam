@@ -1,19 +1,7 @@
-import client/state.{
-  type AdminSettings, type GiftStatus, type LoginForm, type Model, type Msg,
-  type Route, Admin, AdminClickedShowAll, AdminClickedShowConfirmationDetails,
-  AdminOpenedAdminView, AdminSettings, AuthUser, AuthUserRecieved, Comments,
-  CommentsRecieved, ConfirmForm, ConfirmPresence, ConfirmPresenceResponded,
-  ConfirmUpdateComments, ConfirmUpdateEmail, ConfirmUpdateError,
-  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePeopleNames, ConfirmUpdatePersonName, ConfirmUpdatePhone,
-  ConfirmationsRecieved, CountdownUpdated, Event, Gallery, GiftStatus,
-  GiftUpdateError, Gifts, GiftsRecieved, Home, ImagesRecieved, Login, LoginForm,
-  LoginResponded, LoginUpdateConfirmPassword, LoginUpdateEmail, LoginUpdateError,
-  LoginUpdatePassword, LoginUpdateUsername, Model, NotFound, OnRouteChange,
-  SelectGiftResponded, SignUpResponded, UserClickedSignUp, UserOpenedGalleryView,
-  UserOpenedGiftsView, UserRequestedConfirmPresence, UserRequestedLoginSignUp,
-  UserRequestedSelectGift,
-}
+import client/model
+import client/msg
+import client/router
+import client/update
 import client/views/admin_view.{admin_view}
 import client/views/comments_view.{comments_view}
 import client/views/components/footer.{footer_view}
@@ -53,71 +41,36 @@ pub fn main() {
 }
 
 fn init(_) -> #(Model, Effect(Msg)) {
-  #(
-    Model(
-      route: get_route(),
-      auth_user: None,
-      gift_status: GiftStatus([], [], None),
-      gallery_images: [],
-      login_form: LoginForm("", "", "", "", False, None),
-      confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
-      event_countdown: 0,
-      admin_settings: AdminSettings(0, [], dict.new(), False),
-      comments: [],
-    ),
-    effect.batch([
-      modem.init(on_url_change),
-      get_gifts(),
-      update_countdown(),
-      get_images(),
-      get_comments(),
-    ]),
-  )
+  model.init()
+  |> update.effects([
+    modem.init(on_url_change),
+    get_gifts(),
+    update_countdown(),
+    get_images(),
+    get_comments(),
+  ])
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
-    OnRouteChange(route) -> #(Model(..model, route: route), effect.none())
+    msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
+    msg.AuthUserRecieved(user_result) -> handle_user_result(user_result)
 
-    AuthUserRecieved(user_result) ->
-      case user_result {
-        Ok(user) -> {
-          #(Model(..model, auth_user: Some(user)), effect.none())
-        }
-        Error(_) -> #(model, effect.none())
-      }
+    msg.GiftsRecieved(gifts_result) -> handle_gifts_result(gifts_result)
 
-    GiftsRecieved(gifts_result) ->
-      case gifts_result {
-        Ok(gifts) -> {
-          #(
-            Model(
-              ..model,
-              gift_status: GiftStatus(
-                ..model.gift_status,
-                sugestion: gifts.0,
-                unique: gifts.1,
-              ),
-            ),
-            effect.none(),
-          )
-        }
-        Error(_) -> #(model, effect.none())
-      }
-
-    ImagesRecieved(images_result) ->
+    msg.ImagesRecieved(images_result) ->
       case images_result {
         Ok(images) -> #(Model(..model, gallery_images: images), effect.none())
         Error(_) -> #(model, effect.none())
       }
 
-    CommentsRecieved(comments_result) ->
+    msg.CommentsRecieved(comments_result) ->
       case comments_result {
         Ok(comments) -> #(Model(..model, comments: comments), effect.none())
         Error(_) -> #(model, effect.none())
       }
 
-    ConfirmationsRecieved(confirmations_result) ->
+    msg.ConfirmationsRecieved(confirmations_result) ->
       case confirmations_result {
         Ok(confirmation_data) -> {
           let updated_show_details =
@@ -140,26 +93,26 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         Error(_) -> #(model, effect.none())
       }
 
-    CountdownUpdated(value) -> #(
+    msg.CountdownUpdated(value) -> #(
       Model(..model, event_countdown: value),
       effect.none(),
     )
 
-    LoginUpdateUsername(value) -> #(
+    msg.LoginUpdateUsername(value) -> #(
       Model(..model, login_form: LoginForm(..model.login_form, username: value)),
       effect.none(),
     )
 
-    LoginUpdateEmail(value) -> #(
+    msg.LoginUpdateEmail(value) -> #(
       Model(..model, login_form: LoginForm(..model.login_form, email: value)),
       effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
     )
-    LoginUpdatePassword(value) -> #(
+    msg.LoginUpdatePassword(value) -> #(
       Model(..model, login_form: LoginForm(..model.login_form, password: value)),
       effect.none(),
     )
 
-    LoginUpdateConfirmPassword(value) -> #(
+    msg.LoginUpdateConfirmPassword(value) -> #(
       Model(
         ..model,
         login_form: LoginForm(..model.login_form, confirm_password: value),
@@ -167,19 +120,19 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    LoginUpdateError(value) -> #(
+    msg.LoginUpdateError(value) -> #(
       Model(..model, login_form: LoginForm(..model.login_form, error: value)),
       effect.none(),
     )
 
-    UserRequestedLoginSignUp -> {
+    msg.UserRequestedLoginSignUp -> {
       case model.login_form.sign_up {
         False -> #(model, login(model))
         True -> #(model, signup(model))
       }
     }
 
-    LoginResponded(resp_result) ->
+    msg.LoginResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
@@ -220,7 +173,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    UserClickedSignUp -> #(
+    msg.UserClickedSignUp -> #(
       Model(
         ..model,
         login_form: LoginForm(
@@ -231,7 +184,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    SignUpResponded(resp_result) ->
+    msg.SignUpResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
@@ -277,27 +230,27 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       }
 
-    UserOpenedGiftsView ->
+    msg.UserOpenedGiftsView ->
       case model.gift_status.sugestion, model.gift_status.unique {
         [_], [_] -> #(model, effect.none())
         [], [] -> #(model, get_gifts())
         _, _ -> #(model, effect.none())
       }
 
-    UserOpenedGalleryView ->
+    msg.UserOpenedGalleryView ->
       case model.gallery_images {
         [_] -> #(model, effect.none())
         [] -> #(model, get_images())
         _ -> #(model, effect.none())
       }
 
-    AdminOpenedAdminView ->
+    msg.AdminOpenedAdminView ->
       case model.admin_settings.total {
         0 -> #(model, get_confirmation_data())
         _ -> #(model, effect.none())
       }
 
-    AdminClickedShowAll -> #(
+    msg.AdminClickedShowAll -> #(
       Model(
         ..model,
         admin_settings: AdminSettings(
@@ -308,7 +261,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    AdminClickedShowConfirmationDetails(id) -> {
+    msg.AdminClickedShowConfirmationDetails(id) -> {
       let updated_show_details =
         model.admin_settings.show_details
         |> dict.upsert(id, fn(key) {
@@ -330,9 +283,12 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       )
     }
 
-    UserRequestedSelectGift(gift, to) -> #(model, select_gift(model, gift, to))
+    msg.UserRequestedSelectGift(gift, to) -> #(
+      model,
+      select_gift(model, gift, to),
+    )
 
-    SelectGiftResponded(resp_result) -> {
+    msg.SelectGiftResponded(resp_result) -> {
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
@@ -365,12 +321,12 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
     }
 
-    GiftUpdateError(value) -> #(
+    msg.GiftUpdateError(value) -> #(
       Model(..model, gift_status: GiftStatus(..model.gift_status, error: value)),
       effect.none(),
     )
 
-    ConfirmUpdateName(value) -> #(
+    msg.ConfirmUpdateName(value) -> #(
       Model(
         ..model,
         confirm_form: ConfirmForm(..model.confirm_form, name: value),
@@ -378,7 +334,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    ConfirmUpdateInviteName(value) -> #(
+    msg.ConfirmUpdateInviteName(value) -> #(
       Model(
         ..model,
         confirm_form: ConfirmForm(..model.confirm_form, invite_name: value),
@@ -386,7 +342,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    ConfirmUpdateEmail(value) -> #(
+    msg.ConfirmUpdateEmail(value) -> #(
       Model(
         ..model,
         confirm_form: ConfirmForm(..model.confirm_form, email: value),
@@ -394,14 +350,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    ConfirmUpdatePhone(value) -> #(
+    msg.ConfirmUpdatePhone(value) -> #(
       Model(
         ..model,
         confirm_form: ConfirmForm(..model.confirm_form, phone: value),
       ),
       effect.none(),
     )
-    ConfirmUpdatePeopleCount(value) -> {
+    msg.ConfirmUpdatePeopleCount(value) -> {
       case int.parse(value) {
         Ok(people_count) -> {
           #(
@@ -430,7 +386,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       }
     }
 
-    ConfirmUpdatePersonName(n, value) -> {
+    msg.ConfirmUpdatePersonName(n, value) -> {
       let people_names =
         model.confirm_form.people_names
         |> dict.upsert(n, fn(key) {
@@ -449,7 +405,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         }),
       )
     }
-    ConfirmUpdatePeopleNames(value) -> {
+    msg.ConfirmUpdatePeopleNames(value) -> {
       #(
         Model(
           ..model,
@@ -459,7 +415,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       )
     }
 
-    ConfirmUpdateComments(value) -> #(
+    msg.ConfirmUpdateComments(value) -> #(
       Model(
         ..model,
         confirm_form: ConfirmForm(..model.confirm_form, comments: Some(value)),
@@ -467,7 +423,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    ConfirmUpdateError(value) -> #(
+    msg.ConfirmUpdateError(value) -> #(
       Model(
         ..model,
         confirm_form: ConfirmForm(..model.confirm_form, error: value),
@@ -475,9 +431,9 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    UserRequestedConfirmPresence -> #(model, confirm_presence(model))
+    msg.UserRequestedConfirmPresence -> #(model, confirm_presence(model))
 
-    ConfirmPresenceResponded(resp_result) ->
+    msg.ConfirmPresenceResponded(resp_result) ->
       case resp_result {
         Ok(resp) ->
           case resp.message, resp.error {
@@ -549,32 +505,6 @@ pub fn view(model: Model) -> Element(Msg) {
       footer_view(),
     ],
   )
-}
-
-fn on_url_change(_uri: Uri) -> Msg {
-  OnRouteChange(get_route())
-}
-
-@external(javascript, "./ffi.mjs", "get_route")
-fn do_get_route() -> String
-
-fn get_route() -> Route {
-  let uri = case do_get_route() |> uri.parse {
-    Ok(uri) -> uri
-    _ -> panic as "Invalid uri"
-  }
-
-  case uri.path |> uri.path_segments {
-    [] -> Home
-    ["login"] -> Login
-    ["gifts"] -> Gifts
-    ["event"] -> Event
-    ["gallery"] -> Gallery
-    ["comments"] -> Comments
-    ["admin"] -> Admin
-    ["confirm"] -> ConfirmPresence
-    _ -> NotFound
-  }
 }
 
 pub fn get_auth_user(id_string: String) -> Effect(Msg) {
@@ -672,4 +602,23 @@ pub fn update_countdown() -> Effect(Msg) {
     )
 
   effect.from(fn(dispatch) { dispatch(CountdownUpdated(countdown)) })
+}
+
+fn handle_user_result(user_result) {
+  case user_result {
+    Ok(auth_user) -> {
+      model.update_user(auth_user) |> update.none
+    }
+    Error(_) -> model.model |> update.none
+  }
+}
+
+fn handle_gifts_result(gifts_result) {
+  case gifts_result {
+    Ok(gifts) -> {
+      model.update_gifts(gifts)
+      |> update.none
+    }
+    Error(_) -> model.model |> update.none
+  }
 }
