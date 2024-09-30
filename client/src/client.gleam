@@ -49,13 +49,13 @@ fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   ])
 }
 
-// fn on_url_change(_uri: Uri) -> msg.Msg {
-//   msg.OnRouteChange(router.get_route())
-// }
+fn on_url_change(_uri: Uri) -> msg.Msg {
+  msg.OnRouteChange(router.get_route())
+}
 
 fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
   case msg {
-    // msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
+    msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
     msg.AuthUserRecieved(user_result) ->
       handle_api_response(
         model,

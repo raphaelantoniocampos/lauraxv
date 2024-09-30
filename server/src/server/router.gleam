@@ -6,6 +6,7 @@ import client/router.{
 }
 import config.{type Context}
 import cors_builder as cors
+import gleam/dict
 import gleam/http.{Get, Post}
 import gleam/option.{None}
 import lustre/element
@@ -81,11 +82,33 @@ fn page_routes(req: Request) -> Response {
     ["confirm"] -> ConfirmPresence
     _ -> NotFound
   }
+  let model =
+    model.Model(
+      route: Home,
+      auth_user: None,
+      gift_status: model.GiftStatus([], [], None),
+      gallery_images: [],
+      login_form: model.LoginForm("", "", "", "", False, None),
+      confirm_form: model.ConfirmForm(
+        "",
+        "",
+        "",
+        "",
+        1,
+        "",
+        dict.new(),
+        None,
+        None,
+      ),
+      event_countdown: 0,
+      admin_settings: model.AdminSettings(0, [], dict.new(), False),
+      comments: [],
+    )
 
   wisp.response(200)
   |> wisp.set_header("Content-Type", "text/html")
   |> wisp.html_body(
-    client.view(model.init())
+    client.view(model)
     |> page_scaffold()
     |> element.to_document_string_builder(),
   )
