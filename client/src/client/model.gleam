@@ -1,4 +1,3 @@
-import client/msg
 import client/router
 import common
 import gleam/dict
@@ -7,27 +6,100 @@ import gleam/option.{type Option, None, Some}
 pub type Model {
   Model(
     route: router.Route,
-    auth_user: Option(msg.AuthUser),
-    gift_status: msg.GiftStatus,
+    auth_user: Option(AuthUser),
+    gift_status: GiftStatus,
     gallery_images: List(String),
-    login_form: msg.LoginForm,
-    confirm_form: msg.ConfirmForm,
+    login_form: LoginForm,
+    confirm_form: ConfirmForm,
     event_countdown: Int,
-    admin_settings: msg.AdminSettings,
+    admin_settings: AdminSettings,
     comments: List(common.Comment),
   )
 }
 
-fn init() -> Model {
+pub type AuthUser {
+  AuthUser(user_id: Int, username: String, is_confirmed: Bool, is_admin: Bool)
+}
+
+pub type LoginForm {
+  LoginForm(
+    username: String,
+    email: String,
+    password: String,
+    confirm_password: String,
+    sign_up: Bool,
+    error: Option(String),
+  )
+}
+
+pub type ConfirmForm {
+  ConfirmForm(
+    name: String,
+    invite_name: String,
+    email: String,
+    phone: String,
+    people_count: Int,
+    person_name: String,
+    people_names: dict.Dict(Int, String),
+    comments: Option(String),
+    error: Option(String),
+  )
+}
+
+pub type GiftStatus {
+  GiftStatus(
+    sugestion: List(common.Gift),
+    unique: List(common.Gift),
+    error: Option(String),
+  )
+}
+
+pub type AdminSettings {
+  AdminSettings(
+    total: Int,
+    confirmations: List(common.Confirmation),
+    show_details: dict.Dict(Int, Bool),
+    show_all: Bool,
+  )
+}
+
+pub fn init() -> Model {
   Model(
     route: router.Home,
     auth_user: None,
-    gift_status: msg.GiftStatus([], [], None),
+    gift_status: GiftStatus([], [], None),
     gallery_images: [],
-    login_form: msg.LoginForm("", "", "", "", False, None),
-    confirm_form: msg.ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
+    login_form: LoginForm("", "", "", "", False, None),
+    confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
     event_countdown: 0,
-    admin_settings: msg.AdminSettings(0, [], dict.new(), False),
+    admin_settings: AdminSettings(0, [], dict.new(), False),
     comments: [],
   )
+}
+
+pub fn update_route(model: Model, route: router.Route) -> Model {
+  Model(..model, route: route)
+}
+
+pub fn update_user(model: Model, auth_user: AuthUser) -> Model {
+  Model(..model, auth_user: Some(auth_user))
+}
+
+pub fn update_gifts(model: Model, gift_status: GiftStatus) -> Model {
+  Model(..model, gift_status: gift_status)
+}
+
+pub fn update_images(model: Model, gallery_images: List(String)) -> Model {
+  Model(..model, gallery_images: gallery_images)
+}
+
+pub fn update_comments(model: Model, comments: List(common.Comment)) -> Model {
+  Model(..model, comments: comments)
+}
+
+pub fn update_admin_settings(
+  model: Model,
+  admin_settings: AdminSettings,
+) -> Model {
+  Model(..model, admin_settings: admin_settings)
 }

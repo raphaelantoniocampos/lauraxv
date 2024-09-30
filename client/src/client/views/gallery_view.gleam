@@ -1,4 +1,5 @@
-import client/state.{type Model}
+import client/model
+import client/msg
 import gleam/list
 import lustre/attribute.{alt, attribute, class, src}
 import lustre/element.{type Element, text}
@@ -12,7 +13,7 @@ fn image_widget(image: String) -> Element(a) {
   ])
 }
 
-pub fn gallery_view(model: Model) -> Element(a) {
+pub fn gallery_view(model: model.Model) -> Element(a) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [

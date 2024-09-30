@@ -1,4 +1,5 @@
-import client/state.{type Model}
+import client/model
+import client/msg
 import common.{type Comment, Comment}
 import gleam/list
 import gleam/option.{Some}
@@ -6,7 +7,7 @@ import lustre/attribute.{attribute, class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, h2, li, main, p, ul}
 
-pub fn comments_view(model: Model) -> Element(a) {
+pub fn comments_view(model: model.Model) -> Element(a) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     div([class("text-center mt-12")], [
       h1(

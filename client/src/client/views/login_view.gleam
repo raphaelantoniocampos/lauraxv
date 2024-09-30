@@ -1,8 +1,5 @@
-import client/state.{
-  type Model, type Msg, LoginResponded, LoginUpdateConfirmPassword,
-  LoginUpdateEmail, LoginUpdatePassword, LoginUpdateUsername, SignUpResponded,
-  UserClickedSignUp, UserRequestedLoginSignUp, message_error_decoder,
-}
+import client/model
+import client/msg
 import env.{get_api_url}
 import gleam/json
 import gleam/option.{None, Some}
@@ -16,18 +13,18 @@ import lustre/element/html.{button, div, form, h1, input, label, main, p}
 import lustre/event
 import lustre_http
 
-pub fn login(model: Model) -> Effect(Msg) {
+pub fn login(model: model.Model) -> Effect(msg.Msg) {
   lustre_http.post(
     get_api_url() <> "/auth/login",
     json.object([
       #("email", json.string(model.login_form.email)),
       #("password", json.string(model.login_form.password)),
     ]),
-    lustre_http.expect_json(message_error_decoder(), LoginResponded),
+    lustre_http.expect_json(msg.message_error_decoder(), msg.LoginResponded),
   )
 }
 
-pub fn signup(model: Model) -> Effect(Msg) {
+pub fn signup(model: model.Model) -> Effect(msg.Msg) {
   lustre_http.post(
     get_api_url() <> "/users",
     json.object([
@@ -36,11 +33,11 @@ pub fn signup(model: Model) -> Effect(Msg) {
       #("password", json.string(model.login_form.password)),
       #("confirm_password", json.string(model.login_form.confirm_password)),
     ]),
-    lustre_http.expect_json(message_error_decoder(), SignUpResponded),
+    lustre_http.expect_json(msg.message_error_decoder(), msg.SignUpResponded),
   )
 }
 
-pub fn login_view(model: Model) -> Element(Msg) {
+pub fn login_view(model: model.Model) -> Element(msg.Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     div([class("w-full max-w-md p-8 bg-white rounded-lg shadow-lg")], [
       h1(
@@ -50,7 +47,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
         ],
         [text("Entrar")],
       ),
-      form([class("space-y-6"), event.on_submit(UserRequestedLoginSignUp)], [
+      form([class("space-y-6"), event.on_submit(msg.UserRequestedLoginSignUp)], [
         case model.login_form.sign_up {
           True -> {
             div([], [
@@ -65,7 +62,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
                 class(
                   "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
                 ),
-                event.on_input(LoginUpdateUsername),
+                event.on_input(msg.LoginUpdateUsername),
                 required(True),
                 id("username"),
                 type_("name"),
@@ -84,7 +81,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
             class(
               "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
             ),
-            event.on_input(LoginUpdateEmail),
+            event.on_input(msg.LoginUpdateEmail),
             id("email"),
             type_("email"),
             autocomplete("email"),
@@ -101,7 +98,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
             class(
               "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
             ),
-            event.on_input(LoginUpdatePassword),
+            event.on_input(msg.LoginUpdatePassword),
             id("password"),
             type_("password"),
             required(True),
@@ -122,7 +119,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
                 class(
                   "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
                 ),
-                event.on_input(LoginUpdateConfirmPassword),
+                event.on_input(msg.LoginUpdateConfirmPassword),
                 id("confirm_password"),
                 type_("password"),
                 required(True),
@@ -170,7 +167,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
                 class(
                   "p-1 text-pink-600 hover:text-pink-800 transition duration-300",
                 ),
-                event.on_click(UserClickedSignUp),
+                event.on_click(msg.UserClickedSignUp),
               ],
               [text("Cadastre-se")],
             ),
@@ -184,7 +181,7 @@ pub fn login_view(model: Model) -> Element(Msg) {
                 class(
                   "p-1 text-emerald-600 hover:text-emerald-800 transition duration-300",
                 ),
-                event.on_click(UserClickedSignUp),
+                event.on_click(msg.UserClickedSignUp),
               ],
               [text("Login")],
             ),

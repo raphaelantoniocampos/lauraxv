@@ -1,9 +1,5 @@
-import client/state.{
-  type Model, type Msg, ConfirmPresenceResponded, ConfirmUpdateComments,
-  ConfirmUpdateInviteName, ConfirmUpdateName, ConfirmUpdatePeopleCount,
-  ConfirmUpdatePersonName, ConfirmUpdatePhone, UserRequestedConfirmPresence,
-  message_error_decoder,
-}
+import client/model
+import client/msg
 import client/views/login_view.{login_view}
 import env.{get_api_url}
 import gleam/dict
@@ -23,7 +19,7 @@ import lustre/element/html.{
 import lustre/event
 import lustre_http
 
-pub fn confirm_presence(model: Model) -> Effect(Msg) {
+pub fn confirm_presence(model: model.Model) -> Effect(msg.Msg) {
   let user_id = {
     let assert Ok(user) =
       option.to_result(model.auth_user, "Usuário não está logado")
@@ -55,11 +51,14 @@ pub fn confirm_presence(model: Model) -> Effect(Msg) {
           |> json.nullable(json.string),
       ),
     ]),
-    lustre_http.expect_json(message_error_decoder(), ConfirmPresenceResponded),
+    lustre_http.expect_json(
+      msg.message_error_decoder(),
+      msg.ConfirmPresenceResponded,
+    ),
   )
 }
 
-fn name_box_element(model: Model, n: Int) -> Element(Msg) {
+fn name_box_element(model: model.Model, n: Int) -> Element(msg.Msg) {
   let string_n = { n + 1 } |> int.to_string
   element.element("name_box", [], [
     case n {
@@ -81,7 +80,7 @@ fn name_box_element(model: Model, n: Int) -> Element(Msg) {
             id("people_names_" <> string_n),
             type_("name"),
             value(model.confirm_form.name),
-            event.on_input(fn(value) { ConfirmUpdatePersonName(n, value) }),
+            event.on_input(fn(value) { msg.ConfirmUpdatePersonName(n, value) }),
           ]),
         ])
       }
@@ -102,7 +101,7 @@ fn name_box_element(model: Model, n: Int) -> Element(Msg) {
             name("people_names_" <> string_n),
             id("people_names_" <> string_n),
             type_("name"),
-            event.on_input(fn(value) { ConfirmUpdatePersonName(n, value) }),
+            event.on_input(fn(value) { msg.ConfirmUpdatePersonName(n, value) }),
           ]),
         ])
       }
@@ -139,7 +138,7 @@ fn confirmed_user_view() -> Element(a) {
   ])
 }
 
-pub fn confirm_presence_view(model: Model) -> Element(Msg) {
+pub fn confirm_presence_view(model: model.Model) -> Element(msg.Msg) {
   case model.auth_user {
     None -> login_view(model)
     Some(user) ->
@@ -158,7 +157,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
               form(
                 [
                   class("space-y-6"),
-                  event.on_submit(UserRequestedConfirmPresence),
+                  event.on_submit(msg.UserRequestedConfirmPresence),
                 ],
                 [
                   div([], [
@@ -178,7 +177,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       id("first_name"),
                       type_("name"),
                       value(model.confirm_form.name),
-                      event.on_input(ConfirmUpdateName),
+                      event.on_input(msg.ConfirmUpdateName),
                     ]),
                   ]),
                   div([], [
@@ -197,7 +196,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       name("invite_name"),
                       id("invite_name"),
                       type_("text"),
-                      event.on_input(ConfirmUpdateInviteName),
+                      event.on_input(msg.ConfirmUpdateInviteName),
                       value(model.confirm_form.invite_name),
                     ]),
                   ]),
@@ -219,7 +218,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       name("phone"),
                       id("phone"),
                       type_("tel"),
-                      event.on_input(ConfirmUpdatePhone),
+                      event.on_input(msg.ConfirmUpdatePhone),
                       value(model.confirm_form.phone),
                     ]),
                   ]),
@@ -241,7 +240,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       name("people_count"),
                       id("people_count"),
                       type_("number"),
-                      event.on_input(ConfirmUpdatePeopleCount),
+                      event.on_input(msg.ConfirmUpdatePeopleCount),
                     ]),
                   ]),
                   div([], [
@@ -273,7 +272,7 @@ pub fn confirm_presence_view(model: Model) -> Element(Msg) {
                       name("comments"),
                       id("comments"),
                       type_("text"),
-                      event.on_input(ConfirmUpdateComments),
+                      event.on_input(msg.ConfirmUpdateComments),
                     ]),
                   ]),
                   div([class("flex items-center justify-center")], [

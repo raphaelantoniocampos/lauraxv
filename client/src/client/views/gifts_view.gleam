@@ -1,7 +1,5 @@
-import client/state.{
-  type Model, type Msg, SelectGiftResponded, UserRequestedSelectGift,
-  message_error_decoder,
-}
+import client/model
+import client/msg
 import common.{type Gift, Gift}
 import env.{get_api_url}
 import gleam/int
@@ -16,7 +14,7 @@ import lustre/event
 import lustre_http
 import modem
 
-pub fn select_gift(model: Model, gift: Gift, to: Bool) -> Effect(Msg) {
+pub fn select_gift(model: model.Model, gift: Gift, to: Bool) -> Effect(msg.Msg) {
   case model.auth_user {
     Some(user) -> {
       lustre_http.post(
@@ -26,7 +24,10 @@ pub fn select_gift(model: Model, gift: Gift, to: Bool) -> Effect(Msg) {
           #("user_id", json.int(user.user_id)),
           #("to", json.bool(to)),
         ]),
-        lustre_http.expect_json(message_error_decoder(), SelectGiftResponded),
+        lustre_http.expect_json(
+          msg.message_error_decoder(),
+          msg.SelectGiftResponded,
+        ),
       )
     }
     None -> modem.push("/login", None, None)
@@ -53,7 +54,7 @@ fn sugestion_gift(gift: Gift) -> Element(a) {
   )
 }
 
-fn unique_gift(model: Model, gift: Gift) -> Element(Msg) {
+fn unique_gift(model: model.Model, gift: Gift) -> Element(msg.Msg) {
   case gift.link, gift.selected_by, model.auth_user {
     Some(link), Some(selected_by), Some(user) if selected_by == user.user_id -> {
       selected_by_user_gift(gift, link)
@@ -64,7 +65,7 @@ fn unique_gift(model: Model, gift: Gift) -> Element(Msg) {
   }
 }
 
-fn unselected_gift(gift: Gift, link: String) -> Element(Msg) {
+fn unselected_gift(gift: Gift, link: String) -> Element(msg.Msg) {
   div(
     [
       class(
@@ -92,7 +93,7 @@ fn unselected_gift(gift: Gift, link: String) -> Element(Msg) {
           class(
             "mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-full transition duration-300",
           ),
-          event.on_click(UserRequestedSelectGift(gift: gift, to: True)),
+          event.on_click(msg.UserRequestedSelectGift(gift: gift, to: True)),
         ],
         [text("Escolher")],
       ),
@@ -100,7 +101,7 @@ fn unselected_gift(gift: Gift, link: String) -> Element(Msg) {
   )
 }
 
-fn selected_by_user_gift(gift: Gift, link: String) -> Element(Msg) {
+fn selected_by_user_gift(gift: Gift, link: String) -> Element(msg.Msg) {
   div(
     [
       class(
@@ -128,7 +129,7 @@ fn selected_by_user_gift(gift: Gift, link: String) -> Element(Msg) {
           class(
             "mt-3 w-full bg-white-600 hover:bg-emerald-300 text-emerald font-bold py-1 px-3 rounded-full transition duration-300",
           ),
-          event.on_click(UserRequestedSelectGift(gift: gift, to: False)),
+          event.on_click(msg.UserRequestedSelectGift(gift: gift, to: False)),
         ],
         [text("Retirar Escolha")],
       ),
@@ -158,7 +159,7 @@ fn selected_gift(gift: Gift) -> Element(a) {
   ])
 }
 
-pub fn gifts_view(model: Model) -> Element(Msg) {
+pub fn gifts_view(model: model.Model) -> Element(msg.Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [

@@ -1,7 +1,6 @@
-import client/state.{
-  type Model, type Msg, AdminOpenedAdminView, Comments, Gallery,
-  UserOpenedGalleryView, UserOpenedGiftsView,
-}
+import client/model
+import client/msg
+import client/router
 import gleam/option.{None, Some}
 import gleam/string
 import lustre/attribute.{class, href}
@@ -9,7 +8,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, li, nav, span, ul}
 import lustre/event
 
-pub fn navigation_bar_view(model: Model) -> Element(Msg) {
+pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
   nav(
     [
       class(
@@ -37,7 +36,7 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  state.Home -> "text-emerald-600"
+                  router.Home -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
@@ -53,7 +52,7 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  state.Event -> "text-emerald-600"
+                  router.Event -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
@@ -69,13 +68,13 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  state.Gifts -> "text-emerald-600"
+                  router.Gifts -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
               ),
               href("/gifts"),
-              event.on_click(UserOpenedGiftsView),
+              event.on_click(msg.UserOpenedGiftsView),
             ],
             [text("Presentes")],
           ),
@@ -86,13 +85,13 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  Gallery -> "text-emerald-600"
+                  router.Gallery -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
               ),
               href("/gallery"),
-              event.on_click(UserOpenedGalleryView),
+              event.on_click(msg.UserOpenedGalleryView),
             ],
             [text("Galeria")],
           ),
@@ -103,7 +102,7 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
               class(
                 "hover:text-emerald-800 "
                 <> case model.route {
-                  Comments -> "text-emerald-600"
+                  router.Comments -> "text-emerald-600"
                   _ -> "text-pink-600"
                 }
                 <> " transition duration-300",
@@ -123,7 +122,7 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
                   class(
                     "hover:text-emerald-800 "
                     <> case model.route {
-                      state.Login -> "text-emerald-600"
+                      router.Login -> "text-emerald-600"
                       _ -> "text-pink-600"
                     }
                     <> " transition duration-300",
@@ -156,9 +155,10 @@ pub fn navigation_bar_view(model: Model) -> Element(Msg) {
               case user.is_admin {
                 True ->
                   button([], [
-                    a([href("/admin"), event.on_click(AdminOpenedAdminView)], [
-                      text("Olá, " <> user.username |> string.capitalise),
-                    ]),
+                    a(
+                      [href("/admin"), event.on_click(msg.AdminOpenedAdminView)],
+                      [text("Olá, " <> user.username |> string.capitalise)],
+                    ),
                   ])
                 False -> text("Olá, " <> user.username |> string.capitalise)
               },

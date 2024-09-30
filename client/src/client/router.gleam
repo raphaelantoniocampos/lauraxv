@@ -1,8 +1,4 @@
-import gleam/list
-import gleam/option
-import gleam/result
-import gleam/uri.{type Uri}
-import lustre/effect
+import gleam/uri
 
 pub type Route {
   Home
@@ -15,6 +11,9 @@ pub type Route {
   ConfirmPresence
   NotFound
 }
+
+@external(javascript, "./ffi.mjs", "get_route")
+fn do_get_route() -> String
 
 pub fn get_route() -> Route {
   let uri = case do_get_route() |> uri.parse {
@@ -34,10 +33,3 @@ pub fn get_route() -> Route {
     _ -> NotFound
   }
 }
-
-fn on_url_change(_uri: Uri) -> Msg {
-  OnRouteChange(get_route())
-}
-
-@external(javascript, "./ffi.mjs", "get_route")
-fn do_get_route() -> String

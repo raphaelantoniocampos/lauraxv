@@ -1,6 +1,5 @@
-import client/state.{
-  type Model, type Msg, AdminClickedShowAll, AdminClickedShowConfirmationDetails,
-}
+import client/model
+import client/msg
 import client/views/home_view.{home_view}
 import common.{type Confirmation}
 import gleam/dict
@@ -12,7 +11,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
 import lustre/event
 
-pub fn admin_view(model: Model) -> Element(Msg) {
+pub fn admin_view(model: model.Model) -> Element(msg.Msg) {
   case model.auth_user {
     None -> home_view(model)
     Some(user) -> {
@@ -24,7 +23,7 @@ pub fn admin_view(model: Model) -> Element(Msg) {
   }
 }
 
-fn auth_admin_view(model: Model) -> Element(Msg) {
+fn auth_admin_view(model: model.Model) -> Element(msg.Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -48,7 +47,7 @@ fn auth_admin_view(model: Model) -> Element(Msg) {
           "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
         ),
         id("show_all"),
-        event.on_click(AdminClickedShowAll),
+        event.on_click(msg.AdminClickedShowAll),
       ],
       [text("Mostrar todos os dados")],
     ),
@@ -60,7 +59,10 @@ fn auth_admin_view(model: Model) -> Element(Msg) {
   ])
 }
 
-fn confirmation_box(model: Model, confirmation: Confirmation) -> Element(Msg) {
+fn confirmation_box(
+  model: model.Model,
+  confirmation: Confirmation,
+) -> Element(msg.Msg) {
   div(
     [
       class(
@@ -78,7 +80,9 @@ fn confirmation_box(model: Model, confirmation: Confirmation) -> Element(Msg) {
             class(
               "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
             ),
-            event.on_click(AdminClickedShowConfirmationDetails(confirmation.id)),
+            event.on_click(msg.AdminClickedShowConfirmationDetails(
+              confirmation.id,
+            )),
           ],
           [text("Mostrar detalhes")],
         ),

@@ -40,7 +40,7 @@ pub fn main() {
   |> lustre.start("#app", Nil)
 }
 
-fn init(_) -> #(Model, Effect(Msg)) {
+fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   model.init()
   |> update.effects([
     modem.init(on_url_change),
@@ -51,47 +51,31 @@ fn init(_) -> #(Model, Effect(Msg)) {
   ])
 }
 
-fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
+fn on_url_change(_uri: Uri) -> msg.Msg {
+  msg.OnRouteChange(router.get_route())
+}
+
+fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
   case msg {
     msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
-    msg.AuthUserRecieved(user_result) -> handle_user_result(user_result)
+    msg.AuthUserRecieved(user_result) ->
+      handle_api_result(user_result, model.update_user)
 
-    msg.GiftsRecieved(gifts_result) -> handle_gifts_result(gifts_result)
+    msg.GiftsRecieved(gifts_result) ->
+      handle_api_result(gifts_result, model.update_gifts)
 
     msg.ImagesRecieved(images_result) ->
-      case images_result {
-        Ok(images) -> #(Model(..model, gallery_images: images), effect.none())
-        Error(_) -> #(model, effect.none())
-      }
+      handle_api_result(images_result, model.update_images)
 
     msg.CommentsRecieved(comments_result) ->
-      case comments_result {
-        Ok(comments) -> #(Model(..model, comments: comments), effect.none())
-        Error(_) -> #(model, effect.none())
-      }
+      handle_api_result(comments_result, model.update_comments)
 
     msg.ConfirmationsRecieved(confirmations_result) ->
-      case confirmations_result {
-        Ok(confirmation_data) -> {
-          let updated_show_details =
-            confirmation_data.1
-            |> list.group(fn(confirmation) { confirmation.id })
-            |> dict.map_values(fn(_, _) { False })
-          #(
-            Model(
-              ..model,
-              admin_settings: AdminSettings(
-                ..model.admin_settings,
-                confirmations: confirmation_data.1,
-                show_details: updated_show_details,
-                total: confirmation_data.0,
-              ),
-            ),
-            effect.none(),
-          )
-        }
-        Error(_) -> #(model, effect.none())
-      }
+      handle_api_result(
+        confirmations_result,
+        confirmations_to_admin_settings(model),
+        model.update_admin_settings,
+      )
 
     msg.CountdownUpdated(value) -> #(
       Model(..model, event_countdown: value),
@@ -480,7 +464,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
-pub fn view(model: Model) -> Element(Msg) {
+pub fn view(model: model.Model) -> Element(msg.Msg) {
   body(
     [
       class(
@@ -492,22 +476,22 @@ pub fn view(model: Model) -> Element(Msg) {
       navigation_bar_view(model),
       div([class("mt-10")], []),
       case model.route {
-        Home -> home_view(model)
-        Event -> event_view()
-        Gallery -> gallery_view(model)
-        Gifts -> gifts_view(model)
-        Login -> login_view(model)
-        Comments -> comments_view(model)
-        Admin -> admin_view(model)
-        ConfirmPresence -> confirm_presence_view(model)
-        NotFound -> not_found_view()
+        router.Home -> home_view(model)
+        router.Event -> event_view()
+        router.Gallery -> gallery_view(model)
+        router.Gifts -> gifts_view(model)
+        router.Login -> login_view(model)
+        router.Comments -> comments_view(model)
+        router.Admin -> admin_view(model)
+        router.ConfirmPresence -> confirm_presence_view(model)
+        router.NotFound -> not_found_view()
       },
       footer_view(),
     ],
   )
 }
 
-pub fn get_auth_user(id_string: String) -> Effect(Msg) {
+pub fn get_auth_user(id_string: String) -> Effect(msg.Msg) {
   let url = get_api_url() <> "/auth/validate/" <> id_string
 
   let decoder =
@@ -604,21 +588,33 @@ pub fn update_countdown() -> Effect(Msg) {
   effect.from(fn(dispatch) { dispatch(CountdownUpdated(countdown)) })
 }
 
-fn handle_user_result(user_result) {
-  case user_result {
-    Ok(auth_user) -> {
-      model.update_user(auth_user) |> update.none
+fn handle_api_result(
+  api_result: Result(data, lustre_http.HttpError),
+  to_model: Option(fn(model, a) -> b),
+  update_model: fn(data) -> model.Model,
+) {
+  case api_result {
+    Ok(ok_result) -> {
+      case to_model {
+        Some(to_model) -> {
+          to_model(model, ok_result) |> update_model |> update.none
+        }
+        None -> update_model(ok_result) |> update.none
+      }
     }
     Error(_) -> model.model |> update.none
   }
 }
 
-fn handle_gifts_result(gifts_result) {
-  case gifts_result {
-    Ok(gifts) -> {
-      model.update_gifts(gifts)
-      |> update.none
-    }
-    Error(_) -> model.model |> update.none
-  }
+fn confirmations_to_admin_settings(model, confirmation_data) {
+  AdminSettings(
+    ..model.admin_settings,
+    confirmations: confirmation_data.1,
+    show_details: {
+      confirmation_data.1
+      |> list.group(fn(confirmation) { confirmation.id })
+      |> dict.map_values(fn(_, _) { False })
+    },
+    total: confirmation_data.0,
+  )
 }

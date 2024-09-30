@@ -1,3 +1,4 @@
+import client/model
 import client/router
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -8,7 +9,7 @@ import common.{type Comment, type Confirmation, type Gift}
 
 pub type Msg {
   OnRouteChange(router.Route)
-  AuthUserRecieved(Result(AuthUser, lustre_http.HttpError))
+  AuthUserRecieved(Result(model.AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(#(List(Gift), List(Gift)), lustre_http.HttpError))
   ImagesRecieved(Result(List(String), lustre_http.HttpError))
   CommentsRecieved(Result(List(Comment), lustre_http.HttpError))
@@ -68,47 +69,5 @@ pub fn message_error_decoder() {
     MessageErrorResponse,
     dynamic.optional_field("message", dynamic.string),
     dynamic.optional_field("error", dynamic.string),
-  )
-}
-
-pub type AuthUser {
-  AuthUser(user_id: Int, username: String, is_confirmed: Bool, is_admin: Bool)
-}
-
-pub type LoginForm {
-  LoginForm(
-    username: String,
-    email: String,
-    password: String,
-    confirm_password: String,
-    sign_up: Bool,
-    error: Option(String),
-  )
-}
-
-pub type ConfirmForm {
-  ConfirmForm(
-    name: String,
-    invite_name: String,
-    email: String,
-    phone: String,
-    people_count: Int,
-    person_name: String,
-    people_names: Dict(Int, String),
-    comments: Option(String),
-    error: Option(String),
-  )
-}
-
-pub type GiftStatus {
-  GiftStatus(sugestion: List(Gift), unique: List(Gift), error: Option(String))
-}
-
-pub type AdminSettings {
-  AdminSettings(
-    total: Int,
-    confirmations: List(Confirmation),
-    show_details: Dict(Int, Bool),
-    show_all: Bool,
   )
 }
