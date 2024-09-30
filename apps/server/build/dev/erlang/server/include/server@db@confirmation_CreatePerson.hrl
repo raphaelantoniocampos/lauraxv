@@ -1,1 +1,0 @@
--record(create_person, {user_id :: integer(), name :: binary()}).

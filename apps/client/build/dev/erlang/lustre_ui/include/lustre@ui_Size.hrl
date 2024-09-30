@@ -1,1 +1,0 @@
--record(size, {base :: lustre@ui:value(), ratio :: float()}).

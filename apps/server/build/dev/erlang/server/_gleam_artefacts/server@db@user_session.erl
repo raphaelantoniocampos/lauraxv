@@ -1,1 +1,0 @@
--module(server@db@user_session).

@@ -1,0 +1,12 @@
+# flyctl launch added from .gitignore
+**/*/*.beam
+**/*/*.ez
+**/*/build
+**/*/erl_crash.dump
+
+# flyctl launch added from shared/.gitignore
+shared/**/*.beam
+shared/**/*.ez
+shared/build
+shared/**/erl_crash.dump
+fly.toml
