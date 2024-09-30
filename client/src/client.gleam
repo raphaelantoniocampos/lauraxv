@@ -41,7 +41,7 @@ pub fn main() {
 fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   model.init()
   |> update.effects([
-    modem.init(on_url_change),
+    // modem.init(on_url_change),
     get_gifts(),
     update_countdown(),
     get_images(),
@@ -49,13 +49,13 @@ fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   ])
 }
 
-fn on_url_change(_uri: Uri) -> msg.Msg {
-  msg.OnRouteChange(router.get_route())
-}
+// fn on_url_change(_uri: Uri) -> msg.Msg {
+//   msg.OnRouteChange(router.get_route())
+// }
 
 fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
   case msg {
-    msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
+    // msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
     msg.AuthUserRecieved(user_result) ->
       handle_api_response(
         model,
@@ -68,7 +68,7 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
       handle_api_response(
         model,
         gifts_result,
-        default_transform_data,
+        gifts_to_gift_status,
         model.update_gifts,
       )
 
@@ -104,39 +104,32 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
 
     msg.LoginUpdateEmail(value) ->
       model.update_login_email(model, value)
-      |> update.effect(msg.ConfirmUpdateEmail(value))
+      |> update.effect({
+        use dispatch <- effect.from()
+        dispatch(msg.ConfirmUpdateEmail(value))
+      })
 
     msg.LoginUpdatePassword(value) ->
       model.update_login_password(model, value) |> update.none
 
-    //     msg.LoginUpdateEmail(value) -> #(
-    //       Model(..model, login_form: LoginForm(..model.login_form, email: value)),
-    //       effect.from(fn(dispatch) { dispatch(ConfirmUpdateEmail(value)) }),
-    //     )
-    //     msg.LoginUpdatePassword(value) -> #(
-    //       Model(..model, login_form: LoginForm(..model.login_form, password: value)),
-    //       effect.none(),
-    //     )
-    //
-    //     msg.LoginUpdateConfirmPassword(value) -> #(
-    //       Model(
-    //         ..model,
-    //         login_form: LoginForm(..model.login_form, confirm_password: value),
-    //       ),
-    //       effect.none(),
-    //     )
-    //
-    //     msg.LoginUpdateError(value) -> #(
-    //       Model(..model, login_form: LoginForm(..model.login_form, error: value)),
-    //       effect.none(),
-    //     )
-    //
-    //     msg.UserRequestedLoginSignUp -> {
-    //       case model.login_form.sign_up {
-    //         False -> #(model, login(model))
-    //         True -> #(model, signup(model))
-    //       }
-    //     }
+    msg.LoginUpdateConfirmPassword(value) ->
+      model.update_login_confirm_password(model, value) |> update.none
+
+    msg.LoginUpdateError(value) ->
+      model.update_login_error(model, value) |> update.none
+
+    msg.UserRequestedLoginSignUp -> {
+      handle_login_signup(model)
+      model |> update.effect(handle_login_signup(model))
+    }
+
+    // msg.LoginResponded(resp_result) ->
+    //   handle_api_response(
+    //     model,
+    //     resp_result,
+    //     default_transform_data,
+    //     handle_login,
+    //   )
     //
     //     msg.LoginResponded(resp_result) ->
     //       case resp_result {
@@ -235,7 +228,6 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
     //           }),
     //         )
     //       }
-    //
     //     msg.UserOpenedGiftsView ->
     //       case model.gift_status.sugestion, model.gift_status.unique {
     //         [_], [_] -> #(model, effect.none())
@@ -633,6 +625,13 @@ fn handle_api_response(
   }
 }
 
+fn handle_login_signup(model: model.Model) {
+  case model.login_form.sign_up {
+    True -> signup(model)
+    False -> login(model)
+  }
+}
+
 // Função padrão que não transforma os dados
 fn default_transform_data(_model: model.Model, api_data: data) -> data {
   api_data
@@ -654,6 +653,56 @@ fn confirmations_to_admin_settings(
   )
 }
 
-fn gifts_to_gift_status() -> model.GiftStatus {
-  todo
+fn gifts_to_gift_status(
+  model: model.Model,
+  gifts: #(List(Gift), List(Gift)),
+) -> model.GiftStatus {
+  model.GiftStatus(..model.gift_status, sugestion: gifts.0, unique: gifts.1)
 }
+// model.update_login_email(model, value)
+// |> update.effect({
+//   use dispatch <- effect.from()
+//   dispatch(msg.ConfirmUpdateEmail(value))
+// })
+
+// fn handle_login(model: model.Model, response: msg.MessageErrorResponse) {
+//   case msg.MessageErrorResponse(response) {
+//     _, Some(error) ->
+//       model
+//       |> update.effect({
+//         use dispatch <- effect.from()
+//         dispatch(msg.LoginUpdateError(Some(error)))
+//       })
+//
+//     Some(response), None ->
+//       model.reset_login_form
+//       |> update.effects([
+//         modem.push("/", None, None),
+//         get_auth_user(response |> get_id_from_response),
+//       ])
+//     _, _ ->
+//       model
+//       |> update.effect({
+//         use dispatch <- effect.from()
+//         dispatch(
+//           msg.LoginUpdateError(Some(
+//             "Problemas no servidor, por favor tente mais tarde.",
+//           )),
+//         )
+//       })
+//   }
+// }
+//       case resp_result {
+//         Ok(resp) ->
+//           case resp.message, resp.error 
+//         Error(_) -> #(
+//           model,
+//           effect.from(fn(dispatch) {
+//             dispatch(
+//               LoginUpdateError(Some(
+//                 "Problemas no servidor, por favor tente mais tarde.",
+//               )),
+//             )
+//           }),
+//         )
+//       }

@@ -1,6 +1,14 @@
+import client
+import client/model
+import client/router.{
+  type Route, Admin, Comments, ConfirmPresence, Event, Gallery, Gifts, Home,
+  Login, NotFound,
+}
 import config.{type Context}
 import cors_builder as cors
 import gleam/http.{Get, Post}
+import gleam/option.{None}
+import lustre/element
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/comments
@@ -8,6 +16,7 @@ import server/routes/confirmations
 import server/routes/gifts
 import server/routes/images
 import server/routes/users
+import server/scaffold.{page_scaffold}
 import server/web
 import wisp.{type Request, type Response}
 
@@ -62,82 +71,21 @@ fn api_routes(req: Request) -> Response {
 
 fn page_routes(req: Request) -> Response {
   let route: Route = case wisp.path_segments(req) {
-    [] -> Active
-    ["auth", "login"] -> Login
-    ["auth", "signup", auth_code] -> Signup(auth_code: auth_code)
-    ["create-post"] -> CreatePost
-    ["user", username] -> UserPage(username)
-    ["post", post_id] ->
-      case int.parse(post_id) {
-        Ok(id) -> ShowPost(id)
-        Error(_) -> NotFound
-      }
+    [] -> Home
+    ["login"] -> Login
+    ["gifts"] -> Gifts
+    ["event"] -> Event
+    ["gallery"] -> Gallery
+    ["comments"] -> Comments
+    ["admin"] -> Admin
+    ["confirm"] -> ConfirmPresence
     _ -> NotFound
   }
-
-  let model =
-    Model(
-      route,
-      inviter: "",
-      auth_user: case user_session.get_user_id_from_session(req) {
-        Ok(user_id) ->
-          case user.get_user_by_id(user_id) {
-            Ok(user) ->
-              Some(state.AuthUser(
-                is_admin: user.is_user_admin(user.id),
-                user_id: user_id,
-                username: user.username,
-              ))
-            Error(_) -> None
-          }
-        Error(_) -> None
-      },
-      sign_up_username: "",
-      sign_up_email: "",
-      sign_up_password: "",
-      sign_up_error: None,
-      login_email_username: "",
-      login_password: "",
-      login_error: None,
-      create_post_title: "",
-      create_post_href: "",
-      create_post_body: "",
-      create_post_original_creator: False,
-      create_post_tags: [],
-      create_post_use_body: False,
-      create_post_error: None,
-      posts: {
-        case posts.list_posts(req) {
-          Ok(posts) -> posts
-          Error(_) -> []
-        }
-      },
-      show_post: {
-        case route {
-          ShowPost(id) ->
-            case post.show_post(req, id) {
-              Ok(post) -> Some(post)
-              Error(_) -> None
-            }
-          _ -> None
-        }
-      },
-      create_comment_body: "",
-      create_comment_parent_id: None,
-      create_comment_error: None,
-      tags: case tags.list_tags() {
-        Ok(tags) -> tags
-        Error(_) -> []
-      },
-      invite_link: None,
-      forgot_password_response: None,
-      change_password_target: "",
-    )
 
   wisp.response(200)
   |> wisp.set_header("Content-Type", "text/html")
   |> wisp.html_body(
-    client.view(model)
+    client.view(model.init())
     |> page_scaffold()
     |> element.to_document_string_builder(),
   )

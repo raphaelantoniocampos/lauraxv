@@ -250,17 +250,6 @@ function divideFloat(a2, b) {
     return a2 / b;
   }
 }
-function makeError(variant, module, line, fn, message, extra) {
-  let error = new globalThis.Error(message);
-  error.gleam_error = variant;
-  error.module = module;
-  error.line = line;
-  error.function = fn;
-  error.fn = fn;
-  for (let k in extra)
-    error[k] = extra[k];
-  return error;
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
 var Some = class extends CustomType {
@@ -315,18 +304,6 @@ var Gift = class extends CustomType {
     this.selected_by = selected_by;
   }
 };
-var Confirmation = class extends CustomType {
-  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
-    super();
-    this.id = id2;
-    this.user_id = user_id;
-    this.name = name2;
-    this.invite_name = invite_name;
-    this.phone = phone;
-    this.comments = comments;
-    this.people_names = people_names;
-  }
-};
 var Comment = class extends CustomType {
   constructor(name2, comment) {
     super();
@@ -334,37 +311,6 @@ var Comment = class extends CustomType {
     this.comment = comment;
   }
 };
-
-// build/dev/javascript/gleam_stdlib/gleam/order.mjs
-var Lt = class extends CustomType {
-};
-var Eq = class extends CustomType {
-};
-var Gt = class extends CustomType {
-};
-
-// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
-function negate(bool3) {
-  if (bool3) {
-    return false;
-  } else {
-    return true;
-  }
-}
-function to_int(bool3) {
-  if (!bool3) {
-    return 0;
-  } else {
-    return 1;
-  }
-}
-function guard(requirement, consequence, alternative) {
-  if (requirement) {
-    return consequence;
-  } else {
-    return alternative();
-  }
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/regex.mjs
 var Match = class extends CustomType {
@@ -394,6 +340,14 @@ function compile(pattern2, options) {
 function scan(regex, string3) {
   return regex_scan(regex, string3);
 }
+
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+var Lt = class extends CustomType {
+};
+var Eq = class extends CustomType {
+};
+var Gt = class extends CustomType {
+};
 
 // build/dev/javascript/gleam_stdlib/gleam/float.mjs
 function truncate2(x) {
@@ -802,9 +756,6 @@ function append2(builder, second2) {
 function to_string3(builder) {
   return identity(builder);
 }
-function split2(iodata, pattern2) {
-  return split(iodata, pattern2);
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
 function length3(string3) {
@@ -829,9 +780,6 @@ function concat3(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
-}
-function trim2(string3) {
-  return trim(string3);
 }
 function pop_grapheme2(string3) {
   return pop_grapheme(string3);
@@ -870,16 +818,6 @@ function drop_left(string3, num_graphemes) {
     return slice(string3, num_graphemes, length3(string3) - num_graphemes);
   }
 }
-function split3(x, substring) {
-  if (substring === "") {
-    return graphemes(x);
-  } else {
-    let _pipe = x;
-    let _pipe$1 = from_string(_pipe);
-    let _pipe$2 = split2(_pipe$1, substring);
-    return map2(_pipe$2, to_string3);
-  }
-}
 function capitalise(s) {
   let $ = pop_grapheme2(s);
   if ($.isOk()) {
@@ -908,9 +846,6 @@ function classify(data) {
 }
 function int(data) {
   return decode_int(data);
-}
-function bool(data) {
-  return decode_bool(data);
 }
 function shallow_list(value3) {
   return decode_list(value3);
@@ -1051,31 +986,6 @@ function decode2(constructor, t1, t2) {
     }
   };
 }
-function decode4(constructor, t1, t2, t3, t4) {
-  return (x) => {
-    let $ = t1(x);
-    let $1 = t2(x);
-    let $2 = t3(x);
-    let $3 = t4(x);
-    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk()) {
-      let a2 = $[0];
-      let b = $1[0];
-      let c = $2[0];
-      let d = $3[0];
-      return new Ok(constructor(a2, b, c, d));
-    } else {
-      let a2 = $;
-      let b = $1;
-      let c = $2;
-      let d = $3;
-      return new Error(
-        concat(
-          toList([all_errors(a2), all_errors(b), all_errors(c), all_errors(d)])
-        )
-      );
-    }
-  };
-}
 function decode5(constructor, t1, t2, t3, t4, t5) {
   return (x) => {
     let $ = t1(x);
@@ -1104,48 +1014,6 @@ function decode5(constructor, t1, t2, t3, t4, t5) {
             all_errors(c),
             all_errors(d),
             all_errors(e)
-          ])
-        )
-      );
-    }
-  };
-}
-function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
-  return (x) => {
-    let $ = t1(x);
-    let $1 = t2(x);
-    let $2 = t3(x);
-    let $3 = t4(x);
-    let $4 = t5(x);
-    let $5 = t6(x);
-    let $6 = t7(x);
-    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk() && $5.isOk() && $6.isOk()) {
-      let a2 = $[0];
-      let b = $1[0];
-      let c = $2[0];
-      let d = $3[0];
-      let e = $4[0];
-      let f = $5[0];
-      let g = $6[0];
-      return new Ok(constructor(a2, b, c, d, e, f, g));
-    } else {
-      let a2 = $;
-      let b = $1;
-      let c = $2;
-      let d = $3;
-      let e = $4;
-      let f = $5;
-      let g = $6;
-      return new Error(
-        concat(
-          toList([
-            all_errors(a2),
-            all_errors(b),
-            all_errors(c),
-            all_errors(d),
-            all_errors(e),
-            all_errors(f),
-            all_errors(g)
           ])
         )
       );
@@ -1917,18 +1785,12 @@ function uppercase(string3) {
 function add(a2, b) {
   return a2 + b;
 }
-function split(xs, pattern2) {
-  return List.fromArray(xs.split(pattern2));
-}
 function concat2(xs) {
   let result = "";
   for (const x of xs) {
     result = result + x;
   }
   return result;
-}
-function crop_string(string3, substring) {
-  return string3.substring(string3.indexOf(substring));
 }
 function starts_with(haystack, needle) {
   return haystack.startsWith(needle);
@@ -1955,15 +1817,6 @@ var unicode_whitespaces = [
 ].join();
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function trim(string3) {
-  return trim_left(trim_right(string3));
-}
-function trim_left(string3) {
-  return string3.replace(left_trim_regex, "");
-}
-function trim_right(string3) {
-  return string3.replace(right_trim_regex, "");
-}
 function truncate(float3) {
   return Math.trunc(float3);
 }
@@ -2055,9 +1908,6 @@ function decode_string(data) {
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
 }
-function decode_bool(data) {
-  return typeof data === "boolean" ? new Ok(data) : decoder_error("Bool", data);
-}
 function decode_list(data) {
   if (Array.isArray(data)) {
     return new Ok(List.fromArray(data));
@@ -2141,36 +1991,6 @@ function do_keys(dict) {
 }
 function keys(dict) {
   return do_keys(dict);
-}
-function do_values_acc(loop$list, loop$acc) {
-  while (true) {
-    let list2 = loop$list;
-    let acc = loop$acc;
-    if (list2.hasLength(0)) {
-      return reverse_and_concat(acc, toList([]));
-    } else {
-      let x = list2.head;
-      let xs = list2.tail;
-      loop$list = xs;
-      loop$acc = prepend(x[1], acc);
-    }
-  }
-}
-function do_values(dict) {
-  let list_of_pairs = map_to_list(dict);
-  return do_values_acc(list_of_pairs, toList([]));
-}
-function values(dict) {
-  return do_values(dict);
-}
-function upsert(dict, key, fun) {
-  let _pipe = dict;
-  let _pipe$1 = get(_pipe, key);
-  let _pipe$2 = from_result(_pipe$1);
-  let _pipe$3 = fun(_pipe$2);
-  return ((_capture) => {
-    return insert(dict, key, _capture);
-  })(_pipe$3);
 }
 function do_fold(loop$list, loop$initial, loop$fun) {
   while (true) {
@@ -2366,44 +2186,6 @@ function do_parse(uri_string) {
 function parse2(uri_string) {
   return do_parse(uri_string);
 }
-function do_remove_dot_segments(loop$input, loop$accumulator) {
-  while (true) {
-    let input2 = loop$input;
-    let accumulator = loop$accumulator;
-    if (input2.hasLength(0)) {
-      return reverse(accumulator);
-    } else {
-      let segment = input2.head;
-      let rest = input2.tail;
-      let accumulator$1 = (() => {
-        if (segment === "") {
-          let accumulator$12 = accumulator;
-          return accumulator$12;
-        } else if (segment === ".") {
-          let accumulator$12 = accumulator;
-          return accumulator$12;
-        } else if (segment === ".." && accumulator.hasLength(0)) {
-          return toList([]);
-        } else if (segment === ".." && accumulator.atLeastLength(1)) {
-          let accumulator$12 = accumulator.tail;
-          return accumulator$12;
-        } else {
-          let segment$1 = segment;
-          let accumulator$12 = accumulator;
-          return prepend(segment$1, accumulator$12);
-        }
-      })();
-      loop$input = rest;
-      loop$accumulator = accumulator$1;
-    }
-  }
-}
-function remove_dot_segments(input2) {
-  return do_remove_dot_segments(input2, toList([]));
-}
-function path_segments(path) {
-  return remove_dot_segments(split3(path, "/"));
-}
 function to_string4(uri) {
   let parts = (() => {
     let $ = uri.fragment;
@@ -2479,6 +2261,22 @@ function to_string4(uri) {
   return concat3(parts$5);
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
+function to_int(bool3) {
+  if (!bool3) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+function guard(requirement, consequence, alternative) {
+  if (requirement) {
+    return consequence;
+  } else {
+    return alternative();
+  }
+}
+
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
 function json_to_string(json) {
   return JSON.stringify(json);
@@ -2488,12 +2286,6 @@ function object(entries) {
 }
 function identity2(x) {
   return x;
-}
-function array(list2) {
-  return list2.toArray();
-}
-function do_null() {
-  return null;
 }
 function decode(string3) {
   try {
@@ -2621,33 +2413,8 @@ function to_string6(json) {
 function string2(input2) {
   return identity2(input2);
 }
-function bool2(input2) {
-  return identity2(input2);
-}
-function int2(input2) {
-  return identity2(input2);
-}
-function null$() {
-  return do_null();
-}
-function nullable(input2, inner_type) {
-  if (input2 instanceof Some) {
-    let value3 = input2[0];
-    return inner_type(value3);
-  } else {
-    return null$();
-  }
-}
 function object2(entries) {
   return object(entries);
-}
-function preprocessed_array(from3) {
-  return array(from3);
-}
-function array2(entries, inner_type) {
-  let _pipe = entries;
-  let _pipe$1 = map2(_pipe, inner_type);
-  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -2666,18 +2433,18 @@ function custom(run3) {
     ])
   );
 }
-function from2(effect) {
+function from2(effect2) {
   return custom((dispatch, _, _1) => {
-    return effect(dispatch);
+    return effect2(dispatch);
   });
 }
 function none() {
   return new Effect(toList([]));
 }
-function batch(effects) {
+function batch(effects2) {
   return new Effect(
     fold(
-      effects,
+      effects2,
       toList([]),
       (b, _use1) => {
         let a2 = _use1.all;
@@ -3303,13 +3070,13 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {LustreClientApplication}
    */
-  constructor(root, [init4, effects], update2, view2) {
+  constructor(root, [init4, effects2], update2, view2) {
     this.root = root;
     this.#model = init4;
     this.#update = update2;
     this.#view = view2;
     this.#tickScheduled = window.requestAnimationFrame(
-      () => this.#tick(effects.all.toArray(), true)
+      () => this.#tick(effects2.all.toArray(), true)
     );
   }
   /** @type {Element} */
@@ -3380,9 +3147,9 @@ var LustreClientApplication = class _LustreClientApplication {
    * @param {Lustre.Effect<Msg>[]} effects
    * @param {boolean} isFirstRender
    */
-  #tick(effects = [], isFirstRender = false) {
+  #tick(effects2 = [], isFirstRender = false) {
     this.#tickScheduled = void 0;
-    if (!this.#flush(effects, isFirstRender))
+    if (!this.#flush(effects2, isFirstRender))
       return;
     const vdom = this.#view(this.#model);
     const dispatch = (handler, immediate = false) => (event2) => {
@@ -3394,16 +3161,16 @@ var LustreClientApplication = class _LustreClientApplication {
     const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
     morph(prev, vdom, dispatch);
   }
-  #flush(effects = [], didUpdate = false) {
+  #flush(effects2 = [], didUpdate = false) {
     while (this.#queue.length > 0) {
       const msg = this.#queue.shift();
-      const [next, effect] = this.#update(this.#model, msg);
+      const [next, effect2] = this.#update(this.#model, msg);
       didUpdate ||= this.#model !== next;
-      effects = effects.concat(effect.all.toArray());
+      effects2 = effects2.concat(effect2.all.toArray());
       this.#model = next;
     }
-    while (effects.length > 0) {
-      const effect = effects.shift();
+    while (effects2.length > 0) {
+      const effect2 = effects2.shift();
       const dispatch = (msg) => this.send(new Dispatch(msg));
       const emit2 = (event2, data) => this.root.dispatchEvent(
         new CustomEvent(event2, {
@@ -3414,10 +3181,10 @@ var LustreClientApplication = class _LustreClientApplication {
       );
       const select = () => {
       };
-      effect({ dispatch, emit: emit2, select });
+      effect2({ dispatch, emit: emit2, select });
     }
     if (this.#queue.length > 0) {
-      return this.#flush(effects, didUpdate);
+      return this.#flush(effects2, didUpdate);
     } else {
       return didUpdate;
     }
@@ -3434,7 +3201,7 @@ var LustreServerApplication = class _LustreServerApplication {
     );
     return new Ok((action) => app.send(action));
   }
-  constructor([model, effects], update2, view2, on_attribute_change) {
+  constructor([model, effects2], update2, view2, on_attribute_change) {
     this.#model = model;
     this.#update = update2;
     this.#view = view2;
@@ -3442,7 +3209,7 @@ var LustreServerApplication = class _LustreServerApplication {
     this.#onAttributeChange = on_attribute_change;
     this.#renderers = /* @__PURE__ */ new Map();
     this.#handlers = handlers(this.#html);
-    this.#tick(effects.all.toArray());
+    this.#tick(effects2.all.toArray());
   }
   send(action) {
     if (action instanceof Attrs) {
@@ -3494,8 +3261,8 @@ var LustreServerApplication = class _LustreServerApplication {
   #renderers;
   #handlers;
   #onAttributeChange;
-  #tick(effects = []) {
-    if (!this.#flush(false, effects))
+  #tick(effects2 = []) {
+    if (!this.#flush(false, effects2))
       return;
     const vdom = this.#view(this.#model);
     const diff3 = elements(this.#html, vdom);
@@ -3508,16 +3275,16 @@ var LustreServerApplication = class _LustreServerApplication {
     this.#html = vdom;
     this.#handlers = diff3.handlers;
   }
-  #flush(didUpdate = false, effects = []) {
+  #flush(didUpdate = false, effects2 = []) {
     while (this.#queue.length > 0) {
       const msg = this.#queue.shift();
-      const [next, effect] = this.#update(this.#model, msg);
+      const [next, effect2] = this.#update(this.#model, msg);
       didUpdate ||= this.#model !== next;
-      effects = effects.concat(effect.all.toArray());
+      effects2 = effects2.concat(effect2.all.toArray());
       this.#model = next;
     }
-    while (effects.length > 0) {
-      const effect = effects.shift();
+    while (effects2.length > 0) {
+      const effect2 = effects2.shift();
       const dispatch = (msg) => this.send(new Dispatch(msg));
       const emit2 = (event2, data) => this.root.dispatchEvent(
         new CustomEvent(event2, {
@@ -3528,10 +3295,10 @@ var LustreServerApplication = class _LustreServerApplication {
       );
       const select = () => {
       };
-      effect({ dispatch, emit: emit2, select });
+      effect2({ dispatch, emit: emit2, select });
     }
     if (this.#queue.length > 0) {
-      return this.#flush(didUpdate, effects);
+      return this.#flush(didUpdate, effects2);
     } else {
       return didUpdate;
     }
@@ -4044,137 +3811,7 @@ function expect_json(decoder, to_msg) {
 }
 
 // build/dev/javascript/modem/modem.ffi.mjs
-var defaults = {
-  handle_external_links: false,
-  handle_internal_links: true
-};
 var initial_location = window?.location?.href;
-var do_init = (dispatch, options = defaults) => {
-  document.addEventListener("click", (event2) => {
-    const a2 = find_anchor(event2.target);
-    if (!a2)
-      return;
-    try {
-      const url = new URL(a2.href);
-      const uri = uri_from_url(url);
-      const is_external = url.host !== window.location.host;
-      if (!options.handle_external_links && is_external)
-        return;
-      if (!options.handle_internal_links && !is_external)
-        return;
-      event2.preventDefault();
-      if (!is_external) {
-        window.history.pushState({}, "", a2.href);
-        window.requestAnimationFrame(() => {
-          if (url.hash) {
-            document.getElementById(url.hash.slice(1))?.scrollIntoView();
-          }
-        });
-      }
-      return dispatch(uri);
-    } catch {
-      return;
-    }
-  });
-  window.addEventListener("popstate", (e) => {
-    e.preventDefault();
-    const url = new URL(window.location.href);
-    const uri = uri_from_url(url);
-    window.requestAnimationFrame(() => {
-      if (url.hash) {
-        document.getElementById(url.hash.slice(1))?.scrollIntoView();
-      }
-    });
-    dispatch(uri);
-  });
-  window.addEventListener("modem-push", ({ detail }) => {
-    dispatch(detail);
-  });
-  window.addEventListener("modem-replace", ({ detail }) => {
-    dispatch(detail);
-  });
-};
-var do_push = (uri) => {
-  window.history.pushState({}, "", to_string4(uri));
-  window.requestAnimationFrame(() => {
-    if (uri.fragment[0]) {
-      document.getElementById(uri.fragment[0])?.scrollIntoView();
-    }
-  });
-  window.dispatchEvent(new CustomEvent("modem-push", { detail: uri }));
-};
-var find_anchor = (el2) => {
-  if (!el2 || el2.tagName === "BODY") {
-    return null;
-  } else if (el2.tagName === "A") {
-    return el2;
-  } else {
-    return find_anchor(el2.parentElement);
-  }
-};
-var uri_from_url = (url) => {
-  return new Uri(
-    /* scheme   */
-    url.protocol ? new Some(url.protocol.slice(0, -1)) : new None(),
-    /* userinfo */
-    new None(),
-    /* host     */
-    url.hostname ? new Some(url.hostname) : new None(),
-    /* port     */
-    url.port ? new Some(Number(url.port)) : new None(),
-    /* path     */
-    url.pathname,
-    /* query    */
-    url.search ? new Some(url.search.slice(1)) : new None(),
-    /* fragment */
-    url.hash ? new Some(url.hash.slice(1)) : new None()
-  );
-};
-
-// build/dev/javascript/modem/modem.mjs
-function init2(handler) {
-  return from2(
-    (dispatch) => {
-      return guard(
-        !is_browser(),
-        void 0,
-        () => {
-          return do_init(
-            (uri) => {
-              let _pipe = uri;
-              let _pipe$1 = handler(_pipe);
-              return dispatch(_pipe$1);
-            }
-          );
-        }
-      );
-    }
-  );
-}
-var relative = /* @__PURE__ */ new Uri(
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  "",
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None()
-);
-function push(path, query, fragment) {
-  return from2(
-    (_) => {
-      return guard(
-        !is_browser(),
-        void 0,
-        () => {
-          return do_push(
-            relative.withFields({ path, query, fragment })
-          );
-        }
-      );
-    }
-  );
-}
 
 // build/dev/javascript/rada/rada_ffi.mjs
 function get_year_month_day() {
@@ -4485,7 +4122,7 @@ function diff2(unit, date1, date2) {
   }
 }
 
-// build/dev/javascript/client/client/state.mjs
+// build/dev/javascript/client/client/router.mjs
 var Home = class extends CustomType {
 };
 var Login = class extends CustomType {
@@ -4502,8 +4139,8 @@ var Admin = class extends CustomType {
 };
 var ConfirmPresence = class extends CustomType {
 };
-var NotFound2 = class extends CustomType {
-};
+
+// build/dev/javascript/client/client/model.mjs
 var Model2 = class extends CustomType {
   constructor(route, auth_user, gift_status, gallery_images, login_form, confirm_form, event_countdown, admin_settings, comments) {
     super();
@@ -4518,12 +4155,108 @@ var Model2 = class extends CustomType {
     this.comments = comments;
   }
 };
-var OnRouteChange = class extends CustomType {
-  constructor(x0) {
+var LoginForm = class extends CustomType {
+  constructor(username, email, password, confirm_password, sign_up, error) {
     super();
-    this[0] = x0;
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.confirm_password = confirm_password;
+    this.sign_up = sign_up;
+    this.error = error;
   }
 };
+var ConfirmForm = class extends CustomType {
+  constructor(name2, invite_name, email, phone, people_count, person_name, people_names, comments, error) {
+    super();
+    this.name = name2;
+    this.invite_name = invite_name;
+    this.email = email;
+    this.phone = phone;
+    this.people_count = people_count;
+    this.person_name = person_name;
+    this.people_names = people_names;
+    this.comments = comments;
+    this.error = error;
+  }
+};
+var GiftStatus = class extends CustomType {
+  constructor(sugestion, unique, error) {
+    super();
+    this.sugestion = sugestion;
+    this.unique = unique;
+    this.error = error;
+  }
+};
+var AdminSettings = class extends CustomType {
+  constructor(total, confirmations, show_details, show_all) {
+    super();
+    this.total = total;
+    this.confirmations = confirmations;
+    this.show_details = show_details;
+    this.show_all = show_all;
+  }
+};
+function init2() {
+  return new Model2(
+    new Home(),
+    new None(),
+    new GiftStatus(toList([]), toList([]), new None()),
+    toList([]),
+    new LoginForm("", "", "", "", false, new None()),
+    new ConfirmForm("", "", "", "", 1, "", new$(), new None(), new None()),
+    0,
+    new AdminSettings(0, toList([]), new$(), false),
+    toList([])
+  );
+}
+function update_user(model, auth_user) {
+  return model.withFields({ auth_user: new Some(auth_user) });
+}
+function update_gifts(model, gift_status) {
+  return model.withFields({ gift_status });
+}
+function update_images(model, gallery_images) {
+  return model.withFields({ gallery_images });
+}
+function update_comments(model, comments) {
+  return model.withFields({ comments });
+}
+function update_admin_settings(model, admin_settings) {
+  return model.withFields({ admin_settings });
+}
+function update_event_countdown(model, event_countdown) {
+  return model.withFields({ event_countdown });
+}
+function update_login_username(model, username) {
+  return model.withFields({
+    login_form: model.login_form.withFields({ username })
+  });
+}
+function update_login_email(model, email) {
+  return model.withFields({
+    login_form: model.login_form.withFields({ email })
+  });
+}
+function update_login_password(model, password) {
+  return model.withFields({
+    login_form: model.login_form.withFields({ password })
+  });
+}
+function update_login_confirm_password(model, confirm_password) {
+  return model.withFields({
+    login_form: model.login_form.withFields({
+      confirm_password
+    })
+  });
+}
+function update_login_error(model, error) {
+  return model.withFields({
+    login_form: model.login_form.withFields({ error })
+  });
+}
+
+// build/dev/javascript/client/client/msg.mjs
 var AuthUserRecieved = class extends CustomType {
   constructor(x0) {
     super();
@@ -4627,18 +4360,6 @@ var UserRequestedSelectGift = class extends CustomType {
     this.to = to2;
   }
 };
-var SelectGiftResponded = class extends CustomType {
-  constructor(resp_result) {
-    super();
-    this.resp_result = resp_result;
-  }
-};
-var GiftUpdateError = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
 var ConfirmUpdateName = class extends CustomType {
   constructor(value3) {
     super();
@@ -4676,19 +4397,7 @@ var ConfirmUpdatePersonName = class extends CustomType {
     this.value = value3;
   }
 };
-var ConfirmUpdatePeopleNames = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
 var ConfirmUpdateComments = class extends CustomType {
-  constructor(value3) {
-    super();
-    this.value = value3;
-  }
-};
-var ConfirmUpdateError = class extends CustomType {
   constructor(value3) {
     super();
     this.value = value3;
@@ -4696,68 +4405,11 @@ var ConfirmUpdateError = class extends CustomType {
 };
 var UserRequestedConfirmPresence = class extends CustomType {
 };
-var ConfirmPresenceResponded = class extends CustomType {
-  constructor(resp_result) {
-    super();
-    this.resp_result = resp_result;
-  }
-};
 var MessageErrorResponse = class extends CustomType {
   constructor(message, error) {
     super();
     this.message = message;
     this.error = error;
-  }
-};
-var AuthUser = class extends CustomType {
-  constructor(user_id, username, is_confirmed, is_admin) {
-    super();
-    this.user_id = user_id;
-    this.username = username;
-    this.is_confirmed = is_confirmed;
-    this.is_admin = is_admin;
-  }
-};
-var LoginForm = class extends CustomType {
-  constructor(username, email, password, confirm_password, sign_up, error) {
-    super();
-    this.username = username;
-    this.email = email;
-    this.password = password;
-    this.confirm_password = confirm_password;
-    this.sign_up = sign_up;
-    this.error = error;
-  }
-};
-var ConfirmForm = class extends CustomType {
-  constructor(name2, invite_name, email, phone, people_count, person_name, people_names, comments, error) {
-    super();
-    this.name = name2;
-    this.invite_name = invite_name;
-    this.email = email;
-    this.phone = phone;
-    this.people_count = people_count;
-    this.person_name = person_name;
-    this.people_names = people_names;
-    this.comments = comments;
-    this.error = error;
-  }
-};
-var GiftStatus = class extends CustomType {
-  constructor(sugestion, unique, error) {
-    super();
-    this.sugestion = sugestion;
-    this.unique = unique;
-    this.error = error;
-  }
-};
-var AdminSettings = class extends CustomType {
-  constructor(total, confirmations, show_details, show_all) {
-    super();
-    this.total = total;
-    this.confirmations = confirmations;
-    this.show_details = show_details;
-    this.show_all = show_all;
   }
 };
 function message_error_decoder() {
@@ -4768,6 +4420,17 @@ function message_error_decoder() {
     optional_field("message", string),
     optional_field("error", string)
   );
+}
+
+// build/dev/javascript/client/client/update.mjs
+function effect(model, effect2) {
+  return [model, effect2];
+}
+function none3(model) {
+  return [model, none()];
+}
+function effects(model, effects2) {
+  return [model, batch(effects2)];
 }
 
 // build/dev/javascript/lustre/lustre/event.mjs
@@ -5812,61 +5475,6 @@ function login_view(model) {
 }
 
 // build/dev/javascript/client/client/views/confirm_presence_view.mjs
-function confirm_presence(model) {
-  let user_id = (() => {
-    let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
-    if (!$.isOk()) {
-      throw makeError(
-        "let_assert",
-        "client/views/confirm_presence_view",
-        28,
-        "confirm_presence",
-        "Pattern match failed, no pattern matched the value.",
-        { value: $ }
-      );
-    }
-    let user = $[0];
-    return user.user_id;
-  })();
-  let people_names = (() => {
-    let _pipe = model.confirm_form.people_names;
-    let _pipe$1 = insert(_pipe, 0, model.confirm_form.name);
-    return values(_pipe$1);
-  })();
-  return post(
-    get_api_url() + "/confirm",
-    object2(
-      toList([
-        ["id", int2(0)],
-        ["user_id", int2(user_id)],
-        ["name", string2(model.confirm_form.name)],
-        ["invite_name", string2(model.confirm_form.invite_name)],
-        ["phone", string2(model.confirm_form.phone)],
-        ["people_count", int2(model.confirm_form.people_count)],
-        [
-          "people_names",
-          (() => {
-            let _pipe = people_names;
-            return array2(_pipe, string2);
-          })()
-        ],
-        [
-          "comments",
-          (() => {
-            let _pipe = model.confirm_form.comments;
-            return nullable(_pipe, string2);
-          })()
-        ]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new ConfirmPresenceResponded(var0);
-      }
-    )
-  );
-}
 function name_box_element(model, n) {
   let string_n = (() => {
     let _pipe = n + 1;
@@ -6342,30 +5950,6 @@ function gallery_view(model) {
 }
 
 // build/dev/javascript/client/client/views/gifts_view.mjs
-function select_gift(model, gift, to2) {
-  let $ = model.auth_user;
-  if ($ instanceof Some) {
-    let user = $[0];
-    return post(
-      get_api_url() + "/gifts",
-      object2(
-        toList([
-          ["gift_id", int2(gift.id)],
-          ["user_id", int2(user.user_id)],
-          ["to", bool2(to2)]
-        ])
-      ),
-      expect_json(
-        message_error_decoder(),
-        (var0) => {
-          return new SelectGiftResponded(var0);
-        }
-      )
-    );
-  } else {
-    return push("/login", new None(), new None());
-  }
-}
 function sugestion_gift(gift) {
   return div(
     toList([
@@ -6606,11 +6190,6 @@ function not_found_view() {
   );
 }
 
-// build/dev/javascript/client/ffi.mjs
-function get_route() {
-  return window.location.pathname;
-}
-
 // build/dev/javascript/client/client.mjs
 function view(model) {
   return body(
@@ -6647,67 +6226,6 @@ function view(model) {
       })(),
       footer_view()
     ])
-  );
-}
-function get_route2() {
-  let uri = (() => {
-    let $2 = (() => {
-      let _pipe = get_route();
-      return parse2(_pipe);
-    })();
-    if ($2.isOk()) {
-      let uri2 = $2[0];
-      return uri2;
-    } else {
-      throw makeError("panic", "client", 564, "get_route", "Invalid uri", {});
-    }
-  })();
-  let $ = (() => {
-    let _pipe = uri.path;
-    return path_segments(_pipe);
-  })();
-  if ($.hasLength(0)) {
-    return new Home();
-  } else if ($.hasLength(1) && $.head === "login") {
-    return new Login();
-  } else if ($.hasLength(1) && $.head === "gifts") {
-    return new Gifts();
-  } else if ($.hasLength(1) && $.head === "event") {
-    return new Event3();
-  } else if ($.hasLength(1) && $.head === "gallery") {
-    return new Gallery();
-  } else if ($.hasLength(1) && $.head === "comments") {
-    return new Comments();
-  } else if ($.hasLength(1) && $.head === "admin") {
-    return new Admin();
-  } else if ($.hasLength(1) && $.head === "confirm") {
-    return new ConfirmPresence();
-  } else {
-    return new NotFound2();
-  }
-}
-function on_url_change(_) {
-  return new OnRouteChange(get_route2());
-}
-function get_auth_user(id_string) {
-  let url = get_api_url() + "/auth/validate/" + id_string;
-  let decoder = decode4(
-    (var0, var1, var2, var3) => {
-      return new AuthUser(var0, var1, var2, var3);
-    },
-    field("user_id", int),
-    field("username", string),
-    field("is_confirmed", bool),
-    field("is_admin", bool)
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new AuthUserRecieved(var0);
-      }
-    )
   );
 }
 function get_gifts() {
@@ -6775,599 +6293,6 @@ function get_comments() {
     )
   );
 }
-function get_confirmation_data() {
-  let url = get_api_url() + "/confirm";
-  let confirmation_decoder = list(
-    decode7(
-      (var0, var1, var2, var3, var4, var5, var6) => {
-        return new Confirmation(var0, var1, var2, var3, var4, var5, var6);
-      },
-      field("id", int),
-      field("user_id", int),
-      field("name", string),
-      field("invite_name", string),
-      field("phone", string),
-      field("comments", optional(string)),
-      field("people_names", list(string))
-    )
-  );
-  let decoder = decode2(
-    (total, confirmations) => {
-      return [total, confirmations];
-    },
-    field("total", int),
-    field("confirmations", confirmation_decoder)
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new ConfirmationsRecieved(var0);
-      }
-    )
-  );
-}
-function get_id_from_response(response) {
-  let _pipe = response;
-  let _pipe$1 = trim2(_pipe);
-  let _pipe$2 = crop_string(_pipe$1, ":");
-  return drop_left(_pipe$2, 1);
-}
-function update(model, msg) {
-  if (msg instanceof OnRouteChange) {
-    let route = msg[0];
-    return [model.withFields({ route }), none()];
-  } else if (msg instanceof AuthUserRecieved) {
-    let user_result = msg[0];
-    if (user_result.isOk()) {
-      let user = user_result[0];
-      return [model.withFields({ auth_user: new Some(user) }), none()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof GiftsRecieved) {
-    let gifts_result = msg[0];
-    if (gifts_result.isOk()) {
-      let gifts = gifts_result[0];
-      return [
-        model.withFields({
-          gift_status: model.gift_status.withFields({
-            sugestion: gifts[0],
-            unique: gifts[1]
-          })
-        }),
-        none()
-      ];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof ImagesRecieved) {
-    let images_result = msg[0];
-    if (images_result.isOk()) {
-      let images = images_result[0];
-      return [model.withFields({ gallery_images: images }), none()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof CommentsRecieved) {
-    let comments_result = msg[0];
-    if (comments_result.isOk()) {
-      let comments = comments_result[0];
-      return [model.withFields({ comments }), none()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof ConfirmationsRecieved) {
-    let confirmations_result = msg[0];
-    if (confirmations_result.isOk()) {
-      let confirmation_data = confirmations_result[0];
-      let updated_show_details = (() => {
-        let _pipe = confirmation_data[1];
-        let _pipe$1 = group(
-          _pipe,
-          (confirmation) => {
-            return confirmation.id;
-          }
-        );
-        return map_values(_pipe$1, (_, _1) => {
-          return false;
-        });
-      })();
-      return [
-        model.withFields({
-          admin_settings: model.admin_settings.withFields({
-            confirmations: confirmation_data[1],
-            show_details: updated_show_details,
-            total: confirmation_data[0]
-          })
-        }),
-        none()
-      ];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof CountdownUpdated) {
-    let value3 = msg.value;
-    return [model.withFields({ event_countdown: value3 }), none()];
-  } else if (msg instanceof LoginUpdateUsername) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ username: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof LoginUpdateEmail) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ email: value3 })
-      }),
-      from2(
-        (dispatch) => {
-          return dispatch(new ConfirmUpdateEmail(value3));
-        }
-      )
-    ];
-  } else if (msg instanceof LoginUpdatePassword) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ password: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof LoginUpdateConfirmPassword) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ confirm_password: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof LoginUpdateError) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({ error: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof UserRequestedLoginSignUp) {
-    let $ = model.login_form.sign_up;
-    if (!$) {
-      return [model, login(model)];
-    } else {
-      return [model, signup(model)];
-    }
-  } else if (msg instanceof LoginResponded) {
-    let resp_result = msg.resp_result;
-    if (resp_result.isOk()) {
-      let resp = resp_result[0];
-      let $ = resp.message;
-      let $1 = resp.error;
-      if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new LoginUpdateError(new Some(err)));
-            }
-          )
-        ];
-      } else if ($ instanceof Some && $1 instanceof None) {
-        let response = $[0];
-        return [
-          model.withFields({
-            login_form: new LoginForm("", "", "", "", false, new None())
-          }),
-          batch(
-            toList([
-              push("/", new None(), new None()),
-              get_auth_user(
-                (() => {
-                  let _pipe = response;
-                  return get_id_from_response(_pipe);
-                })()
-              )
-            ])
-          )
-        ];
-      } else {
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(
-                new LoginUpdateError(
-                  new Some("Problemas no servidor, por favor tente mais tarde.")
-                )
-              );
-            }
-          )
-        ];
-      }
-    } else {
-      return [
-        model,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new LoginUpdateError(
-                new Some("Problemas no servidor, por favor tente mais tarde.")
-              )
-            );
-          }
-        )
-      ];
-    }
-  } else if (msg instanceof UserClickedSignUp) {
-    return [
-      model.withFields({
-        login_form: model.login_form.withFields({
-          sign_up: negate(model.login_form.sign_up)
-        })
-      }),
-      none()
-    ];
-  } else if (msg instanceof SignUpResponded) {
-    let resp_result = msg.resp_result;
-    if (resp_result.isOk()) {
-      let resp = resp_result[0];
-      let $ = resp.message;
-      let $1 = resp.error;
-      if ($ instanceof Some && $1 instanceof None) {
-        let response = $[0];
-        return [
-          model.withFields({
-            login_form: new LoginForm("", "", "", "", false, new None())
-          }),
-          batch(
-            toList([
-              push("/", new None(), new None()),
-              get_auth_user(
-                (() => {
-                  let _pipe = response;
-                  return get_id_from_response(_pipe);
-                })()
-              )
-            ])
-          )
-        ];
-      } else if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new LoginUpdateError(new Some(err)));
-            }
-          )
-        ];
-      } else {
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(
-                new LoginUpdateError(
-                  new Some("Problemas no servidor, por favor tente mais tarde.")
-                )
-              );
-            }
-          )
-        ];
-      }
-    } else {
-      return [
-        model,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new LoginUpdateError(
-                new Some("Problemas no servidor, por favor tente mais tarde.")
-              )
-            );
-          }
-        )
-      ];
-    }
-  } else if (msg instanceof UserOpenedGiftsView) {
-    let $ = model.gift_status.sugestion;
-    let $1 = model.gift_status.unique;
-    if ($.hasLength(1) && $1.hasLength(1)) {
-      return [model, none()];
-    } else if ($.hasLength(0) && $1.hasLength(0)) {
-      return [model, get_gifts()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof UserOpenedGalleryView) {
-    let $ = model.gallery_images;
-    if ($.hasLength(1)) {
-      return [model, none()];
-    } else if ($.hasLength(0)) {
-      return [model, get_images()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof AdminOpenedAdminView) {
-    let $ = model.admin_settings.total;
-    if ($ === 0) {
-      return [model, get_confirmation_data()];
-    } else {
-      return [model, none()];
-    }
-  } else if (msg instanceof AdminClickedShowAll) {
-    return [
-      model.withFields({
-        admin_settings: model.admin_settings.withFields({
-          show_all: negate(model.admin_settings.show_all)
-        })
-      }),
-      none()
-    ];
-  } else if (msg instanceof AdminClickedShowConfirmationDetails) {
-    let id$1 = msg.id;
-    let updated_show_details = (() => {
-      let _pipe = model.admin_settings.show_details;
-      return upsert(
-        _pipe,
-        id$1,
-        (key) => {
-          if (key instanceof Some) {
-            let key$1 = key[0];
-            return negate(key$1);
-          } else {
-            return false;
-          }
-        }
-      );
-    })();
-    return [
-      model.withFields({
-        admin_settings: model.admin_settings.withFields({
-          show_details: updated_show_details
-        })
-      }),
-      none()
-    ];
-  } else if (msg instanceof UserRequestedSelectGift) {
-    let gift = msg.gift;
-    let to2 = msg.to;
-    return [model, select_gift(model, gift, to2)];
-  } else if (msg instanceof SelectGiftResponded) {
-    let resp_result = msg.resp_result;
-    if (resp_result.isOk()) {
-      let resp = resp_result[0];
-      let $ = resp.message;
-      let $1 = resp.error;
-      if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new GiftUpdateError(new Some(err)));
-            }
-          )
-        ];
-      } else if ($ instanceof Some && $1 instanceof None) {
-        return [model, get_gifts()];
-      } else {
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(
-                new GiftUpdateError(
-                  new Some("Problemas no servidor, por favor tente mais tarde.")
-                )
-              );
-            }
-          )
-        ];
-      }
-    } else {
-      return [
-        model,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new GiftUpdateError(
-                new Some("Problemas no servidor, por favor tente mais tarde.")
-              )
-            );
-          }
-        )
-      ];
-    }
-  } else if (msg instanceof GiftUpdateError) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        gift_status: model.gift_status.withFields({ error: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdateName) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ name: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdateInviteName) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ invite_name: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdateEmail) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ email: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdatePhone) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ phone: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdatePeopleCount) {
-    let value3 = msg.value;
-    let $ = parse(value3);
-    if ($.isOk()) {
-      let people_count = $[0];
-      return [
-        model.withFields({
-          confirm_form: model.confirm_form.withFields({
-            people_count
-          })
-        }),
-        none()
-      ];
-    } else {
-      return [
-        model,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new ConfirmUpdateError(
-                new Some(
-                  'O campo "Quantidade de pessoas" deve ser um valor inteiro entre 1 e 99'
-                )
-              )
-            );
-          }
-        )
-      ];
-    }
-  } else if (msg instanceof ConfirmUpdatePersonName) {
-    let n = msg.key;
-    let value3 = msg.value;
-    let people_names = (() => {
-      let _pipe = model.confirm_form.people_names;
-      return upsert(
-        _pipe,
-        n,
-        (key) => {
-          if (key instanceof Some) {
-            return value3;
-          } else {
-            return "";
-          }
-        }
-      );
-    })();
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ person_name: value3 })
-      }),
-      from2(
-        (dispatch) => {
-          return dispatch(new ConfirmUpdatePeopleNames(people_names));
-        }
-      )
-    ];
-  } else if (msg instanceof ConfirmUpdatePeopleNames) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ people_names: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdateComments) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ comments: new Some(value3) })
-      }),
-      none()
-    ];
-  } else if (msg instanceof ConfirmUpdateError) {
-    let value3 = msg.value;
-    return [
-      model.withFields({
-        confirm_form: model.confirm_form.withFields({ error: value3 })
-      }),
-      none()
-    ];
-  } else if (msg instanceof UserRequestedConfirmPresence) {
-    return [model, confirm_presence(model)];
-  } else {
-    let resp_result = msg.resp_result;
-    if (resp_result.isOk()) {
-      let resp = resp_result[0];
-      let $ = resp.message;
-      let $1 = resp.error;
-      if ($ instanceof Some && $1 instanceof None) {
-        let response = $[0];
-        return [
-          model,
-          batch(
-            toList([
-              push("/confirm", new None(), new None()),
-              get_auth_user(
-                (() => {
-                  let _pipe = response;
-                  return get_id_from_response(_pipe);
-                })()
-              )
-            ])
-          )
-        ];
-      } else if ($1 instanceof Some) {
-        let err = $1[0];
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(new ConfirmUpdateError(new Some(err)));
-            }
-          )
-        ];
-      } else {
-        return [
-          model,
-          from2(
-            (dispatch) => {
-              return dispatch(
-                new ConfirmUpdateError(
-                  new Some("Problemas no servidor, por favor tente mais tarde.")
-                )
-              );
-            }
-          )
-        ];
-      }
-    } else {
-      return [
-        model,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new ConfirmUpdateError(
-                new Some("Problemas no servidor, por favor tente mais tarde.")
-              )
-            );
-          }
-        )
-      ];
-    }
-  }
-}
 function update_countdown() {
   let countdown = diff2(
     new Days(),
@@ -7380,39 +6305,142 @@ function update_countdown() {
     }
   );
 }
+function handle_login_signup(model) {
+  let $ = model.login_form.sign_up;
+  if ($) {
+    return signup(model);
+  } else {
+    return login(model);
+  }
+}
+function default_transform_data(_, api_data) {
+  return api_data;
+}
+function confirmations_to_admin_settings(model, confirmation_data) {
+  return model.admin_settings.withFields({
+    confirmations: confirmation_data[1],
+    show_details: (() => {
+      let _pipe = confirmation_data[1];
+      let _pipe$1 = group(
+        _pipe,
+        (confirmation) => {
+          return confirmation.id;
+        }
+      );
+      return map_values(_pipe$1, (_, _1) => {
+        return false;
+      });
+    })(),
+    total: confirmation_data[0]
+  });
+}
+function gifts_to_gift_status(model, gifts) {
+  return model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] });
+}
+function handle_api_response(model, response, transform_data, apply_update) {
+  if (response.isOk()) {
+    let api_data = response[0];
+    let _pipe = model;
+    let _pipe$1 = apply_update(
+      _pipe,
+      (() => {
+        let _pipe$12 = model;
+        return transform_data(_pipe$12, api_data);
+      })()
+    );
+    return none3(_pipe$1);
+  } else {
+    let _pipe = model;
+    return none3(_pipe);
+  }
+}
+function update(model, msg) {
+  if (msg instanceof AuthUserRecieved) {
+    let user_result = msg[0];
+    return handle_api_response(
+      model,
+      user_result,
+      default_transform_data,
+      update_user
+    );
+  } else if (msg instanceof GiftsRecieved) {
+    let gifts_result = msg[0];
+    return handle_api_response(
+      model,
+      gifts_result,
+      gifts_to_gift_status,
+      update_gifts
+    );
+  } else if (msg instanceof ImagesRecieved) {
+    let images_result = msg[0];
+    return handle_api_response(
+      model,
+      images_result,
+      default_transform_data,
+      update_images
+    );
+  } else if (msg instanceof CommentsRecieved) {
+    let comments_result = msg[0];
+    return handle_api_response(
+      model,
+      comments_result,
+      default_transform_data,
+      update_comments
+    );
+  } else if (msg instanceof ConfirmationsRecieved) {
+    let confirmations_result = msg[0];
+    return handle_api_response(
+      model,
+      confirmations_result,
+      confirmations_to_admin_settings,
+      update_admin_settings
+    );
+  } else if (msg instanceof CountdownUpdated) {
+    let value3 = msg.value;
+    let _pipe = update_event_countdown(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof LoginUpdateUsername) {
+    let value3 = msg.value;
+    let _pipe = update_login_username(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof LoginUpdateEmail) {
+    let value3 = msg.value;
+    let _pipe = update_login_email(model, value3);
+    return effect(
+      _pipe,
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdateEmail(value3));
+        }
+      )
+    );
+  } else if (msg instanceof LoginUpdatePassword) {
+    let value3 = msg.value;
+    let _pipe = update_login_password(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof LoginUpdateConfirmPassword) {
+    let value3 = msg.value;
+    let _pipe = update_login_confirm_password(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof LoginUpdateError) {
+    let value3 = msg.value;
+    let _pipe = update_login_error(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof UserRequestedLoginSignUp) {
+    handle_login_signup(model);
+    let _pipe = model;
+    return effect(_pipe, handle_login_signup(model));
+  } else {
+    let _pipe = model;
+    return none3(_pipe);
+  }
+}
 function init3(_) {
-  return [
-    new Model2(
-      get_route2(),
-      new None(),
-      new GiftStatus(toList([]), toList([]), new None()),
-      toList([]),
-      new LoginForm("", "", "", "", false, new None()),
-      new ConfirmForm(
-        "",
-        "",
-        "",
-        "",
-        1,
-        "",
-        new$(),
-        new None(),
-        new None()
-      ),
-      0,
-      new AdminSettings(0, toList([]), new$(), false),
-      toList([])
-    ),
-    batch(
-      toList([
-        init2(on_url_change),
-        get_gifts(),
-        update_countdown(),
-        get_images(),
-        get_comments()
-      ])
-    )
-  ];
+  let _pipe = init2();
+  return effects(
+    _pipe,
+    toList([get_gifts(), update_countdown(), get_images(), get_comments()])
+  );
 }
 function main2() {
   let _pipe = application(init3, update, view);

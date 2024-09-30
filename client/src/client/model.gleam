@@ -133,6 +133,10 @@ pub fn update_login_confirm_password(
   )
 }
 
-pub fn update_login_error(model: Model, error: String) -> Model {
-  Model(..model, login_form: LoginForm(..model.login_form, error: Some(error)))
+pub fn update_login_error(model: Model, error: Option(String)) -> Model {
+  Model(..model, login_form: LoginForm(..model.login_form, error: error))
+}
+
+pub fn reset_login_form(model: Model) -> Model {
+  Model(..model, login_form: LoginForm("", "", "", "", False, None))
 }
