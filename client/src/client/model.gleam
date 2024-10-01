@@ -77,6 +77,10 @@ pub fn init() -> Model {
   )
 }
 
+pub fn update_all(first: Model, second: Model) -> Model {
+  first
+}
+
 pub fn update_route(model: Model, route: router.Route) -> Model {
   Model(..model, route: route)
 }

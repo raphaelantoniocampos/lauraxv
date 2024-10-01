@@ -4578,6 +4578,9 @@ function init3() {
     toList([])
   );
 }
+function update_all(first3, second2) {
+  return first3;
+}
 function update_route(model, route) {
   return model.withFields({ route });
 }
@@ -4762,6 +4765,12 @@ var SelectGiftResponded = class extends CustomType {
     this.resp_result = resp_result;
   }
 };
+var GiftUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var ConfirmUpdateName = class extends CustomType {
   constructor(value3) {
     super();
@@ -4799,7 +4808,19 @@ var ConfirmUpdatePersonName = class extends CustomType {
     this.value = value3;
   }
 };
+var ConfirmUpdatePeopleNames = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var ConfirmUpdateComments = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
+var ConfirmUpdateError = class extends CustomType {
   constructor(value3) {
     super();
     this.value = value3;
@@ -6657,8 +6678,8 @@ function view(model) {
     ])
   );
 }
-function get_auth_user(id_string) {
-  let url = get_api_url() + "api/auth/validate/" + id_string;
+function get_auth_user(token2) {
+  let url = get_api_url() + "api/auth/validate/" + token2;
   let decoder = decode4(
     (var0, var1, var2, var3) => {
       return new AuthUser(var0, var1, var2, var3);
@@ -6802,29 +6823,77 @@ function handle_login_signup(model) {
     return login(model);
   }
 }
-function default_transform_data(_, api_data) {
-  return api_data;
+function default_validate_data(_, api_data) {
+  let _pipe = [api_data, toList([])];
+  return new Ok(_pipe);
 }
-function confirmations_to_admin_settings(model, confirmation_data) {
-  return model.admin_settings.withFields({
-    confirmations: confirmation_data[1],
-    show_details: (() => {
-      let _pipe = confirmation_data[1];
-      let _pipe$1 = group(
-        _pipe,
-        (confirmation) => {
-          return confirmation.id;
+function validate_admin_settings(model, confirmation_data) {
+  let _pipe = [
+    model.admin_settings.withFields({
+      confirmations: confirmation_data[1],
+      show_details: (() => {
+        let _pipe2 = confirmation_data[1];
+        let _pipe$1 = group(
+          _pipe2,
+          (confirmation) => {
+            return confirmation.id;
+          }
+        );
+        return map_values(_pipe$1, (_, _1) => {
+          return false;
+        });
+      })(),
+      total: confirmation_data[0]
+    }),
+    toList([])
+  ];
+  return new Ok(_pipe);
+}
+function validate_gift_status(model, gifts) {
+  let _pipe = [
+    model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] }),
+    toList([])
+  ];
+  return new Ok(_pipe);
+}
+function validate_login(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let response = data.message[0];
+    let updated_model = reset_login_form(model);
+    let effects2 = toList([
+      push("/", new None(), new None()),
+      get_auth_user(
+        (() => {
+          let _pipe = response;
+          return get_id_from_response(_pipe);
+        })()
+      )
+    ]);
+    return new Ok([updated_model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new LoginUpdateError(new Some(error)));
         }
-      );
-      return map_values(_pipe$1, (_, _1) => {
-        return false;
-      });
-    })(),
-    total: confirmation_data[0]
-  });
-}
-function gifts_to_gift_status(model, gifts) {
-  return model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] });
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new LoginUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
 }
 function turn_on_off_confirmation_details(model, id2) {
   return model.admin_settings.withFields({
@@ -6845,21 +6914,25 @@ function turn_on_off_confirmation_details(model, id2) {
     })()
   });
 }
-function handle_api_response(model, response, transform_data, apply_update) {
+function handle_api_response(model, response, validate_data, apply_update, error_effects) {
   if (response.isOk()) {
     let api_data = response[0];
-    let _pipe = model;
-    let _pipe$1 = apply_update(
-      _pipe,
-      (() => {
-        let _pipe$12 = model;
-        return transform_data(_pipe$12, api_data);
-      })()
-    );
-    return none3(_pipe$1);
+    let $ = (() => {
+      let _pipe = model;
+      return validate_data(_pipe, api_data);
+    })();
+    if ($.isOk()) {
+      let return$2 = $[0];
+      let _pipe = apply_update(model, return$2[0]);
+      return effects(_pipe, return$2[1]);
+    } else {
+      let returned_effects = $[0];
+      let _pipe = model;
+      return effects(_pipe, returned_effects);
+    }
   } else {
     let _pipe = model;
-    return none3(_pipe);
+    return effects(_pipe, error_effects);
   }
 }
 function update(model, msg) {
@@ -6872,40 +6945,45 @@ function update(model, msg) {
     return handle_api_response(
       model,
       user_result,
-      default_transform_data,
-      update_user
+      default_validate_data,
+      update_user,
+      toList([none()])
     );
   } else if (msg instanceof GiftsRecieved) {
     let gifts_result = msg[0];
     return handle_api_response(
       model,
       gifts_result,
-      gifts_to_gift_status,
-      update_gifts
+      validate_gift_status,
+      update_gifts,
+      toList([none()])
     );
   } else if (msg instanceof ImagesRecieved) {
     let images_result = msg[0];
     return handle_api_response(
       model,
       images_result,
-      default_transform_data,
-      update_images
+      default_validate_data,
+      update_images,
+      toList([none()])
     );
   } else if (msg instanceof CommentsRecieved) {
     let comments_result = msg[0];
     return handle_api_response(
       model,
       comments_result,
-      default_transform_data,
-      update_comments
+      default_validate_data,
+      update_comments,
+      toList([none()])
     );
   } else if (msg instanceof ConfirmationsRecieved) {
     let confirmations_result = msg[0];
     return handle_api_response(
       model,
       confirmations_result,
-      confirmations_to_admin_settings,
-      update_admin_settings
+      validate_admin_settings,
+      update_admin_settings,
+      toList([none()])
     );
   } else if (msg instanceof CountdownUpdated) {
     let value3 = msg.value;
@@ -6948,12 +7026,22 @@ function update(model, msg) {
     return none3(_pipe$1);
   } else if (msg instanceof LoginResponded) {
     let resp_result = msg.resp_result;
-    let _pipe = model;
-    return log_user(_pipe, resp_result);
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_login,
+      update_all,
+      toList([none()])
+    );
   } else if (msg instanceof SignUpResponded) {
     let resp_result = msg.resp_result;
-    let _pipe = model;
-    return log_user(_pipe, resp_result);
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_login,
+      update_all,
+      toList([none()])
+    );
   } else if (msg instanceof UserOpenedGiftsView) {
     let $ = model.gift_status.sugestion;
     let $1 = model.gift_status.unique;
@@ -7004,9 +7092,136 @@ function update(model, msg) {
     let to2 = msg.to;
     let _pipe = model;
     return effect(_pipe, select_gift(model, gift, to2));
+  } else if (msg instanceof SelectGiftResponded) {
+    let resp_result = msg.resp_result;
+    throw makeError(
+      "todo",
+      "client",
+      182,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof GiftUpdateError) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      216,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdateName) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      222,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdateInviteName) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      231,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdateEmail) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      240,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdatePhone) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      249,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdatePeopleCount) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      257,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdatePersonName) {
+    let n = msg.key;
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      287,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdatePeopleNames) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      307,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdateComments) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      318,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof ConfirmUpdateError) {
+    let value3 = msg.value;
+    throw makeError(
+      "todo",
+      "client",
+      327,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
+  } else if (msg instanceof UserRequestedConfirmPresence) {
+    throw makeError(
+      "todo",
+      "client",
+      336,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
   } else {
-    let _pipe = model;
-    return none3(_pipe);
+    let resp_result = msg.resp_result;
+    throw makeError(
+      "todo",
+      "client",
+      339,
+      "update",
+      "This has not yet been implemented",
+      {}
+    );
   }
 }
 function init4(_) {
@@ -7025,66 +7240,6 @@ function init4(_) {
 function main2() {
   let _pipe = application(init4, update, view);
   return start2(_pipe, "#app", void 0);
-}
-function log_user(model, response) {
-  if (response.isOk()) {
-    let message_error_response = response[0];
-    if (message_error_response instanceof MessageErrorResponse && message_error_response.error instanceof Some) {
-      let error = message_error_response.error[0];
-      let _pipe = model;
-      return effect(
-        _pipe,
-        from2(
-          (dispatch) => {
-            return dispatch(new LoginUpdateError(new Some(error)));
-          }
-        )
-      );
-    } else if (message_error_response instanceof MessageErrorResponse && message_error_response.message instanceof Some && message_error_response.error instanceof None) {
-      let response$1 = message_error_response.message[0];
-      let _pipe = reset_login_form(model);
-      return effects(
-        _pipe,
-        toList([
-          push("/", new None(), new None()),
-          get_auth_user(
-            (() => {
-              let _pipe$1 = response$1;
-              return get_id_from_response(_pipe$1);
-            })()
-          )
-        ])
-      );
-    } else {
-      let _pipe = model;
-      return effect(
-        _pipe,
-        from2(
-          (dispatch) => {
-            return dispatch(
-              new LoginUpdateError(
-                new Some("Problemas no servidor, por favor tente mais tarde.")
-              )
-            );
-          }
-        )
-      );
-    }
-  } else {
-    let _pipe = model;
-    return effect(
-      _pipe,
-      from2(
-        (dispatch) => {
-          return dispatch(
-            new LoginUpdateError(
-              new Some("Problemas no servidor, por favor tente mais tarde.")
-            )
-          );
-        }
-      )
-    );
-  }
 }
 
 // build/.lustre/entry.mjs
