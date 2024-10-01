@@ -1,5 +1,1 @@
-export function get_route() {
-
-  return window.location.pathname;
-
-}
+export function get_route() { return window.location.pathname; }

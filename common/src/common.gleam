@@ -25,6 +25,10 @@ pub type User {
   )
 }
 
+pub type UserSession {
+  UserSession(id: Int, user_id: Int, token: String, created_at: String)
+}
+
 pub type Confirmation {
   Confirmation(
     id: Int,

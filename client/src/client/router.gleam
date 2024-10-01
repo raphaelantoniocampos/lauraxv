@@ -12,7 +12,7 @@ pub type Route {
   NotFound
 }
 
-@external(javascript, "./ffi.mjs", "get_route")
+@external(javascript, "../ffi.mjs", "get_route")
 fn do_get_route() -> String
 
 pub fn get_route() -> Route {

@@ -1,14 +1,24 @@
+import common.{UserSession}
 import gleam/dynamic
 import gleam/list
 import gleam/result
-import rada
+import rada/date
 import server/db
-import server/db/user
 import server/generate_token.{generate_token}
 import sqlight
 import wisp.{type Request}
 
 const get_user_session_base_query = "SELECT * FROM 'user_session' "
+
+pub fn user_session_db_decoder() {
+  dynamic.decode4(
+    UserSession,
+    dynamic.element(0, dynamic.int),
+    dynamic.element(1, dynamic.int),
+    dynamic.element(2, dynamic.string),
+    dynamic.element(3, dynamic.string),
+  )
+}
 
 pub fn get_user_id_from_session(req: Request) {
   use session_token <- result.try(
@@ -22,7 +32,7 @@ pub fn get_user_id_from_session(req: Request) {
     db.execute_read(
       sql,
       [sqlight.text(session_token)],
-      dynamic.tuple2(dynamic.int, dynamic.int),
+      dynamic.tuple4(dynamic.int, dynamic.int, dynamic.string, dynamic.string),
     )
   {
     Ok(users) -> Ok(list.first(users))
@@ -41,18 +51,25 @@ pub fn get_user_id_from_session(req: Request) {
 
 pub fn create_user_session(user_id: Int) {
   let token = generate_token(64)
+  let created_at = date.today() |> date.to_iso_string
+  let sql =
+    "
+INSERT INTO user_session (user_id, token, created_at)
+VALUES( ?, ?, ? ); "
 
   let result =
-    [i.row([i.int(user_id), i.string(token)])]
-    |> i.from_values(table_name: "user_session", columns: ["user_id", "token"])
-    |> i.to_query
-    |> db.execute_write(
-      [sqlight.int(user_id), sqlight.text(token)],
-      user.user_db_decoder(),
+    db.execute_write(
+      sql,
+      [sqlight.int(user_id), sqlight.text(token), sqlight.text(created_at)],
+      user_session_db_decoder(),
     )
 
   case result {
     Ok(_) -> Ok(token)
-    Error(_) -> Error("Creating user session")
+    Error(_) -> Error("Problem creating user session")
   }
+}
+
+pub fn delete_old_user_session() {
+  todo
 }

@@ -2,14 +2,11 @@ import beecrypt
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Post}
-import gleam/int
 import gleam/json
 import gleam/result
 import gleam/string
 import server/db/user.{get_user_by_email}
-
-// import server/db/user_session.{create_user_session}
-import server/web
+import server/db/user_session
 import wisp.{type Request, type Response}
 
 type Login {
@@ -30,7 +27,7 @@ fn decode_login(json: dynamic.Dynamic) -> Result(Login, dynamic.DecodeErrors) {
   }
 }
 
-pub fn login(body: dynamic.Dynamic) {
+pub fn login(req: Request, body: dynamic.Dynamic) {
   let result = {
     use request_user <- result.try(case decode_login(body) {
       Ok(val) -> Ok(val)
@@ -50,23 +47,35 @@ pub fn login(body: dynamic.Dynamic) {
       return: Error("Senha incorreta"),
     )
 
-    // use session_token <- result.try(create_user_session(user.id))
-    // Ok(session_token)
+    use session_token <- result.try(user_session.create_user_session(user.id))
 
     // Using user id for now
-    let user_id = int.to_string(user.id)
-    Ok(
-      json.object([#("message", json.string("Logged in. id:" <> user_id))])
-      |> json.to_string_builder,
-    )
+    // let user_id = int.to_string(user.id)
+
+    Ok(session_token)
   }
 
-  web.generate_wisp_response(result)
-  // |> wisp.set_cookie(
-  //   req,
-  //   "session_token",
-  //   session_token,
-  //   wisp.PlainText,
-  //   60 * 60 * 24 * 1000,
-  // )
+  // web.generate_wisp_response(result)
+
+  case result {
+    Ok(session_token) ->
+      wisp.json_response(
+        json.object([#("message", json.string("Logged in"))])
+          |> json.to_string_builder,
+        201,
+      )
+      |> wisp.set_cookie(
+        req,
+        "kk_session_token",
+        session_token,
+        wisp.PlainText,
+        60 * 60 * 24 * 1000,
+      )
+    Error(error) ->
+      wisp.json_response(
+        json.object([#("error", json.string(error))])
+          |> json.to_string_builder,
+        200,
+      )
+  }
 }

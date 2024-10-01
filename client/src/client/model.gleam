@@ -65,7 +65,7 @@ pub type AdminSettings {
 
 pub fn init() -> Model {
   Model(
-    route: router.Home,
+    route: router.get_route(),
     auth_user: None,
     gift_status: GiftStatus([], [], None),
     gallery_images: [],
@@ -139,4 +139,24 @@ pub fn update_login_error(model: Model, error: Option(String)) -> Model {
 
 pub fn reset_login_form(model: Model) -> Model {
   Model(..model, login_form: LoginForm("", "", "", "", False, None))
+}
+
+pub fn turn_on_off_signup(model: Model) -> Model {
+  Model(
+    ..model,
+    login_form: LoginForm(
+      ..model.login_form,
+      sign_up: !model.login_form.sign_up,
+    ),
+  )
+}
+
+pub fn turn_on_off_show_all(model: Model) -> Model {
+  Model(
+    ..model,
+    admin_settings: AdminSettings(
+      ..model.admin_settings,
+      show_all: !model.admin_settings.show_all,
+    ),
+  )
 }

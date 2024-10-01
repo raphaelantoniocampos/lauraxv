@@ -8,8 +8,10 @@ import config.{type Context}
 import cors_builder as cors
 import gleam/dict
 import gleam/http.{Get, Post}
-import gleam/option.{None}
+import gleam/option.{None, Some}
 import lustre/element
+import server/db/user
+import server/db/user_session
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/comments
@@ -57,7 +59,7 @@ pub fn handle_post(req: Request) {
     ["api", "gifts"] -> gifts.select_gift(body)
     ["api", "users"] -> users.create_user(body)
     ["api", "confirm"] -> confirmations.create_confirmation(body)
-    ["api", "auth", "login"] -> login.login(body)
+    ["api", "auth", "login"] -> login.login(req, body)
     _ -> wisp.not_found()
   }
 }
@@ -84,10 +86,31 @@ fn page_routes(req: Request) -> Response {
   }
   let model =
     model.Model(
-      route: Home,
-      auth_user: None,
+      route: route,
+      auth_user: case user_session.get_user_id_from_session(req) {
+        Ok(user_id) ->
+          case user.get_user_by_id(user_id) {
+            Ok(user) ->
+              Some(model.AuthUser(
+                user_id: user_id,
+                username: user.username,
+                is_confirmed: user.is_confirmed,
+                is_admin: user.is_admin,
+              ))
+            Error(_) -> None
+          }
+        Error(_) -> None
+      },
       gift_status: model.GiftStatus([], [], None),
+      // case gifts.list_gifts() {
+      //     Ok(gifts) -> gifts
+      //     Error(_) -> []
+      //   },
       gallery_images: [],
+      // case images.list_images() {
+      //     Ok(images) -> images
+      //     Error(_) -> []
+      //   },
       login_form: model.LoginForm("", "", "", "", False, None),
       confirm_form: model.ConfirmForm(
         "",
@@ -103,6 +126,7 @@ fn page_routes(req: Request) -> Response {
       event_countdown: 0,
       admin_settings: model.AdminSettings(0, [], dict.new(), False),
       comments: [],
+      // comments.list_comments(),
     )
 
   wisp.response(200)
