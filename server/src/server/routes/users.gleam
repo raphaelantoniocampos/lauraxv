@@ -1,18 +1,15 @@
 import gleam/bool
 import gleam/dynamic
-import gleam/http.{Post}
-import gleam/int
 import gleam/json
 import gleam/regex
 import gleam/result
 import gleam/string
 import server/db/user
 
-// import server/db/user_session.{create_user_session}
-import server/web
+import server/db/user_session.{create_user_session}
 import wisp.{type Request, type Response}
 
-pub fn create_user(body: dynamic.Dynamic) {
+pub fn create_user(req: Request, body: dynamic.Dynamic) -> Response {
   let result = {
     use user <- result.try(case user.decode_create_user(body) {
       Ok(val) -> Ok(val)
@@ -70,24 +67,31 @@ pub fn create_user(body: dynamic.Dynamic) {
 
     use inserted_user <- result.try(user.get_user_by_email(user.email))
 
-    // use session_token <- result.try(create_user_session(inserted_user.id))
-    //
-    // Ok(session_token)
-    // Using user id for now
-    Ok(
-      json.object([
-        #(
-          "message",
-          json.string(
-            "Signed up. id:"
-            <> inserted_user.id
-            |> int.to_string,
-          ),
-        ),
-      ])
-      |> json.to_string_builder,
-    )
+    use session_token <- result.try(create_user_session(inserted_user.id))
+
+    Ok(session_token)
   }
 
-  web.generate_wisp_response(result)
+  case result {
+    Ok(session_token) ->
+      wisp.json_response(
+        json.object([#("message", json.string("Signed Up"))])
+          |> json.to_string_builder,
+        200,
+      )
+      |> wisp.set_cookie(
+        req,
+        "kk_session_token",
+        session_token,
+        wisp.PlainText,
+        60 * 60 * 24 * 1000,
+      )
+
+    Error(error) ->
+      wisp.json_response(
+        json.object([#("error", json.string(error))])
+          |> json.to_string_builder,
+        200,
+      )
+  }
 }

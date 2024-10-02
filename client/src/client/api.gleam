@@ -172,7 +172,7 @@ pub fn validate_confirm_presence(
 
 pub fn login(model: model.Model) -> effect.Effect(msg.Msg) {
   lustre_http.post(
-    get_api_url() <> "api/auth/login",
+    get_api_url() <> "/api/auth/login",
     json.object([
       #("email", json.string(model.login_form.email)),
       #("password", json.string(model.login_form.password)),
@@ -183,7 +183,7 @@ pub fn login(model: model.Model) -> effect.Effect(msg.Msg) {
 
 pub fn signup(model: model.Model) -> effect.Effect(msg.Msg) {
   lustre_http.post(
-    get_api_url() <> "api/users",
+    get_api_url() <> "/api/users",
     json.object([
       #("username", json.string(model.login_form.username |> string.lowercase)),
       #("email", json.string(model.login_form.email)),
@@ -195,7 +195,7 @@ pub fn signup(model: model.Model) -> effect.Effect(msg.Msg) {
 }
 
 pub fn get_auth_user() -> effect.Effect(msg.Msg) {
-  let url = get_api_url() <> "api/auth/validate"
+  let url = get_api_url() <> "/api/auth/validate"
 
   let decoder =
     dynamic.decode4(
@@ -210,7 +210,7 @@ pub fn get_auth_user() -> effect.Effect(msg.Msg) {
 }
 
 pub fn get_gifts() -> effect.Effect(msg.Msg) {
-  let url = get_api_url() <> "api/gifts"
+  let url = get_api_url() <> "/api/gifts"
   let decoder =
     dynamic.list(dynamic.decode5(
       Gift,
@@ -234,14 +234,14 @@ pub fn get_gifts() -> effect.Effect(msg.Msg) {
 }
 
 pub fn get_images() -> effect.Effect(msg.Msg) {
-  let url = get_api_url() <> "api/images"
+  let url = get_api_url() <> "/api/images"
   let decoder = dynamic.list(dynamic.field("src", dynamic.string))
 
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.ImagesRecieved))
 }
 
 pub fn get_comments() -> effect.Effect(msg.Msg) {
-  let url = get_api_url() <> "api/comments"
+  let url = get_api_url() <> "/api/comments"
 
   let decoder =
     dynamic.list(dynamic.decode2(
@@ -253,7 +253,7 @@ pub fn get_comments() -> effect.Effect(msg.Msg) {
 }
 
 pub fn get_confirmation_data() -> effect.Effect(msg.Msg) {
-  let url = get_api_url() <> "api/confirm"
+  let url = get_api_url() <> "/api/confirm"
   let confirmation_decoder =
     dynamic.list(dynamic.decode7(
       Confirmation,
@@ -292,7 +292,7 @@ pub fn confirm_presence(model: model.Model) -> effect.Effect(msg.Msg) {
     |> dict.values
   }
   lustre_http.post(
-    get_api_url() <> "api/confirm",
+    get_api_url() <> "/api/confirm",
     json.object([
       #("id", json.int(0)),
       #("user_id", json.int(user_id)),
@@ -326,7 +326,7 @@ pub fn select_gift(
   case model.auth_user {
     Some(user) -> {
       lustre_http.post(
-        get_api_url() <> "api/gifts",
+        get_api_url() <> "/api/gifts",
         json.object([
           #("gift_id", json.int(gift.id)),
           #("user_id", json.int(user.user_id)),

@@ -26,7 +26,7 @@ pub type User {
 }
 
 pub type UserSession {
-  UserSession(id: Int, user_id: Int, token: String, created_at: String)
+  UserSession(id: Int, user_id: Int, token: String, created_at: Int)
 }
 
 pub type Confirmation {

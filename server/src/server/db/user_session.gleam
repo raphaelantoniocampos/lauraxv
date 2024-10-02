@@ -17,23 +17,26 @@ pub fn user_session_db_decoder() {
     dynamic.element(0, dynamic.int),
     dynamic.element(1, dynamic.int),
     dynamic.element(2, dynamic.string),
-    dynamic.element(3, dynamic.string),
+    dynamic.element(3, dynamic.int),
   )
 }
 
 pub fn get_user_id_from_session(req: Request) {
+  wisp.get_secret_key_base(req)
+  |> io.debug
   use session_token <- result.try(
-    wisp.get_cookie(req, "session_token", wisp.PlainText)
+    wisp.get_cookie(req, "kk_session_token", wisp.Signed)
     |> result.replace_error("No session cookie found"),
   )
+  io.debug(session_token)
 
-  let sql = get_user_session_base_query <> "WHERE user_session.token = ?"
+  let sql = get_user_session_base_query <> "WHERE token = ?"
 
   let session_token = case
     db.execute_read(
       sql,
       [sqlight.text(session_token)],
-      dynamic.tuple4(dynamic.int, dynamic.int, dynamic.string, dynamic.int),
+      user_session_db_decoder(),
     )
   {
     Ok(users) -> Ok(list.first(users))
@@ -42,10 +45,31 @@ pub fn get_user_id_from_session(req: Request) {
     }
   }
 
-  use user_id_result <- result.try(session_token)
-  // |> result.replace_error("ERRO")
-  case user_id_result {
-    Ok(id) -> Ok(id.1)
+  use user_session_result <- result.try(session_token)
+
+  case user_session_result {
+    Ok(user_session) -> Ok(user_session.user_id)
+    Error(_) ->
+      Error("No user_session found when getting user_session by token")
+  }
+}
+
+pub fn get_token_from_user_id(user_id: Int) {
+  let sql = get_user_session_base_query <> "WHERE user_id = ?"
+
+  let session_token = case
+    db.execute_read(sql, [sqlight.int(user_id)], user_session_db_decoder())
+  {
+    Ok(sessions) -> Ok(list.first(sessions))
+    Error(_) -> {
+      Error("Problem getting user_session by user_id")
+    }
+  }
+
+  use user_session_result <- result.try(session_token)
+
+  case user_session_result {
+    Ok(user_session) -> Ok(user_session.token)
     Error(_) ->
       Error("No user_session found when getting user_session by token")
   }

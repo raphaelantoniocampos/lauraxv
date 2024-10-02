@@ -9,6 +9,7 @@ import gleam/result
 import gleam/string
 import server/db/user.{get_user_by_email}
 import server/db/user_session
+import server/generate_token.{generate_token}
 import wisp.{type Request, type Response}
 
 type Login {
@@ -51,9 +52,13 @@ pub fn login(req: Request, body: dynamic.Dynamic) {
 
     use _ <- result.try(user_session.delete_old_user_session())
 
-    use session_token <- result.try(user_session.create_user_session(user.id))
+    use session_token <- result.try({
+      case user.id |> user_session.get_token_from_user_id {
+        Ok(token) -> Ok(token)
+        Error(_) -> user.id |> user_session.create_user_session
+      }
+    })
 
-    io.debug(session_token)
     Ok(session_token)
   }
 
@@ -66,11 +71,12 @@ pub fn login(req: Request, body: dynamic.Dynamic) {
       )
       |> wisp.set_cookie(
         req,
-        "session_token",
+        "kk_session_token",
         session_token,
         wisp.PlainText,
         60 * 60 * 24 * 1000,
       )
+
     Error(error) ->
       wisp.json_response(
         json.object([#("error", json.string(error))])

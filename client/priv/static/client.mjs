@@ -4936,7 +4936,7 @@ function message_error_decoder() {
 
 // build/dev/javascript/client/env.mjs
 function get_api_url() {
-  return "http://localhost:8083/";
+  return "http://localhost:1234";
 }
 
 // build/dev/javascript/client/client/api.mjs
