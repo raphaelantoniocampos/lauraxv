@@ -1,8 +1,8 @@
-import lustre/attribute.{attribute, href, name, rel, src, type_}
-import lustre/element
-import lustre/element/html.{head, html, link, meta, script, title}
+import lustre/attribute.{attribute, href, id, name, rel, type_}
+import lustre/element.{type Element}
+import lustre/element/html.{body, div, head, html, link, meta, script, title}
 
-pub fn page_scaffold(content: element.Element(a)) {
+pub fn page_scaffold() -> Element(a) {
   html([], [
     head([], [
       meta([attribute("charset", "UTF-8")]),
@@ -29,12 +29,19 @@ pub fn page_scaffold(content: element.Element(a)) {
         attribute("content", "Festa de 15 anos da Laura"),
         attribute("property", "og:description"),
       ]),
-      meta([
-        attribute("content", "https://lauraxv.fly.dev/"),
-        attribute("property", "og:url"),
-      ]),
-      link([href("/static/client.min.css"), rel("stylesheet")]),
-      script([src("/static/client.min.mjs"), attribute.type_("module")], ""),
+      // meta([
+      //   attribute("content", "https://lauraxv.fly.dev/"),
+      //   attribute("property", "og:url"),
+      // ]),
+      link([href("/static/client.css"), rel("stylesheet")]),
+      script(
+        [type_("module"), attribute("defer", "true")],
+        "import { main2 } from \"/static/client.mjs\"; main2()",
+      ),
+      script(
+        [type_("module"), attribute("defer", "true")],
+        "import { main3 } from \"/static/client.mjs\"; main3()",
+      ),
       link([
         rel("stylesheet"),
         href("https://fonts.googleapis.com/css2?family=Pacifico&display=swap"),
@@ -46,6 +53,6 @@ pub fn page_scaffold(content: element.Element(a)) {
         ),
       ]),
     ]),
-    content,
+    body([], [div([id("app")], [])]),
   ])
 }

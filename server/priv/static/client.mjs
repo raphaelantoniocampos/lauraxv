@@ -302,37 +302,6 @@ function map(option, fun) {
   }
 }
 
-// build/dev/javascript/common/common.mjs
-var Gift = class extends CustomType {
-  constructor(id2, name2, pic, link, selected_by) {
-    super();
-    this.id = id2;
-    this.name = name2;
-    this.pic = pic;
-    this.link = link;
-    this.selected_by = selected_by;
-  }
-};
-var Confirmation = class extends CustomType {
-  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
-    super();
-    this.id = id2;
-    this.user_id = user_id;
-    this.name = name2;
-    this.invite_name = invite_name;
-    this.phone = phone;
-    this.comments = comments;
-    this.people_names = people_names;
-  }
-};
-var Comment = class extends CustomType {
-  constructor(name2, comment) {
-    super();
-    this.name = name2;
-    this.comment = comment;
-  }
-};
-
 // build/dev/javascript/gleam_stdlib/gleam/regex.mjs
 var Match = class extends CustomType {
   constructor(content, submatches) {
@@ -804,9 +773,6 @@ function concat3(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
-}
-function trim2(string3) {
-  return trim(string3);
 }
 function pop_grapheme2(string3) {
   return pop_grapheme(string3);
@@ -1902,9 +1868,6 @@ function concat2(xs) {
   }
   return result;
 }
-function crop_string(string3, substring) {
-  return string3.substring(string3.indexOf(substring));
-}
 function starts_with(haystack, needle) {
   return haystack.startsWith(needle);
 }
@@ -1930,15 +1893,6 @@ var unicode_whitespaces = [
 ].join();
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function trim(string3) {
-  return trim_left(trim_right(string3));
-}
-function trim_left(string3) {
-  return string3.replace(left_trim_regex, "");
-}
-function trim_right(string3) {
-  return string3.replace(right_trim_regex, "");
-}
 function truncate(float3) {
   return Math.trunc(float3);
 }
@@ -2116,6 +2070,27 @@ function do_keys(dict) {
 }
 function keys(dict) {
   return do_keys(dict);
+}
+function do_values_acc(loop$list, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse_and_concat(acc, toList([]));
+    } else {
+      let x = list2.head;
+      let xs = list2.tail;
+      loop$list = xs;
+      loop$acc = prepend(x[1], acc);
+    }
+  }
+}
+function do_values(dict) {
+  let list_of_pairs = map_to_list(dict);
+  return do_values_acc(list_of_pairs, toList([]));
+}
+function values(dict) {
+  return do_values(dict);
 }
 function upsert(dict, key, fun) {
   let _pipe = dict;
@@ -2459,6 +2434,12 @@ function object(entries) {
 function identity2(x) {
   return x;
 }
+function array(list2) {
+  return list2.toArray();
+}
+function do_null() {
+  return null;
+}
 function decode(string3) {
   try {
     const result = JSON.parse(string3);
@@ -2591,8 +2572,27 @@ function bool2(input2) {
 function int2(input2) {
   return identity2(input2);
 }
+function null$() {
+  return do_null();
+}
+function nullable(input2, inner_type) {
+  if (input2 instanceof Some) {
+    let value3 = input2[0];
+    return inner_type(value3);
+  } else {
+    return null$();
+  }
+}
 function object2(entries) {
   return object(entries);
+}
+function preprocessed_array(from3) {
+  return array(from3);
+}
+function array2(entries, inner_type) {
+  let _pipe = entries;
+  let _pipe$1 = map2(_pipe, inner_type);
+  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -2986,14 +2986,14 @@ function morph(prev, next, dispatch) {
 function createElementNode({ prev, next, dispatch, stack }) {
   const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
-  const el2 = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
+  const el = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
   let handlersForEl;
-  if (!registeredHandlers.has(el2)) {
+  if (!registeredHandlers.has(el)) {
     const emptyHandlers = /* @__PURE__ */ new Map();
-    registeredHandlers.set(el2, emptyHandlers);
+    registeredHandlers.set(el, emptyHandlers);
     handlersForEl = emptyHandlers;
   } else {
-    handlersForEl = registeredHandlers.get(el2);
+    handlersForEl = registeredHandlers.get(el);
   }
   const prevHandlers = canMorph ? new Set(handlersForEl.keys()) : null;
   const prevAttributes = canMorph ? new Set(Array.from(prev.attributes, (a2) => a2.name)) : null;
@@ -3003,21 +3003,22 @@ function createElementNode({ prev, next, dispatch, stack }) {
   if (canMorph && next.tag === "textarea") {
     const innertText = next.children[Symbol.iterator]().next().value?.content;
     if (innertText !== void 0)
-      el2.value = innertText;
+      el.value = innertText;
   }
+  const delegated = [];
   for (const attr of next.attrs) {
     const name2 = attr[0];
     const value3 = attr[1];
     if (attr.as_property) {
-      if (el2[name2] !== value3)
-        el2[name2] = value3;
+      if (el[name2] !== value3)
+        el[name2] = value3;
       if (canMorph)
         prevAttributes.delete(name2);
     } else if (name2.startsWith("on")) {
       const eventName = name2.slice(2);
       const callback = dispatch(value3, eventName === "input");
       if (!handlersForEl.has(eventName)) {
-        el2.addEventListener(eventName, lustreGenericEventHandler);
+        el.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
       if (canMorph)
@@ -3026,10 +3027,13 @@ function createElementNode({ prev, next, dispatch, stack }) {
       const eventName = name2.slice(15);
       const callback = dispatch(lustreServerEventHandler);
       if (!handlersForEl.has(eventName)) {
-        el2.addEventListener(eventName, lustreGenericEventHandler);
+        el.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
-      el2.setAttribute(name2, value3);
+      el.setAttribute(name2, value3);
+    } else if (name2.startsWith("delegate:data-") || name2.startsWith("delegate:aria-")) {
+      el.setAttribute(name2, value3);
+      delegated.push([name2.slice(10), value3]);
     } else if (name2 === "class") {
       className = className === null ? value3 : className + " " + value3;
     } else if (name2 === "style") {
@@ -3037,40 +3041,51 @@ function createElementNode({ prev, next, dispatch, stack }) {
     } else if (name2 === "dangerous-unescaped-html") {
       innerHTML = value3;
     } else {
-      if (el2.getAttribute(name2) !== value3)
-        el2.setAttribute(name2, value3);
+      if (el.getAttribute(name2) !== value3)
+        el.setAttribute(name2, value3);
       if (name2 === "value" || name2 === "selected")
-        el2[name2] = value3;
+        el[name2] = value3;
       if (canMorph)
         prevAttributes.delete(name2);
     }
   }
   if (className !== null) {
-    el2.setAttribute("class", className);
+    el.setAttribute("class", className);
     if (canMorph)
       prevAttributes.delete("class");
   }
   if (style !== null) {
-    el2.setAttribute("style", style);
+    el.setAttribute("style", style);
     if (canMorph)
       prevAttributes.delete("style");
   }
   if (canMorph) {
     for (const attr of prevAttributes) {
-      el2.removeAttribute(attr);
+      el.removeAttribute(attr);
     }
     for (const eventName of prevHandlers) {
       handlersForEl.delete(eventName);
-      el2.removeEventListener(eventName, lustreGenericEventHandler);
+      el.removeEventListener(eventName, lustreGenericEventHandler);
     }
   }
-  if (next.key !== void 0 && next.key !== "") {
-    el2.setAttribute("data-lustre-key", next.key);
-  } else if (innerHTML !== null) {
-    el2.innerHTML = innerHTML;
-    return el2;
+  if (next.tag === "slot") {
+    window.queueMicrotask(() => {
+      for (const child of el.assignedElements()) {
+        for (const [name2, value3] of delegated) {
+          if (!child.hasAttribute(name2)) {
+            child.setAttribute(name2, value3);
+          }
+        }
+      }
+    });
   }
-  let prevChild = el2.firstChild;
+  if (next.key !== void 0 && next.key !== "") {
+    el.setAttribute("data-lustre-key", next.key);
+  } else if (innerHTML !== null) {
+    el.innerHTML = innerHTML;
+    return el;
+  }
+  let prevChild = el.firstChild;
   let seenKeys = null;
   let keyedChildren = null;
   let incomingKeyedChildren = null;
@@ -3085,7 +3100,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
       prevChild = diffKeyedChild(
         prevChild,
         child,
-        el2,
+        el,
         stack,
         incomingKeyedChildren,
         keyedChildren,
@@ -3094,16 +3109,16 @@ function createElementNode({ prev, next, dispatch, stack }) {
     }
   } else {
     for (const child of children(next)) {
-      stack.unshift({ prev: prevChild, next: child, parent: el2 });
+      stack.unshift({ prev: prevChild, next: child, parent: el });
       prevChild = prevChild?.nextSibling;
     }
   }
   while (prevChild) {
     const next2 = prevChild.nextSibling;
-    el2.removeChild(prevChild);
+    el.removeChild(prevChild);
     prevChild = next2;
   }
-  return el2;
+  return el;
 }
 var registeredHandlers = /* @__PURE__ */ new WeakMap();
 function lustreGenericEventHandler(event2) {
@@ -3120,10 +3135,10 @@ function lustreGenericEventHandler(event2) {
   handlersForEventTarget.get(event2.type)(event2);
 }
 function lustreServerEventHandler(event2) {
-  const el2 = event2.currentTarget;
-  const tag = el2.getAttribute(`data-lustre-on-${event2.type}`);
-  const data = JSON.parse(el2.getAttribute("data-lustre-data") || "{}");
-  const include = JSON.parse(el2.getAttribute("data-lustre-include") || "[]");
+  const el = event2.currentTarget;
+  const tag = el.getAttribute(`data-lustre-on-${event2.type}`);
+  const data = JSON.parse(el.getAttribute("data-lustre-data") || "{}");
+  const include = JSON.parse(el.getAttribute("data-lustre-include") || "[]");
   switch (event2.type) {
     case "input":
     case "change":
@@ -3150,10 +3165,10 @@ function lustreServerEventHandler(event2) {
     )
   };
 }
-function getKeyedChildren(el2) {
+function getKeyedChildren(el) {
   const keyedChildren = /* @__PURE__ */ new Map();
-  if (el2) {
-    for (const child of children(el2)) {
+  if (el) {
+    for (const child of children(el)) {
       const key = child?.key || child?.getAttribute?.("data-lustre-key");
       if (key)
         keyedChildren.set(key, child);
@@ -3161,43 +3176,41 @@ function getKeyedChildren(el2) {
   }
   return keyedChildren;
 }
-function diffKeyedChild(prevChild, child, el2, stack, incomingKeyedChildren, keyedChildren, seenKeys) {
+function diffKeyedChild(prevChild, child, el, stack, incomingKeyedChildren, keyedChildren, seenKeys) {
   while (prevChild && !incomingKeyedChildren.has(prevChild.getAttribute("data-lustre-key"))) {
     const nextChild = prevChild.nextSibling;
-    el2.removeChild(prevChild);
+    el.removeChild(prevChild);
     prevChild = nextChild;
   }
   if (keyedChildren.size === 0) {
-    for (const currChild of children(child)) {
-      stack.unshift({ prev: prevChild, next: currChild, parent: el2 });
-      prevChild = prevChild?.nextSibling;
-    }
+    stack.unshift({ prev: prevChild, next: child, parent: el });
+    prevChild = prevChild?.nextSibling;
     return prevChild;
   }
   if (seenKeys.has(child.key)) {
     console.warn(`Duplicate key found in Lustre vnode: ${child.key}`);
-    stack.unshift({ prev: null, next: child, parent: el2 });
+    stack.unshift({ prev: null, next: child, parent: el });
     return prevChild;
   }
   seenKeys.add(child.key);
   const keyedChild = keyedChildren.get(child.key);
   if (!keyedChild && !prevChild) {
-    stack.unshift({ prev: null, next: child, parent: el2 });
+    stack.unshift({ prev: null, next: child, parent: el });
     return prevChild;
   }
   if (!keyedChild && prevChild !== null) {
     const placeholder2 = document.createTextNode("");
-    el2.insertBefore(placeholder2, prevChild);
-    stack.unshift({ prev: placeholder2, next: child, parent: el2 });
+    el.insertBefore(placeholder2, prevChild);
+    stack.unshift({ prev: placeholder2, next: child, parent: el });
     return prevChild;
   }
   if (!keyedChild || keyedChild === prevChild) {
-    stack.unshift({ prev: prevChild, next: child, parent: el2 });
+    stack.unshift({ prev: prevChild, next: child, parent: el });
     prevChild = prevChild?.nextSibling;
     return prevChild;
   }
-  el2.insertBefore(keyedChild, prevChild);
-  stack.unshift({ prev: keyedChild, next: child, parent: el2 });
+  el.insertBefore(keyedChild, prevChild);
+  stack.unshift({ prev: keyedChild, next: child, parent: el });
   return prevChild;
 }
 function* children(element2) {
@@ -4048,13 +4061,13 @@ var do_push = (uri) => {
   });
   window.dispatchEvent(new CustomEvent("modem-push", { detail: uri }));
 };
-var find_anchor = (el2) => {
-  if (!el2 || el2.tagName === "BODY") {
+var find_anchor = (el) => {
+  if (!el || el.tagName === "BODY") {
     return null;
-  } else if (el2.tagName === "A") {
-    return el2;
+  } else if (el.tagName === "A") {
+    return el;
   } else {
-    return find_anchor(el2.parentElement);
+    return find_anchor(el.parentElement);
   }
 };
 var uri_from_url = (url) => {
@@ -4430,6 +4443,37 @@ function diff2(unit, date1, date2) {
   }
 }
 
+// build/dev/javascript/common/common.mjs
+var Gift = class extends CustomType {
+  constructor(id2, name2, pic, link, selected_by) {
+    super();
+    this.id = id2;
+    this.name = name2;
+    this.pic = pic;
+    this.link = link;
+    this.selected_by = selected_by;
+  }
+};
+var Confirmation = class extends CustomType {
+  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
+    super();
+    this.id = id2;
+    this.user_id = user_id;
+    this.name = name2;
+    this.invite_name = invite_name;
+    this.phone = phone;
+    this.comments = comments;
+    this.people_names = people_names;
+  }
+};
+var Comment = class extends CustomType {
+  constructor(name2, comment) {
+    super();
+    this.name = name2;
+    this.comment = comment;
+  }
+};
+
 // build/dev/javascript/client/ffi.mjs
 function get_route() {
   return window.location.pathname;
@@ -4578,7 +4622,7 @@ function init3() {
     toList([])
   );
 }
-function update_all(first3, second2) {
+function update_all(first3, _) {
   return first3;
 }
 function update_route(model, route) {
@@ -4589,6 +4633,11 @@ function update_user(model, auth_user) {
 }
 function update_gifts(model, gift_status) {
   return model.withFields({ gift_status });
+}
+function update_gift_error(model, error) {
+  return model.withFields({
+    gift_status: model.gift_status.withFields({ error })
+  });
 }
 function update_images(model, gallery_images) {
   return model.withFields({ gallery_images });
@@ -4646,6 +4695,51 @@ function turn_on_off_show_all(model) {
     admin_settings: model.admin_settings.withFields({
       show_all: !model.admin_settings.show_all
     })
+  });
+}
+function update_confirm_name(model, name2) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ name: name2 })
+  });
+}
+function update_confirm_invite_name(model, invite_name) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ invite_name })
+  });
+}
+function update_confirm_email(model, email) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ email })
+  });
+}
+function update_confirm_phone(model, phone) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ phone })
+  });
+}
+function update_confirm_people_count(model, people_count) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ people_count })
+  });
+}
+function update_confirm_person_name(model, person_name) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ person_name })
+  });
+}
+function update_confirm_people_names(model, people_names) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ people_names })
+  });
+}
+function update_confirm_comments(model, comments) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ comments: new Some(comments) })
+  });
+}
+function update_confirm_error(model, error) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ error })
   });
 }
 
@@ -4828,6 +4922,12 @@ var ConfirmUpdateError = class extends CustomType {
 };
 var UserRequestedConfirmPresence = class extends CustomType {
 };
+var ConfirmPresenceResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
 var MessageErrorResponse = class extends CustomType {
   constructor(message, error) {
     super();
@@ -4843,6 +4943,382 @@ function message_error_decoder() {
     optional_field("message", string),
     optional_field("error", string)
   );
+}
+
+// build/dev/javascript/client/env.mjs
+function get_api_url() {
+  return "http://localhost:8083";
+}
+
+// build/dev/javascript/client/client/api.mjs
+function validate_default(_, api_data) {
+  let _pipe = [api_data, toList([])];
+  return new Ok(_pipe);
+}
+function validate_admin_settings(model, confirmation_data) {
+  let _pipe = [
+    model.admin_settings.withFields({
+      confirmations: confirmation_data[1],
+      show_details: (() => {
+        let _pipe2 = confirmation_data[1];
+        let _pipe$1 = group(
+          _pipe2,
+          (confirmation) => {
+            return confirmation.id;
+          }
+        );
+        return map_values(_pipe$1, (_, _1) => {
+          return false;
+        });
+      })(),
+      total: confirmation_data[0]
+    }),
+    toList([])
+  ];
+  return new Ok(_pipe);
+}
+function validate_gift_status(model, gifts) {
+  let _pipe = [
+    model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] }),
+    toList([])
+  ];
+  return new Ok(_pipe);
+}
+function login(model) {
+  return post(
+    get_api_url() + "/api/auth/login",
+    object2(
+      toList([
+        ["email", string2(model.login_form.email)],
+        ["password", string2(model.login_form.password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new LoginResponded(var0);
+      }
+    )
+  );
+}
+function signup(model) {
+  return post(
+    get_api_url() + "/api/users",
+    object2(
+      toList([
+        [
+          "username",
+          string2(
+            (() => {
+              let _pipe = model.login_form.username;
+              return lowercase2(_pipe);
+            })()
+          )
+        ],
+        ["email", string2(model.login_form.email)],
+        ["password", string2(model.login_form.password)],
+        ["confirm_password", string2(model.login_form.confirm_password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new SignUpResponded(var0);
+      }
+    )
+  );
+}
+function get_auth_user() {
+  let url = get_api_url() + "/api/auth/validate";
+  let decoder = decode4(
+    (var0, var1, var2, var3) => {
+      return new AuthUser(var0, var1, var2, var3);
+    },
+    field("user_id", int),
+    field("username", string),
+    field("is_confirmed", bool),
+    field("is_admin", bool)
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new AuthUserRecieved(var0);
+      }
+    )
+  );
+}
+function validate_login(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let updated_model = reset_login_form(model);
+    let effects2 = toList([
+      push("/", new None(), new None()),
+      get_auth_user()
+    ]);
+    return new Ok([updated_model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new LoginUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new LoginUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
+function validate_confirm_presence(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let effects2 = toList([
+      push("/confirm", new None(), new None()),
+      get_auth_user()
+    ]);
+    return new Ok([model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new LoginUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
+function get_gifts() {
+  let url = get_api_url() + "/api/gifts";
+  let decoder = list(
+    decode5(
+      (var0, var1, var2, var3, var4) => {
+        return new Gift(var0, var1, var2, var3, var4);
+      },
+      field("id", int),
+      field("name", string),
+      field("pic", string),
+      field("link", optional(string)),
+      field("selected_by", optional(int))
+    )
+  );
+  let tuple_decoder = decode2(
+    (sugestion, unique) => {
+      return [sugestion, unique];
+    },
+    field("sugestion_gifts", decoder),
+    field("unique_gifts", decoder)
+  );
+  return get2(
+    url,
+    expect_json(
+      tuple_decoder,
+      (var0) => {
+        return new GiftsRecieved(var0);
+      }
+    )
+  );
+}
+function validate_select_gift(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let effects2 = toList([get_gifts()]);
+    return new Ok([model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new GiftUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new GiftUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
+function get_images() {
+  let url = get_api_url() + "/api/images";
+  let decoder = list(field("src", string));
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new ImagesRecieved(var0);
+      }
+    )
+  );
+}
+function get_comments() {
+  let url = get_api_url() + "/api/comments";
+  let decoder = list(
+    decode2(
+      (var0, var1) => {
+        return new Comment(var0, var1);
+      },
+      field("name", string),
+      field("comment", optional(string))
+    )
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new CommentsRecieved(var0);
+      }
+    )
+  );
+}
+function get_confirmation_data() {
+  let url = get_api_url() + "/api/confirm";
+  let confirmation_decoder = list(
+    decode7(
+      (var0, var1, var2, var3, var4, var5, var6) => {
+        return new Confirmation(var0, var1, var2, var3, var4, var5, var6);
+      },
+      field("id", int),
+      field("user_id", int),
+      field("name", string),
+      field("invite_name", string),
+      field("phone", string),
+      field("comments", optional(string)),
+      field("people_names", list(string))
+    )
+  );
+  let decoder = decode2(
+    (total, confirmations) => {
+      return [total, confirmations];
+    },
+    field("total", int),
+    field("confirmations", confirmation_decoder)
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new ConfirmationsRecieved(var0);
+      }
+    )
+  );
+}
+function confirm_presence(model) {
+  let user_id = (() => {
+    let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
+    if (!$.isOk()) {
+      throw makeError(
+        "assignment_no_match",
+        "client/api",
+        294,
+        "confirm_presence",
+        "Assignment pattern did not match",
+        { value: $ }
+      );
+    }
+    let user = $[0];
+    return user.user_id;
+  })();
+  let people_names = (() => {
+    let _pipe = model.confirm_form.people_names;
+    let _pipe$1 = insert(_pipe, 0, model.confirm_form.name);
+    return values(_pipe$1);
+  })();
+  return post(
+    get_api_url() + "/api/confirm",
+    object2(
+      toList([
+        ["id", int2(0)],
+        ["user_id", int2(user_id)],
+        ["name", string2(model.confirm_form.name)],
+        ["invite_name", string2(model.confirm_form.invite_name)],
+        ["phone", string2(model.confirm_form.phone)],
+        ["people_count", int2(model.confirm_form.people_count)],
+        [
+          "people_names",
+          (() => {
+            let _pipe = people_names;
+            return array2(_pipe, string2);
+          })()
+        ],
+        [
+          "comments",
+          (() => {
+            let _pipe = model.confirm_form.comments;
+            return nullable(_pipe, string2);
+          })()
+        ]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new ConfirmPresenceResponded(var0);
+      }
+    )
+  );
+}
+function select_gift(model, gift, to2) {
+  let $ = model.auth_user;
+  if ($ instanceof Some) {
+    let user = $[0];
+    return post(
+      get_api_url() + "/api/gifts",
+      object2(
+        toList([
+          ["gift_id", int2(gift.id)],
+          ["user_id", int2(user.user_id)],
+          ["to", bool2(to2)]
+        ])
+      ),
+      expect_json(
+        message_error_decoder(),
+        (var0) => {
+          return new SelectGiftResponded(var0);
+        }
+      )
+    );
+  } else {
+    return push("/login", new None(), new None());
+  }
 }
 
 // build/dev/javascript/client/client/update.mjs
@@ -5610,56 +6086,7 @@ function navigation_bar_view(model) {
   );
 }
 
-// build/dev/javascript/client/env.mjs
-function get_api_url() {
-  return "";
-}
-
 // build/dev/javascript/client/client/views/login_view.mjs
-function login(model) {
-  return post(
-    get_api_url() + "/auth/login",
-    object2(
-      toList([
-        ["email", string2(model.login_form.email)],
-        ["password", string2(model.login_form.password)]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new LoginResponded(var0);
-      }
-    )
-  );
-}
-function signup(model) {
-  return post(
-    get_api_url() + "/users",
-    object2(
-      toList([
-        [
-          "username",
-          string2(
-            (() => {
-              let _pipe = model.login_form.username;
-              return lowercase2(_pipe);
-            })()
-          )
-        ],
-        ["email", string2(model.login_form.email)],
-        ["password", string2(model.login_form.password)],
-        ["confirm_password", string2(model.login_form.confirm_password)]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new SignUpResponded(var0);
-      }
-    )
-  );
-}
 function login_view(model) {
   return main(
     toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
@@ -6275,7 +6702,7 @@ function event_view() {
                 toList([
                   class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
                   alt("Local da Festa"),
-                  src("/priv/static/paiol.jpg")
+                  src("./priv/static/images/paiol.jpg")
                 ])
               )
             ])
@@ -6373,30 +6800,6 @@ function gallery_view(model) {
 }
 
 // build/dev/javascript/client/client/views/gifts_view.mjs
-function select_gift(model, gift, to2) {
-  let $ = model.auth_user;
-  if ($ instanceof Some) {
-    let user = $[0];
-    return post(
-      get_api_url() + "/gifts",
-      object2(
-        toList([
-          ["gift_id", int2(gift.id)],
-          ["user_id", int2(user.user_id)],
-          ["to", bool2(to2)]
-        ])
-      ),
-      expect_json(
-        message_error_decoder(),
-        (var0) => {
-          return new SelectGiftResponded(var0);
-        }
-      )
-    );
-  } else {
-    return push("/login", new None(), new None());
-  }
-}
 function sugestion_gift(gift) {
   return div(
     toList([
@@ -6678,131 +7081,6 @@ function view(model) {
     ])
   );
 }
-function get_auth_user(token2) {
-  let url = get_api_url() + "api/auth/validate/" + token2;
-  let decoder = decode4(
-    (var0, var1, var2, var3) => {
-      return new AuthUser(var0, var1, var2, var3);
-    },
-    field("user_id", int),
-    field("username", string),
-    field("is_confirmed", bool),
-    field("is_admin", bool)
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new AuthUserRecieved(var0);
-      }
-    )
-  );
-}
-function get_gifts() {
-  let url = get_api_url() + "api/gifts";
-  let decoder = list(
-    decode5(
-      (var0, var1, var2, var3, var4) => {
-        return new Gift(var0, var1, var2, var3, var4);
-      },
-      field("id", int),
-      field("name", string),
-      field("pic", string),
-      field("link", optional(string)),
-      field("selected_by", optional(int))
-    )
-  );
-  let tuple_decoder = decode2(
-    (sugestion, unique) => {
-      return [sugestion, unique];
-    },
-    field("sugestion_gifts", decoder),
-    field("unique_gifts", decoder)
-  );
-  return get2(
-    url,
-    expect_json(
-      tuple_decoder,
-      (var0) => {
-        return new GiftsRecieved(var0);
-      }
-    )
-  );
-}
-function get_images() {
-  let url = get_api_url() + "api/images";
-  let decoder = list(field("src", string));
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new ImagesRecieved(var0);
-      }
-    )
-  );
-}
-function get_comments() {
-  let url = get_api_url() + "api/comments";
-  let decoder = list(
-    decode2(
-      (var0, var1) => {
-        return new Comment(var0, var1);
-      },
-      field("name", string),
-      field("comment", optional(string))
-    )
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new CommentsRecieved(var0);
-      }
-    )
-  );
-}
-function get_confirmation_data() {
-  let url = get_api_url() + "api/confirm";
-  let confirmation_decoder = list(
-    decode7(
-      (var0, var1, var2, var3, var4, var5, var6) => {
-        return new Confirmation(var0, var1, var2, var3, var4, var5, var6);
-      },
-      field("id", int),
-      field("user_id", int),
-      field("name", string),
-      field("invite_name", string),
-      field("phone", string),
-      field("comments", optional(string)),
-      field("people_names", list(string))
-    )
-  );
-  let decoder = decode2(
-    (total, confirmations) => {
-      return [total, confirmations];
-    },
-    field("total", int),
-    field("confirmations", confirmation_decoder)
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new ConfirmationsRecieved(var0);
-      }
-    )
-  );
-}
-function get_id_from_response(response) {
-  let _pipe = response;
-  let _pipe$1 = trim2(_pipe);
-  let _pipe$2 = crop_string(_pipe$1, ":");
-  return drop_left(_pipe$2, 1);
-}
 function update_countdown() {
   let countdown = diff2(
     new Days(),
@@ -6823,78 +7101,6 @@ function handle_login_signup(model) {
     return login(model);
   }
 }
-function default_validate_data(_, api_data) {
-  let _pipe = [api_data, toList([])];
-  return new Ok(_pipe);
-}
-function validate_admin_settings(model, confirmation_data) {
-  let _pipe = [
-    model.admin_settings.withFields({
-      confirmations: confirmation_data[1],
-      show_details: (() => {
-        let _pipe2 = confirmation_data[1];
-        let _pipe$1 = group(
-          _pipe2,
-          (confirmation) => {
-            return confirmation.id;
-          }
-        );
-        return map_values(_pipe$1, (_, _1) => {
-          return false;
-        });
-      })(),
-      total: confirmation_data[0]
-    }),
-    toList([])
-  ];
-  return new Ok(_pipe);
-}
-function validate_gift_status(model, gifts) {
-  let _pipe = [
-    model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] }),
-    toList([])
-  ];
-  return new Ok(_pipe);
-}
-function validate_login(model, data) {
-  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
-    let response = data.message[0];
-    let updated_model = reset_login_form(model);
-    let effects2 = toList([
-      push("/", new None(), new None()),
-      get_auth_user(
-        (() => {
-          let _pipe = response;
-          return get_id_from_response(_pipe);
-        })()
-      )
-    ]);
-    return new Ok([updated_model, effects2]);
-  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
-    let error = data.error[0];
-    let effects2 = toList([
-      from2(
-        (dispatch) => {
-          return dispatch(new LoginUpdateError(new Some(error)));
-        }
-      )
-    ]);
-    return new Error(effects2);
-  } else {
-    let effects2 = toList([
-      from2(
-        (dispatch) => {
-          return dispatch(
-            new LoginUpdateError(
-              new Some("Problemas no servidor, por favor tente mais tarde.")
-            )
-          );
-        }
-      )
-    ]);
-    return new Error(effects2);
-  }
-}
 function turn_on_off_confirmation_details(model, id2) {
   return model.admin_settings.withFields({
     show_details: (() => {
@@ -6913,6 +7119,20 @@ function turn_on_off_confirmation_details(model, id2) {
       );
     })()
   });
+}
+function update_people_names(model, n, value3) {
+  let _pipe = model.confirm_form.people_names;
+  return upsert(
+    _pipe,
+    n,
+    (key) => {
+      if (key instanceof Some) {
+        return value3;
+      } else {
+        return "";
+      }
+    }
+  );
 }
 function handle_api_response(model, response, validate_data, apply_update, error_effects) {
   if (response.isOk()) {
@@ -6945,7 +7165,7 @@ function update(model, msg) {
     return handle_api_response(
       model,
       user_result,
-      default_validate_data,
+      validate_default,
       update_user,
       toList([none()])
     );
@@ -6963,7 +7183,7 @@ function update(model, msg) {
     return handle_api_response(
       model,
       images_result,
-      default_validate_data,
+      validate_default,
       update_images,
       toList([none()])
     );
@@ -6972,7 +7192,7 @@ function update(model, msg) {
     return handle_api_response(
       model,
       comments_result,
-      default_validate_data,
+      validate_default,
       update_comments,
       toList([none()])
     );
@@ -7017,7 +7237,6 @@ function update(model, msg) {
     let _pipe = update_login_error(model, value3);
     return none3(_pipe);
   } else if (msg instanceof UserRequestedLoginSignUp) {
-    handle_login_signup(model);
     let _pipe = model;
     return effect(_pipe, handle_login_signup(model));
   } else if (msg instanceof UserClickedSignUp) {
@@ -7031,7 +7250,17 @@ function update(model, msg) {
       resp_result,
       validate_login,
       update_all,
-      toList([none()])
+      toList([
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ])
     );
   } else if (msg instanceof SignUpResponded) {
     let resp_result = msg.resp_result;
@@ -7040,7 +7269,17 @@ function update(model, msg) {
       resp_result,
       validate_login,
       update_all,
-      toList([none()])
+      toList([
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ])
     );
   } else if (msg instanceof UserOpenedGiftsView) {
     let $ = model.gift_status.sugestion;
@@ -7094,133 +7333,109 @@ function update(model, msg) {
     return effect(_pipe, select_gift(model, gift, to2));
   } else if (msg instanceof SelectGiftResponded) {
     let resp_result = msg.resp_result;
-    throw makeError(
-      "todo",
-      "client",
-      182,
-      "update",
-      "This has not yet been implemented",
-      {}
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_select_gift,
+      update_all,
+      toList([none()])
     );
   } else if (msg instanceof GiftUpdateError) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      216,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_gift_error(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdateName) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      222,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_name(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdateInviteName) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      231,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_invite_name(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdateEmail) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      240,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_email(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdatePhone) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      249,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_phone(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdatePeopleCount) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      257,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let $ = parse(value3);
+    if ($.isOk()) {
+      let people_count = $[0];
+      let _pipe = update_confirm_people_count(model, people_count);
+      return none3(_pipe);
+    } else {
+      let _pipe = model;
+      return effect(
+        _pipe,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new ConfirmUpdateError(
+                new Some(
+                  'O campo "Quantidade de pessoas" deve ser um valor inteiro entre 1 e 99'
+                )
+              )
+            );
+          }
+        )
+      );
+    }
   } else if (msg instanceof ConfirmUpdatePersonName) {
     let n = msg.key;
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      287,
-      "update",
-      "This has not yet been implemented",
-      {}
+    let _pipe = update_confirm_person_name(model, value3);
+    return effect(
+      _pipe,
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new ConfirmUpdatePeopleNames(
+              (() => {
+                let _pipe$1 = model;
+                return update_people_names(_pipe$1, n, value3);
+              })()
+            )
+          );
+        }
+      )
     );
   } else if (msg instanceof ConfirmUpdatePeopleNames) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      307,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_people_names(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdateComments) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      318,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_comments(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof ConfirmUpdateError) {
     let value3 = msg.value;
-    throw makeError(
-      "todo",
-      "client",
-      327,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = update_confirm_error(model, value3);
+    return none3(_pipe);
   } else if (msg instanceof UserRequestedConfirmPresence) {
-    throw makeError(
-      "todo",
-      "client",
-      336,
-      "update",
-      "This has not yet been implemented",
-      {}
-    );
+    let _pipe = model;
+    return effect(_pipe, confirm_presence(model));
   } else {
     let resp_result = msg.resp_result;
-    throw makeError(
-      "todo",
-      "client",
-      339,
-      "update",
-      "This has not yet been implemented",
-      {}
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_confirm_presence,
+      update_all,
+      toList([
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ])
     );
   }
 }
@@ -7231,9 +7446,10 @@ function init4(_) {
     toList([
       init2(on_url_change),
       get_gifts(),
-      update_countdown(),
       get_images(),
-      get_comments()
+      get_comments(),
+      get_auth_user(),
+      update_countdown()
     ])
   );
 }

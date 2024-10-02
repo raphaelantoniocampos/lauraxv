@@ -32,13 +32,14 @@ pub fn main() {
   |> lustre.start("#app", Nil)
 }
 
-fn init(_) -> #(model.Model, Effect(msg.Msg)) {
+pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   model.init()
   |> update.effects([
     modem.init(on_url_change),
     api.get_gifts(),
     api.get_images(),
     api.get_comments(),
+    api.get_auth_user(),
     update_countdown(),
   ])
 }

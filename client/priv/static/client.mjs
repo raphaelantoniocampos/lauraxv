@@ -39,7 +39,6 @@ var List = class {
     }
     return desired === 0;
   }
-  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -255,7 +254,6 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
-  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -4611,7 +4609,7 @@ function init3() {
     toList([])
   );
 }
-function update_all(first3, second2) {
+function update_all(first3, _) {
   return first3;
 }
 function update_route(model, route) {
@@ -4936,7 +4934,7 @@ function message_error_decoder() {
 
 // build/dev/javascript/client/env.mjs
 function get_api_url() {
-  return "http://localhost:1234";
+  return "http://localhost:8083";
 }
 
 // build/dev/javascript/client/client/api.mjs
@@ -4975,7 +4973,7 @@ function validate_gift_status(model, gifts) {
 }
 function login(model) {
   return post(
-    get_api_url() + "api/auth/login",
+    get_api_url() + "/api/auth/login",
     object2(
       toList([
         ["email", string2(model.login_form.email)],
@@ -4992,7 +4990,7 @@ function login(model) {
 }
 function signup(model) {
   return post(
-    get_api_url() + "api/users",
+    get_api_url() + "/api/users",
     object2(
       toList([
         [
@@ -5018,7 +5016,7 @@ function signup(model) {
   );
 }
 function get_auth_user() {
-  let url = get_api_url() + "api/auth/validate";
+  let url = get_api_url() + "/api/auth/validate";
   let decoder = decode4(
     (var0, var1, var2, var3) => {
       return new AuthUser(var0, var1, var2, var3);
@@ -5040,7 +5038,6 @@ function get_auth_user() {
 }
 function validate_login(model, data) {
   if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
-    let response = data.message[0];
     let updated_model = reset_login_form(model);
     let effects2 = toList([
       push("/", new None(), new None()),
@@ -5074,7 +5071,6 @@ function validate_login(model, data) {
 }
 function validate_confirm_presence(model, data) {
   if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
-    let response = data.message[0];
     let effects2 = toList([
       push("/confirm", new None(), new None()),
       get_auth_user()
@@ -5106,7 +5102,7 @@ function validate_confirm_presence(model, data) {
   }
 }
 function get_gifts() {
-  let url = get_api_url() + "api/gifts";
+  let url = get_api_url() + "/api/gifts";
   let decoder = list(
     decode5(
       (var0, var1, var2, var3, var4) => {
@@ -5138,7 +5134,6 @@ function get_gifts() {
 }
 function validate_select_gift(model, data) {
   if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
-    let response = data.message[0];
     let effects2 = toList([get_gifts()]);
     return new Ok([model, effects2]);
   } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
@@ -5167,7 +5162,7 @@ function validate_select_gift(model, data) {
   }
 }
 function get_images() {
-  let url = get_api_url() + "api/images";
+  let url = get_api_url() + "/api/images";
   let decoder = list(field("src", string));
   return get2(
     url,
@@ -5180,7 +5175,7 @@ function get_images() {
   );
 }
 function get_comments() {
-  let url = get_api_url() + "api/comments";
+  let url = get_api_url() + "/api/comments";
   let decoder = list(
     decode2(
       (var0, var1) => {
@@ -5201,7 +5196,7 @@ function get_comments() {
   );
 }
 function get_confirmation_data() {
-  let url = get_api_url() + "api/confirm";
+  let url = get_api_url() + "/api/confirm";
   let confirmation_decoder = list(
     decode7(
       (var0, var1, var2, var3, var4, var5, var6) => {
@@ -5238,11 +5233,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "let_assert",
+        "assignment_no_match",
         "client/api",
         284,
         "confirm_presence",
-        "Pattern match failed, no pattern matched the value.",
+        "Assignment pattern did not match",
         { value: $ }
       );
     }
@@ -5255,7 +5250,7 @@ function confirm_presence(model) {
     return values(_pipe$1);
   })();
   return post(
-    get_api_url() + "api/confirm",
+    get_api_url() + "/api/confirm",
     object2(
       toList([
         ["id", int2(0)],
@@ -5293,7 +5288,7 @@ function select_gift(model, gift, to2) {
   if ($ instanceof Some) {
     let user = $[0];
     return post(
-      get_api_url() + "api/gifts",
+      get_api_url() + "/api/gifts",
       object2(
         toList([
           ["gift_id", int2(gift.id)],
@@ -6694,7 +6689,7 @@ function event_view() {
                 toList([
                   class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
                   alt("Local da Festa"),
-                  src("/priv/static/paiol.jpg")
+                  src("/priv/static/images/paiol.jpg")
                 ])
               )
             ])

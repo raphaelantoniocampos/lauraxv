@@ -61,7 +61,7 @@ pub fn validate_login(
   List(effect.Effect(msg.Msg)),
 ) {
   case data {
-    msg.MessageErrorResponse(Some(response), None) -> {
+    msg.MessageErrorResponse(Some(_response), None) -> {
       let updated_model = model.reset_login_form(model)
       let effects = [modem.push("/", None, None), get_auth_user()]
       Ok(#(updated_model, effects))
@@ -101,7 +101,7 @@ pub fn validate_select_gift(
   List(effect.Effect(msg.Msg)),
 ) {
   case data {
-    msg.MessageErrorResponse(Some(response), None) -> {
+    msg.MessageErrorResponse(Some(_response), None) -> {
       let effects = [get_gifts()]
       Ok(#(model, effects))
     }
@@ -139,7 +139,7 @@ pub fn validate_confirm_presence(
   List(effect.Effect(msg.Msg)),
 ) {
   case data {
-    msg.MessageErrorResponse(Some(response), None) -> {
+    msg.MessageErrorResponse(Some(_response), None) -> {
       let effects = [modem.push("/confirm", None, None), get_auth_user()]
       Ok(#(model, effects))
     }
@@ -206,6 +206,16 @@ pub fn get_auth_user() -> effect.Effect(msg.Msg) {
       dynamic.field("is_admin", dynamic.bool),
     )
 
+  // let req =   Request(
+  //   method: http.Get,
+  //   headers: List(Header),
+  //   body: body,
+  //   scheme: Scheme,
+  //   host: String,
+  //   port: Option(Int),
+  //   path: String,
+  //   query: Option(String),
+  // )
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.AuthUserRecieved))
 }
 

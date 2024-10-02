@@ -1,6 +1,5 @@
 import common.{UserSession}
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/result
 import rada/date
@@ -23,12 +22,10 @@ pub fn user_session_db_decoder() {
 
 pub fn get_user_id_from_session(req: Request) {
   wisp.get_secret_key_base(req)
-  |> io.debug
   use session_token <- result.try(
-    wisp.get_cookie(req, "kk_session_token", wisp.Signed)
+    wisp.get_cookie(req, "kk_session_token", wisp.PlainText)
     |> result.replace_error("No session cookie found"),
   )
-  io.debug(session_token)
 
   let sql = get_user_session_base_query <> "WHERE token = ?"
 

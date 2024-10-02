@@ -77,7 +77,7 @@ pub fn init() -> Model {
   )
 }
 
-pub fn update_all(first: Model, second: Model) -> Model {
+pub fn update_all(first: Model, _second: Model) -> Model {
   first
 }
 
