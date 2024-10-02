@@ -7,7 +7,6 @@ import client/router.{
 import cors_builder as cors
 import gleam/dict
 import gleam/http.{Get, Post}
-import gleam/io
 import gleam/option.{None, Some}
 import lustre/element
 import server/config.{type Context}
