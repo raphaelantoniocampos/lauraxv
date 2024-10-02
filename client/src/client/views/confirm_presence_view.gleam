@@ -1,62 +1,18 @@
 import client/model
 import client/msg
 import client/views/login_view.{login_view}
-import env.{get_api_url}
-import gleam/dict
 import gleam/int
-import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{
   attribute, class, for, href, id, max, min, name, pattern, placeholder,
   required, type_, value,
 }
-import lustre/effect.{type Effect}
 import lustre/element.{type Element, text}
 import lustre/element/html.{
   a, button, div, form, h1, input, label, li, main, p, ul,
 }
 import lustre/event
-import lustre_http
-
-pub fn confirm_presence(model: model.Model) -> Effect(msg.Msg) {
-  let user_id = {
-    let assert Ok(user) =
-      option.to_result(model.auth_user, "Usuário não está logado")
-    user.user_id
-  }
-
-  let people_names = {
-    model.confirm_form.people_names
-    |> dict.insert(0, model.confirm_form.name)
-    |> dict.values
-  }
-  lustre_http.post(
-    get_api_url() <> "/confirm",
-    json.object([
-      #("id", json.int(0)),
-      #("user_id", json.int(user_id)),
-      #("name", json.string(model.confirm_form.name)),
-      #("invite_name", json.string(model.confirm_form.invite_name)),
-      #("phone", json.string(model.confirm_form.phone)),
-      #("people_count", json.int(model.confirm_form.people_count)),
-      #(
-        "people_names",
-        people_names
-          |> json.array(json.string),
-      ),
-      #(
-        "comments",
-        model.confirm_form.comments
-          |> json.nullable(json.string),
-      ),
-    ]),
-    lustre_http.expect_json(
-      msg.message_error_decoder(),
-      msg.ConfirmPresenceResponded,
-    ),
-  )
-}
 
 fn name_box_element(model: model.Model, n: Int) -> Element(msg.Msg) {
   let string_n = { n + 1 } |> int.to_string

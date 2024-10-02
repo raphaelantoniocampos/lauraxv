@@ -1,38 +1,13 @@
 import client/model
 import client/msg
 import common.{type Gift, Gift}
-import env.{get_api_url}
 import gleam/int
-import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{alt, attribute, class, disabled, href, rel, src, target}
-import lustre/effect.{type Effect}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p}
 import lustre/event
-import lustre_http
-import modem
-
-pub fn select_gift(model: model.Model, gift: Gift, to: Bool) -> Effect(msg.Msg) {
-  case model.auth_user {
-    Some(user) -> {
-      lustre_http.post(
-        get_api_url() <> "/gifts",
-        json.object([
-          #("gift_id", json.int(gift.id)),
-          #("user_id", json.int(user.user_id)),
-          #("to", json.bool(to)),
-        ]),
-        lustre_http.expect_json(
-          msg.message_error_decoder(),
-          msg.SelectGiftResponded,
-        ),
-      )
-    }
-    None -> modem.push("/login", None, None)
-  }
-}
 
 fn sugestion_gift(gift: Gift) -> Element(a) {
   div(

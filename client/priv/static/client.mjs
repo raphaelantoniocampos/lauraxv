@@ -250,6 +250,17 @@ function divideFloat(a2, b) {
     return a2 / b;
   }
 }
+function makeError(variant, module, line, fn, message, extra) {
+  let error = new globalThis.Error(message);
+  error.gleam_error = variant;
+  error.module = module;
+  error.line = line;
+  error.function = fn;
+  error.fn = fn;
+  for (let k in extra)
+    error[k] = extra[k];
+  return error;
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
 var Some = class extends CustomType {
@@ -292,25 +303,6 @@ function map(option, fun) {
     return new None();
   }
 }
-
-// build/dev/javascript/common/common.mjs
-var Gift = class extends CustomType {
-  constructor(id2, name2, pic, link, selected_by) {
-    super();
-    this.id = id2;
-    this.name = name2;
-    this.pic = pic;
-    this.link = link;
-    this.selected_by = selected_by;
-  }
-};
-var Comment = class extends CustomType {
-  constructor(name2, comment) {
-    super();
-    this.name = name2;
-    this.comment = comment;
-  }
-};
 
 // build/dev/javascript/gleam_stdlib/gleam/regex.mjs
 var Match = class extends CustomType {
@@ -756,6 +748,9 @@ function append2(builder, second2) {
 function to_string3(builder) {
   return identity(builder);
 }
+function split2(iodata, pattern2) {
+  return split(iodata, pattern2);
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
 function length3(string3) {
@@ -818,6 +813,16 @@ function drop_left(string3, num_graphemes) {
     return slice(string3, num_graphemes, length3(string3) - num_graphemes);
   }
 }
+function split3(x, substring) {
+  if (substring === "") {
+    return graphemes(x);
+  } else {
+    let _pipe = x;
+    let _pipe$1 = from_string(_pipe);
+    let _pipe$2 = split2(_pipe$1, substring);
+    return map2(_pipe$2, to_string3);
+  }
+}
 function capitalise(s) {
   let $ = pop_grapheme2(s);
   if ($.isOk()) {
@@ -846,6 +851,9 @@ function classify(data) {
 }
 function int(data) {
   return decode_int(data);
+}
+function bool(data) {
+  return decode_bool(data);
 }
 function shallow_list(value3) {
   return decode_list(value3);
@@ -986,6 +994,31 @@ function decode2(constructor, t1, t2) {
     }
   };
 }
+function decode4(constructor, t1, t2, t3, t4) {
+  return (x) => {
+    let $ = t1(x);
+    let $1 = t2(x);
+    let $2 = t3(x);
+    let $3 = t4(x);
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk()) {
+      let a2 = $[0];
+      let b = $1[0];
+      let c = $2[0];
+      let d = $3[0];
+      return new Ok(constructor(a2, b, c, d));
+    } else {
+      let a2 = $;
+      let b = $1;
+      let c = $2;
+      let d = $3;
+      return new Error(
+        concat(
+          toList([all_errors(a2), all_errors(b), all_errors(c), all_errors(d)])
+        )
+      );
+    }
+  };
+}
 function decode5(constructor, t1, t2, t3, t4, t5) {
   return (x) => {
     let $ = t1(x);
@@ -1014,6 +1047,48 @@ function decode5(constructor, t1, t2, t3, t4, t5) {
             all_errors(c),
             all_errors(d),
             all_errors(e)
+          ])
+        )
+      );
+    }
+  };
+}
+function decode7(constructor, t1, t2, t3, t4, t5, t6, t7) {
+  return (x) => {
+    let $ = t1(x);
+    let $1 = t2(x);
+    let $2 = t3(x);
+    let $3 = t4(x);
+    let $4 = t5(x);
+    let $5 = t6(x);
+    let $6 = t7(x);
+    if ($.isOk() && $1.isOk() && $2.isOk() && $3.isOk() && $4.isOk() && $5.isOk() && $6.isOk()) {
+      let a2 = $[0];
+      let b = $1[0];
+      let c = $2[0];
+      let d = $3[0];
+      let e = $4[0];
+      let f = $5[0];
+      let g = $6[0];
+      return new Ok(constructor(a2, b, c, d, e, f, g));
+    } else {
+      let a2 = $;
+      let b = $1;
+      let c = $2;
+      let d = $3;
+      let e = $4;
+      let f = $5;
+      let g = $6;
+      return new Error(
+        concat(
+          toList([
+            all_errors(a2),
+            all_errors(b),
+            all_errors(c),
+            all_errors(d),
+            all_errors(e),
+            all_errors(f),
+            all_errors(g)
           ])
         )
       );
@@ -1785,6 +1860,9 @@ function uppercase(string3) {
 function add(a2, b) {
   return a2 + b;
 }
+function split(xs, pattern2) {
+  return List.fromArray(xs.split(pattern2));
+}
 function concat2(xs) {
   let result = "";
   for (const x of xs) {
@@ -1908,6 +1986,9 @@ function decode_string(data) {
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
 }
+function decode_bool(data) {
+  return typeof data === "boolean" ? new Ok(data) : decoder_error("Bool", data);
+}
 function decode_list(data) {
   if (Array.isArray(data)) {
     return new Ok(List.fromArray(data));
@@ -1991,6 +2072,36 @@ function do_keys(dict) {
 }
 function keys(dict) {
   return do_keys(dict);
+}
+function do_values_acc(loop$list, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse_and_concat(acc, toList([]));
+    } else {
+      let x = list2.head;
+      let xs = list2.tail;
+      loop$list = xs;
+      loop$acc = prepend(x[1], acc);
+    }
+  }
+}
+function do_values(dict) {
+  let list_of_pairs = map_to_list(dict);
+  return do_values_acc(list_of_pairs, toList([]));
+}
+function values(dict) {
+  return do_values(dict);
+}
+function upsert(dict, key, fun) {
+  let _pipe = dict;
+  let _pipe$1 = get(_pipe, key);
+  let _pipe$2 = from_result(_pipe$1);
+  let _pipe$3 = fun(_pipe$2);
+  return ((_capture) => {
+    return insert(dict, key, _capture);
+  })(_pipe$3);
 }
 function do_fold(loop$list, loop$initial, loop$fun) {
   while (true) {
@@ -2186,6 +2297,44 @@ function do_parse(uri_string) {
 function parse2(uri_string) {
   return do_parse(uri_string);
 }
+function do_remove_dot_segments(loop$input, loop$accumulator) {
+  while (true) {
+    let input2 = loop$input;
+    let accumulator = loop$accumulator;
+    if (input2.hasLength(0)) {
+      return reverse(accumulator);
+    } else {
+      let segment = input2.head;
+      let rest = input2.tail;
+      let accumulator$1 = (() => {
+        if (segment === "") {
+          let accumulator$12 = accumulator;
+          return accumulator$12;
+        } else if (segment === ".") {
+          let accumulator$12 = accumulator;
+          return accumulator$12;
+        } else if (segment === ".." && accumulator.hasLength(0)) {
+          return toList([]);
+        } else if (segment === ".." && accumulator.atLeastLength(1)) {
+          let accumulator$12 = accumulator.tail;
+          return accumulator$12;
+        } else {
+          let segment$1 = segment;
+          let accumulator$12 = accumulator;
+          return prepend(segment$1, accumulator$12);
+        }
+      })();
+      loop$input = rest;
+      loop$accumulator = accumulator$1;
+    }
+  }
+}
+function remove_dot_segments(input2) {
+  return do_remove_dot_segments(input2, toList([]));
+}
+function path_segments(path) {
+  return remove_dot_segments(split3(path, "/"));
+}
 function to_string4(uri) {
   let parts = (() => {
     let $ = uri.fragment;
@@ -2286,6 +2435,12 @@ function object(entries) {
 }
 function identity2(x) {
   return x;
+}
+function array(list2) {
+  return list2.toArray();
+}
+function do_null() {
+  return null;
 }
 function decode(string3) {
   try {
@@ -2413,8 +2568,33 @@ function to_string6(json) {
 function string2(input2) {
   return identity2(input2);
 }
+function bool2(input2) {
+  return identity2(input2);
+}
+function int2(input2) {
+  return identity2(input2);
+}
+function null$() {
+  return do_null();
+}
+function nullable(input2, inner_type) {
+  if (input2 instanceof Some) {
+    let value3 = input2[0];
+    return inner_type(value3);
+  } else {
+    return null$();
+  }
+}
 function object2(entries) {
   return object(entries);
+}
+function preprocessed_array(from3) {
+  return array(from3);
+}
+function array2(entries, inner_type) {
+  let _pipe = entries;
+  let _pipe$1 = map2(_pipe, inner_type);
+  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -3053,13 +3233,13 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {Gleam.Ok<(action: Lustre.Action<Lustre.Client, Msg>>) => void>}
    */
-  static start({ init: init4, update: update2, view: view2 }, selector, flags) {
+  static start({ init: init5, update: update2, view: view2 }, selector, flags) {
     if (!is_browser())
       return new Error(new NotABrowser());
     const root = selector instanceof HTMLElement ? selector : document.querySelector(selector);
     if (!root)
       return new Error(new ElementNotFound(selector));
-    const app = new _LustreClientApplication(root, init4(flags), update2, view2);
+    const app = new _LustreClientApplication(root, init5(flags), update2, view2);
     return new Ok((action) => app.send(action));
   }
   /**
@@ -3070,9 +3250,9 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {LustreClientApplication}
    */
-  constructor(root, [init4, effects2], update2, view2) {
+  constructor(root, [init5, effects2], update2, view2) {
     this.root = root;
-    this.#model = init4;
+    this.#model = init5;
     this.#update = update2;
     this.#view = view2;
     this.#tickScheduled = window.requestAnimationFrame(
@@ -3192,9 +3372,9 @@ var LustreClientApplication = class _LustreClientApplication {
 };
 var start = LustreClientApplication.start;
 var LustreServerApplication = class _LustreServerApplication {
-  static start({ init: init4, update: update2, view: view2, on_attribute_change }, flags) {
+  static start({ init: init5, update: update2, view: view2, on_attribute_change }, flags) {
     const app = new _LustreServerApplication(
-      init4(flags),
+      init5(flags),
       update2,
       view2,
       on_attribute_change
@@ -3310,9 +3490,9 @@ var prevent_default = (event2) => event2.preventDefault();
 
 // build/dev/javascript/lustre/lustre.mjs
 var App = class extends CustomType {
-  constructor(init4, update2, view2, on_attribute_change) {
+  constructor(init5, update2, view2, on_attribute_change) {
     super();
-    this.init = init4;
+    this.init = init5;
     this.update = update2;
     this.view = view2;
     this.on_attribute_change = on_attribute_change;
@@ -3326,8 +3506,8 @@ var ElementNotFound = class extends CustomType {
 };
 var NotABrowser = class extends CustomType {
 };
-function application(init4, update2, view2) {
-  return new App(init4, update2, view2, new None());
+function application(init5, update2, view2) {
+  return new App(init5, update2, view2, new None());
 }
 function start2(app, selector, flags) {
   return guard(
@@ -3811,7 +3991,137 @@ function expect_json(decoder, to_msg) {
 }
 
 // build/dev/javascript/modem/modem.ffi.mjs
+var defaults = {
+  handle_external_links: false,
+  handle_internal_links: true
+};
 var initial_location = window?.location?.href;
+var do_init = (dispatch, options = defaults) => {
+  document.addEventListener("click", (event2) => {
+    const a2 = find_anchor(event2.target);
+    if (!a2)
+      return;
+    try {
+      const url = new URL(a2.href);
+      const uri = uri_from_url(url);
+      const is_external = url.host !== window.location.host;
+      if (!options.handle_external_links && is_external)
+        return;
+      if (!options.handle_internal_links && !is_external)
+        return;
+      event2.preventDefault();
+      if (!is_external) {
+        window.history.pushState({}, "", a2.href);
+        window.requestAnimationFrame(() => {
+          if (url.hash) {
+            document.getElementById(url.hash.slice(1))?.scrollIntoView();
+          }
+        });
+      }
+      return dispatch(uri);
+    } catch {
+      return;
+    }
+  });
+  window.addEventListener("popstate", (e) => {
+    e.preventDefault();
+    const url = new URL(window.location.href);
+    const uri = uri_from_url(url);
+    window.requestAnimationFrame(() => {
+      if (url.hash) {
+        document.getElementById(url.hash.slice(1))?.scrollIntoView();
+      }
+    });
+    dispatch(uri);
+  });
+  window.addEventListener("modem-push", ({ detail }) => {
+    dispatch(detail);
+  });
+  window.addEventListener("modem-replace", ({ detail }) => {
+    dispatch(detail);
+  });
+};
+var do_push = (uri) => {
+  window.history.pushState({}, "", to_string4(uri));
+  window.requestAnimationFrame(() => {
+    if (uri.fragment[0]) {
+      document.getElementById(uri.fragment[0])?.scrollIntoView();
+    }
+  });
+  window.dispatchEvent(new CustomEvent("modem-push", { detail: uri }));
+};
+var find_anchor = (el2) => {
+  if (!el2 || el2.tagName === "BODY") {
+    return null;
+  } else if (el2.tagName === "A") {
+    return el2;
+  } else {
+    return find_anchor(el2.parentElement);
+  }
+};
+var uri_from_url = (url) => {
+  return new Uri(
+    /* scheme   */
+    url.protocol ? new Some(url.protocol.slice(0, -1)) : new None(),
+    /* userinfo */
+    new None(),
+    /* host     */
+    url.hostname ? new Some(url.hostname) : new None(),
+    /* port     */
+    url.port ? new Some(Number(url.port)) : new None(),
+    /* path     */
+    url.pathname,
+    /* query    */
+    url.search ? new Some(url.search.slice(1)) : new None(),
+    /* fragment */
+    url.hash ? new Some(url.hash.slice(1)) : new None()
+  );
+};
+
+// build/dev/javascript/modem/modem.mjs
+function init2(handler) {
+  return from2(
+    (dispatch) => {
+      return guard(
+        !is_browser(),
+        void 0,
+        () => {
+          return do_init(
+            (uri) => {
+              let _pipe = uri;
+              let _pipe$1 = handler(_pipe);
+              return dispatch(_pipe$1);
+            }
+          );
+        }
+      );
+    }
+  );
+}
+var relative = /* @__PURE__ */ new Uri(
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  "",
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None()
+);
+function push(path, query, fragment) {
+  return from2(
+    (_) => {
+      return guard(
+        !is_browser(),
+        void 0,
+        () => {
+          return do_push(
+            relative.withFields({ path, query, fragment })
+          );
+        }
+      );
+    }
+  );
+}
 
 // build/dev/javascript/rada/rada_ffi.mjs
 function get_year_month_day() {
@@ -4122,6 +4432,42 @@ function diff2(unit, date1, date2) {
   }
 }
 
+// build/dev/javascript/common/common.mjs
+var Gift = class extends CustomType {
+  constructor(id2, name2, pic, link, selected_by) {
+    super();
+    this.id = id2;
+    this.name = name2;
+    this.pic = pic;
+    this.link = link;
+    this.selected_by = selected_by;
+  }
+};
+var Confirmation = class extends CustomType {
+  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
+    super();
+    this.id = id2;
+    this.user_id = user_id;
+    this.name = name2;
+    this.invite_name = invite_name;
+    this.phone = phone;
+    this.comments = comments;
+    this.people_names = people_names;
+  }
+};
+var Comment = class extends CustomType {
+  constructor(name2, comment) {
+    super();
+    this.name = name2;
+    this.comment = comment;
+  }
+};
+
+// build/dev/javascript/client/ffi.mjs
+function get_route() {
+  return window.location.pathname;
+}
+
 // build/dev/javascript/client/client/router.mjs
 var Home = class extends CustomType {
 };
@@ -4139,6 +4485,52 @@ var Admin = class extends CustomType {
 };
 var ConfirmPresence = class extends CustomType {
 };
+var NotFound2 = class extends CustomType {
+};
+function get_route2() {
+  let uri = (() => {
+    let $2 = (() => {
+      let _pipe = get_route();
+      return parse2(_pipe);
+    })();
+    if ($2.isOk()) {
+      let uri2 = $2[0];
+      return uri2;
+    } else {
+      throw makeError(
+        "panic",
+        "client/router",
+        21,
+        "get_route",
+        "Invalid uri",
+        {}
+      );
+    }
+  })();
+  let $ = (() => {
+    let _pipe = uri.path;
+    return path_segments(_pipe);
+  })();
+  if ($.hasLength(0)) {
+    return new Home();
+  } else if ($.hasLength(1) && $.head === "login") {
+    return new Login();
+  } else if ($.hasLength(1) && $.head === "gifts") {
+    return new Gifts();
+  } else if ($.hasLength(1) && $.head === "event") {
+    return new Event3();
+  } else if ($.hasLength(1) && $.head === "gallery") {
+    return new Gallery();
+  } else if ($.hasLength(1) && $.head === "comments") {
+    return new Comments();
+  } else if ($.hasLength(1) && $.head === "admin") {
+    return new Admin();
+  } else if ($.hasLength(1) && $.head === "confirm") {
+    return new ConfirmPresence();
+  } else {
+    return new NotFound2();
+  }
+}
 
 // build/dev/javascript/client/client/model.mjs
 var Model2 = class extends CustomType {
@@ -4153,6 +4545,15 @@ var Model2 = class extends CustomType {
     this.event_countdown = event_countdown;
     this.admin_settings = admin_settings;
     this.comments = comments;
+  }
+};
+var AuthUser = class extends CustomType {
+  constructor(user_id, username, is_confirmed, is_admin) {
+    super();
+    this.user_id = user_id;
+    this.username = username;
+    this.is_confirmed = is_confirmed;
+    this.is_admin = is_admin;
   }
 };
 var LoginForm = class extends CustomType {
@@ -4197,9 +4598,9 @@ var AdminSettings = class extends CustomType {
     this.show_all = show_all;
   }
 };
-function init2() {
+function init3() {
   return new Model2(
-    new Home(),
+    get_route2(),
     new None(),
     new GiftStatus(toList([]), toList([]), new None()),
     toList([]),
@@ -4210,11 +4611,22 @@ function init2() {
     toList([])
   );
 }
+function update_all(first3, second2) {
+  return first3;
+}
+function update_route(model, route) {
+  return model.withFields({ route });
+}
 function update_user(model, auth_user) {
   return model.withFields({ auth_user: new Some(auth_user) });
 }
 function update_gifts(model, gift_status) {
   return model.withFields({ gift_status });
+}
+function update_gift_error(model, error) {
+  return model.withFields({
+    gift_status: model.gift_status.withFields({ error })
+  });
 }
 function update_images(model, gallery_images) {
   return model.withFields({ gallery_images });
@@ -4255,8 +4667,78 @@ function update_login_error(model, error) {
     login_form: model.login_form.withFields({ error })
   });
 }
+function reset_login_form(model) {
+  return model.withFields({
+    login_form: new LoginForm("", "", "", "", false, new None())
+  });
+}
+function turn_on_off_signup(model) {
+  return model.withFields({
+    login_form: model.login_form.withFields({
+      sign_up: !model.login_form.sign_up
+    })
+  });
+}
+function turn_on_off_show_all(model) {
+  return model.withFields({
+    admin_settings: model.admin_settings.withFields({
+      show_all: !model.admin_settings.show_all
+    })
+  });
+}
+function update_confirm_name(model, name2) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ name: name2 })
+  });
+}
+function update_confirm_invite_name(model, invite_name) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ invite_name })
+  });
+}
+function update_confirm_email(model, email) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ email })
+  });
+}
+function update_confirm_phone(model, phone) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ phone })
+  });
+}
+function update_confirm_people_count(model, people_count) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ people_count })
+  });
+}
+function update_confirm_person_name(model, person_name) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ person_name })
+  });
+}
+function update_confirm_people_names(model, people_names) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ people_names })
+  });
+}
+function update_confirm_comments(model, comments) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ comments: new Some(comments) })
+  });
+}
+function update_confirm_error(model, error) {
+  return model.withFields({
+    confirm_form: model.confirm_form.withFields({ error })
+  });
+}
 
 // build/dev/javascript/client/client/msg.mjs
+var OnRouteChange = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
 var AuthUserRecieved = class extends CustomType {
   constructor(x0) {
     super();
@@ -4360,6 +4842,18 @@ var UserRequestedSelectGift = class extends CustomType {
     this.to = to2;
   }
 };
+var SelectGiftResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
+};
+var GiftUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var ConfirmUpdateName = class extends CustomType {
   constructor(value3) {
     super();
@@ -4397,13 +4891,31 @@ var ConfirmUpdatePersonName = class extends CustomType {
     this.value = value3;
   }
 };
+var ConfirmUpdatePeopleNames = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var ConfirmUpdateComments = class extends CustomType {
   constructor(value3) {
     super();
     this.value = value3;
   }
 };
+var ConfirmUpdateError = class extends CustomType {
+  constructor(value3) {
+    super();
+    this.value = value3;
+  }
+};
 var UserRequestedConfirmPresence = class extends CustomType {
+};
+var ConfirmPresenceResponded = class extends CustomType {
+  constructor(resp_result) {
+    super();
+    this.resp_result = resp_result;
+  }
 };
 var MessageErrorResponse = class extends CustomType {
   constructor(message, error) {
@@ -4420,6 +4932,385 @@ function message_error_decoder() {
     optional_field("message", string),
     optional_field("error", string)
   );
+}
+
+// build/dev/javascript/client/env.mjs
+function get_api_url() {
+  return "http://localhost:8083/";
+}
+
+// build/dev/javascript/client/client/api.mjs
+function validate_default(_, api_data) {
+  let _pipe = [api_data, toList([])];
+  return new Ok(_pipe);
+}
+function validate_admin_settings(model, confirmation_data) {
+  let _pipe = [
+    model.admin_settings.withFields({
+      confirmations: confirmation_data[1],
+      show_details: (() => {
+        let _pipe2 = confirmation_data[1];
+        let _pipe$1 = group(
+          _pipe2,
+          (confirmation) => {
+            return confirmation.id;
+          }
+        );
+        return map_values(_pipe$1, (_, _1) => {
+          return false;
+        });
+      })(),
+      total: confirmation_data[0]
+    }),
+    toList([])
+  ];
+  return new Ok(_pipe);
+}
+function validate_gift_status(model, gifts) {
+  let _pipe = [
+    model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] }),
+    toList([])
+  ];
+  return new Ok(_pipe);
+}
+function login(model) {
+  return post(
+    get_api_url() + "api/auth/login",
+    object2(
+      toList([
+        ["email", string2(model.login_form.email)],
+        ["password", string2(model.login_form.password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new LoginResponded(var0);
+      }
+    )
+  );
+}
+function signup(model) {
+  return post(
+    get_api_url() + "api/users",
+    object2(
+      toList([
+        [
+          "username",
+          string2(
+            (() => {
+              let _pipe = model.login_form.username;
+              return lowercase2(_pipe);
+            })()
+          )
+        ],
+        ["email", string2(model.login_form.email)],
+        ["password", string2(model.login_form.password)],
+        ["confirm_password", string2(model.login_form.confirm_password)]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new SignUpResponded(var0);
+      }
+    )
+  );
+}
+function get_auth_user() {
+  let url = get_api_url() + "api/auth/validate";
+  let decoder = decode4(
+    (var0, var1, var2, var3) => {
+      return new AuthUser(var0, var1, var2, var3);
+    },
+    field("user_id", int),
+    field("username", string),
+    field("is_confirmed", bool),
+    field("is_admin", bool)
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new AuthUserRecieved(var0);
+      }
+    )
+  );
+}
+function validate_login(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let response = data.message[0];
+    let updated_model = reset_login_form(model);
+    let effects2 = toList([
+      push("/", new None(), new None()),
+      get_auth_user()
+    ]);
+    return new Ok([updated_model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new LoginUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new LoginUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
+function validate_confirm_presence(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let response = data.message[0];
+    let effects2 = toList([
+      push("/confirm", new None(), new None()),
+      get_auth_user()
+    ]);
+    return new Ok([model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new LoginUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
+function get_gifts() {
+  let url = get_api_url() + "api/gifts";
+  let decoder = list(
+    decode5(
+      (var0, var1, var2, var3, var4) => {
+        return new Gift(var0, var1, var2, var3, var4);
+      },
+      field("id", int),
+      field("name", string),
+      field("pic", string),
+      field("link", optional(string)),
+      field("selected_by", optional(int))
+    )
+  );
+  let tuple_decoder = decode2(
+    (sugestion, unique) => {
+      return [sugestion, unique];
+    },
+    field("sugestion_gifts", decoder),
+    field("unique_gifts", decoder)
+  );
+  return get2(
+    url,
+    expect_json(
+      tuple_decoder,
+      (var0) => {
+        return new GiftsRecieved(var0);
+      }
+    )
+  );
+}
+function validate_select_gift(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let response = data.message[0];
+    let effects2 = toList([get_gifts()]);
+    return new Ok([model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new GiftUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new GiftUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
+function get_images() {
+  let url = get_api_url() + "api/images";
+  let decoder = list(field("src", string));
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new ImagesRecieved(var0);
+      }
+    )
+  );
+}
+function get_comments() {
+  let url = get_api_url() + "api/comments";
+  let decoder = list(
+    decode2(
+      (var0, var1) => {
+        return new Comment(var0, var1);
+      },
+      field("name", string),
+      field("comment", optional(string))
+    )
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new CommentsRecieved(var0);
+      }
+    )
+  );
+}
+function get_confirmation_data() {
+  let url = get_api_url() + "api/confirm";
+  let confirmation_decoder = list(
+    decode7(
+      (var0, var1, var2, var3, var4, var5, var6) => {
+        return new Confirmation(var0, var1, var2, var3, var4, var5, var6);
+      },
+      field("id", int),
+      field("user_id", int),
+      field("name", string),
+      field("invite_name", string),
+      field("phone", string),
+      field("comments", optional(string)),
+      field("people_names", list(string))
+    )
+  );
+  let decoder = decode2(
+    (total, confirmations) => {
+      return [total, confirmations];
+    },
+    field("total", int),
+    field("confirmations", confirmation_decoder)
+  );
+  return get2(
+    url,
+    expect_json(
+      decoder,
+      (var0) => {
+        return new ConfirmationsRecieved(var0);
+      }
+    )
+  );
+}
+function confirm_presence(model) {
+  let user_id = (() => {
+    let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
+    if (!$.isOk()) {
+      throw makeError(
+        "let_assert",
+        "client/api",
+        284,
+        "confirm_presence",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
+      );
+    }
+    let user = $[0];
+    return user.user_id;
+  })();
+  let people_names = (() => {
+    let _pipe = model.confirm_form.people_names;
+    let _pipe$1 = insert(_pipe, 0, model.confirm_form.name);
+    return values(_pipe$1);
+  })();
+  return post(
+    get_api_url() + "api/confirm",
+    object2(
+      toList([
+        ["id", int2(0)],
+        ["user_id", int2(user_id)],
+        ["name", string2(model.confirm_form.name)],
+        ["invite_name", string2(model.confirm_form.invite_name)],
+        ["phone", string2(model.confirm_form.phone)],
+        ["people_count", int2(model.confirm_form.people_count)],
+        [
+          "people_names",
+          (() => {
+            let _pipe = people_names;
+            return array2(_pipe, string2);
+          })()
+        ],
+        [
+          "comments",
+          (() => {
+            let _pipe = model.confirm_form.comments;
+            return nullable(_pipe, string2);
+          })()
+        ]
+      ])
+    ),
+    expect_json(
+      message_error_decoder(),
+      (var0) => {
+        return new ConfirmPresenceResponded(var0);
+      }
+    )
+  );
+}
+function select_gift(model, gift, to2) {
+  let $ = model.auth_user;
+  if ($ instanceof Some) {
+    let user = $[0];
+    return post(
+      get_api_url() + "api/gifts",
+      object2(
+        toList([
+          ["gift_id", int2(gift.id)],
+          ["user_id", int2(user.user_id)],
+          ["to", bool2(to2)]
+        ])
+      ),
+      expect_json(
+        message_error_decoder(),
+        (var0) => {
+          return new SelectGiftResponded(var0);
+        }
+      )
+    );
+  } else {
+    return push("/login", new None(), new None());
+  }
 }
 
 // build/dev/javascript/client/client/update.mjs
@@ -5187,56 +6078,7 @@ function navigation_bar_view(model) {
   );
 }
 
-// build/dev/javascript/client/env.mjs
-function get_api_url() {
-  return "http://localhost:8083";
-}
-
 // build/dev/javascript/client/client/views/login_view.mjs
-function login(model) {
-  return post(
-    get_api_url() + "/auth/login",
-    object2(
-      toList([
-        ["email", string2(model.login_form.email)],
-        ["password", string2(model.login_form.password)]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new LoginResponded(var0);
-      }
-    )
-  );
-}
-function signup(model) {
-  return post(
-    get_api_url() + "/users",
-    object2(
-      toList([
-        [
-          "username",
-          string2(
-            (() => {
-              let _pipe = model.login_form.username;
-              return lowercase2(_pipe);
-            })()
-          )
-        ],
-        ["email", string2(model.login_form.email)],
-        ["password", string2(model.login_form.password)],
-        ["confirm_password", string2(model.login_form.confirm_password)]
-      ])
-    ),
-    expect_json(
-      message_error_decoder(),
-      (var0) => {
-        return new SignUpResponded(var0);
-      }
-    )
-  );
-}
 function login_view(model) {
   return main(
     toList([class$("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")]),
@@ -6191,6 +7033,9 @@ function not_found_view() {
 }
 
 // build/dev/javascript/client/client.mjs
+function on_url_change(_) {
+  return new OnRouteChange(get_route2());
+}
 function view(model) {
   return body(
     toList([
@@ -6228,71 +7073,6 @@ function view(model) {
     ])
   );
 }
-function get_gifts() {
-  let url = get_api_url() + "/gifts";
-  let decoder = list(
-    decode5(
-      (var0, var1, var2, var3, var4) => {
-        return new Gift(var0, var1, var2, var3, var4);
-      },
-      field("id", int),
-      field("name", string),
-      field("pic", string),
-      field("link", optional(string)),
-      field("selected_by", optional(int))
-    )
-  );
-  let tuple_decoder = decode2(
-    (sugestion, unique) => {
-      return [sugestion, unique];
-    },
-    field("sugestion_gifts", decoder),
-    field("unique_gifts", decoder)
-  );
-  return get2(
-    url,
-    expect_json(
-      tuple_decoder,
-      (var0) => {
-        return new GiftsRecieved(var0);
-      }
-    )
-  );
-}
-function get_images() {
-  let url = get_api_url() + "/images";
-  let decoder = list(field("src", string));
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new ImagesRecieved(var0);
-      }
-    )
-  );
-}
-function get_comments() {
-  let url = get_api_url() + "/comments";
-  let decoder = list(
-    decode2(
-      (var0, var1) => {
-        return new Comment(var0, var1);
-      },
-      field("name", string),
-      field("comment", optional(string))
-    )
-  );
-  return get2(
-    url,
-    expect_json(
-      decoder,
-      (var0) => {
-        return new CommentsRecieved(var0);
-      }
-    )
-  );
-}
 function update_countdown() {
   let countdown = diff2(
     new Days(),
@@ -6313,87 +7093,109 @@ function handle_login_signup(model) {
     return login(model);
   }
 }
-function default_transform_data(_, api_data) {
-  return api_data;
-}
-function confirmations_to_admin_settings(model, confirmation_data) {
+function turn_on_off_confirmation_details(model, id2) {
   return model.admin_settings.withFields({
-    confirmations: confirmation_data[1],
     show_details: (() => {
-      let _pipe = confirmation_data[1];
-      let _pipe$1 = group(
+      let _pipe = model.admin_settings.show_details;
+      return upsert(
         _pipe,
-        (confirmation) => {
-          return confirmation.id;
+        id2,
+        (key) => {
+          if (key instanceof Some) {
+            let key$1 = key[0];
+            return !key$1;
+          } else {
+            return false;
+          }
         }
       );
-      return map_values(_pipe$1, (_, _1) => {
-        return false;
-      });
-    })(),
-    total: confirmation_data[0]
+    })()
   });
 }
-function gifts_to_gift_status(model, gifts) {
-  return model.gift_status.withFields({ sugestion: gifts[0], unique: gifts[1] });
+function update_people_names(model, n, value3) {
+  let _pipe = model.confirm_form.people_names;
+  return upsert(
+    _pipe,
+    n,
+    (key) => {
+      if (key instanceof Some) {
+        return value3;
+      } else {
+        return "";
+      }
+    }
+  );
 }
-function handle_api_response(model, response, transform_data, apply_update) {
+function handle_api_response(model, response, validate_data, apply_update, error_effects) {
   if (response.isOk()) {
     let api_data = response[0];
-    let _pipe = model;
-    let _pipe$1 = apply_update(
-      _pipe,
-      (() => {
-        let _pipe$12 = model;
-        return transform_data(_pipe$12, api_data);
-      })()
-    );
-    return none3(_pipe$1);
+    let $ = (() => {
+      let _pipe = model;
+      return validate_data(_pipe, api_data);
+    })();
+    if ($.isOk()) {
+      let return$2 = $[0];
+      let _pipe = apply_update(model, return$2[0]);
+      return effects(_pipe, return$2[1]);
+    } else {
+      let returned_effects = $[0];
+      let _pipe = model;
+      return effects(_pipe, returned_effects);
+    }
   } else {
     let _pipe = model;
-    return none3(_pipe);
+    return effects(_pipe, error_effects);
   }
 }
 function update(model, msg) {
-  if (msg instanceof AuthUserRecieved) {
+  if (msg instanceof OnRouteChange) {
+    let route = msg[0];
+    let _pipe = update_route(model, route);
+    return none3(_pipe);
+  } else if (msg instanceof AuthUserRecieved) {
     let user_result = msg[0];
     return handle_api_response(
       model,
       user_result,
-      default_transform_data,
-      update_user
+      validate_default,
+      update_user,
+      toList([none()])
     );
   } else if (msg instanceof GiftsRecieved) {
     let gifts_result = msg[0];
     return handle_api_response(
       model,
       gifts_result,
-      gifts_to_gift_status,
-      update_gifts
+      validate_gift_status,
+      update_gifts,
+      toList([none()])
     );
   } else if (msg instanceof ImagesRecieved) {
     let images_result = msg[0];
     return handle_api_response(
       model,
       images_result,
-      default_transform_data,
-      update_images
+      validate_default,
+      update_images,
+      toList([none()])
     );
   } else if (msg instanceof CommentsRecieved) {
     let comments_result = msg[0];
     return handle_api_response(
       model,
       comments_result,
-      default_transform_data,
-      update_comments
+      validate_default,
+      update_comments,
+      toList([none()])
     );
   } else if (msg instanceof ConfirmationsRecieved) {
     let confirmations_result = msg[0];
     return handle_api_response(
       model,
       confirmations_result,
-      confirmations_to_admin_settings,
-      update_admin_settings
+      validate_admin_settings,
+      update_admin_settings,
+      toList([none()])
     );
   } else if (msg instanceof CountdownUpdated) {
     let value3 = msg.value;
@@ -6427,23 +7229,223 @@ function update(model, msg) {
     let _pipe = update_login_error(model, value3);
     return none3(_pipe);
   } else if (msg instanceof UserRequestedLoginSignUp) {
-    handle_login_signup(model);
     let _pipe = model;
     return effect(_pipe, handle_login_signup(model));
-  } else {
+  } else if (msg instanceof UserClickedSignUp) {
     let _pipe = model;
+    let _pipe$1 = turn_on_off_signup(_pipe);
+    return none3(_pipe$1);
+  } else if (msg instanceof LoginResponded) {
+    let resp_result = msg.resp_result;
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_login,
+      update_all,
+      toList([
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ])
+    );
+  } else if (msg instanceof SignUpResponded) {
+    let resp_result = msg.resp_result;
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_login,
+      update_all,
+      toList([
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ])
+    );
+  } else if (msg instanceof UserOpenedGiftsView) {
+    let $ = model.gift_status.sugestion;
+    let $1 = model.gift_status.unique;
+    if ($.hasLength(1) && $1.hasLength(1)) {
+      let _pipe = model;
+      return none3(_pipe);
+    } else if ($.hasLength(0) && $1.hasLength(0)) {
+      let _pipe = model;
+      return effect(_pipe, get_gifts());
+    } else {
+      let _pipe = model;
+      return none3(_pipe);
+    }
+  } else if (msg instanceof UserOpenedGalleryView) {
+    let $ = model.gallery_images;
+    if ($.hasLength(1)) {
+      let _pipe = model;
+      return none3(_pipe);
+    } else if ($.hasLength(0)) {
+      let _pipe = model;
+      return effect(_pipe, get_images());
+    } else {
+      let _pipe = model;
+      return none3(_pipe);
+    }
+  } else if (msg instanceof AdminOpenedAdminView) {
+    let $ = model.admin_settings.total;
+    if ($ === 0) {
+      let _pipe = model;
+      return effect(_pipe, get_confirmation_data());
+    } else {
+      let _pipe = model;
+      return none3(_pipe);
+    }
+  } else if (msg instanceof AdminClickedShowAll) {
+    let _pipe = model;
+    let _pipe$1 = turn_on_off_show_all(_pipe);
+    return none3(_pipe$1);
+  } else if (msg instanceof AdminClickedShowConfirmationDetails) {
+    let id$1 = msg.id;
+    let _pipe = update_admin_settings(
+      model,
+      turn_on_off_confirmation_details(model, id$1)
+    );
     return none3(_pipe);
+  } else if (msg instanceof UserRequestedSelectGift) {
+    let gift = msg.gift;
+    let to2 = msg.to;
+    let _pipe = model;
+    return effect(_pipe, select_gift(model, gift, to2));
+  } else if (msg instanceof SelectGiftResponded) {
+    let resp_result = msg.resp_result;
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_select_gift,
+      update_all,
+      toList([none()])
+    );
+  } else if (msg instanceof GiftUpdateError) {
+    let value3 = msg.value;
+    let _pipe = update_gift_error(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdateName) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_name(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdateInviteName) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_invite_name(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdateEmail) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_email(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdatePhone) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_phone(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdatePeopleCount) {
+    let value3 = msg.value;
+    let $ = parse(value3);
+    if ($.isOk()) {
+      let people_count = $[0];
+      let _pipe = update_confirm_people_count(model, people_count);
+      return none3(_pipe);
+    } else {
+      let _pipe = model;
+      return effect(
+        _pipe,
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new ConfirmUpdateError(
+                new Some(
+                  'O campo "Quantidade de pessoas" deve ser um valor inteiro entre 1 e 99'
+                )
+              )
+            );
+          }
+        )
+      );
+    }
+  } else if (msg instanceof ConfirmUpdatePersonName) {
+    let n = msg.key;
+    let value3 = msg.value;
+    let _pipe = update_confirm_person_name(model, value3);
+    return effect(
+      _pipe,
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new ConfirmUpdatePeopleNames(
+              (() => {
+                let _pipe$1 = model;
+                return update_people_names(_pipe$1, n, value3);
+              })()
+            )
+          );
+        }
+      )
+    );
+  } else if (msg instanceof ConfirmUpdatePeopleNames) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_people_names(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdateComments) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_comments(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof ConfirmUpdateError) {
+    let value3 = msg.value;
+    let _pipe = update_confirm_error(model, value3);
+    return none3(_pipe);
+  } else if (msg instanceof UserRequestedConfirmPresence) {
+    let _pipe = model;
+    return effect(_pipe, confirm_presence(model));
+  } else {
+    let resp_result = msg.resp_result;
+    return handle_api_response(
+      model,
+      resp_result,
+      validate_confirm_presence,
+      update_all,
+      toList([
+        from2(
+          (dispatch) => {
+            return dispatch(
+              new LoginUpdateError(
+                new Some("Problemas no servidor, por favor tente mais tarde.")
+              )
+            );
+          }
+        )
+      ])
+    );
   }
 }
-function init3(_) {
-  let _pipe = init2();
+function init4(_) {
+  let _pipe = init3();
   return effects(
     _pipe,
-    toList([get_gifts(), update_countdown(), get_images(), get_comments()])
+    toList([
+      init2(on_url_change),
+      get_gifts(),
+      get_images(),
+      get_comments(),
+      update_countdown()
+    ])
   );
 }
 function main2() {
-  let _pipe = application(init3, update, view);
+  let _pipe = application(init4, update, view);
   return start2(_pipe, "#app", void 0);
 }
 

@@ -1,14 +1,11 @@
-import config.{Context}
 import gleam/erlang/process
 import mist
+import server/config.{Context}
 import server/router
 import wisp
 import wisp/wisp_mist
 
-//TODO: Wisp Secret key
-
 //TODO: Deploy
-//TODO: Wisp cookies?
 //TODO: Ultimos testes
 
 pub fn main() {

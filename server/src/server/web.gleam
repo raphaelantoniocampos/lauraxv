@@ -1,9 +1,7 @@
-import config.{type Context}
-import cors_builder as cors_
 import gleam/bool
-import gleam/http.{Get, Post}
 import gleam/json
 import gleam/string_builder.{type StringBuilder}
+import server/config.{type Context}
 import wisp
 
 pub fn middleware(

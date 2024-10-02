@@ -1,5 +1,6 @@
 import common.{UserSession}
 import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleam/result
 import rada/date
@@ -32,7 +33,7 @@ pub fn get_user_id_from_session(req: Request) {
     db.execute_read(
       sql,
       [sqlight.text(session_token)],
-      dynamic.tuple4(dynamic.int, dynamic.int, dynamic.string, dynamic.string),
+      dynamic.tuple4(dynamic.int, dynamic.int, dynamic.string, dynamic.int),
     )
   {
     Ok(users) -> Ok(list.first(users))
@@ -42,6 +43,7 @@ pub fn get_user_id_from_session(req: Request) {
   }
 
   use user_id_result <- result.try(session_token)
+  // |> result.replace_error("ERRO")
   case user_id_result {
     Ok(id) -> Ok(id.1)
     Error(_) ->
@@ -51,7 +53,7 @@ pub fn get_user_id_from_session(req: Request) {
 
 pub fn create_user_session(user_id: Int) {
   let token = generate_token(64)
-  let created_at = date.today() |> date.to_iso_string
+  let created_at = date.today() |> date.to_rata_die
   let sql =
     "
 INSERT INTO user_session (user_id, token, created_at)
@@ -60,7 +62,7 @@ VALUES( ?, ?, ? ); "
   let result =
     db.execute_write(
       sql,
-      [sqlight.int(user_id), sqlight.text(token), sqlight.text(created_at)],
+      [sqlight.int(user_id), sqlight.text(token), sqlight.int(created_at)],
       user_session_db_decoder(),
     )
 
@@ -71,5 +73,15 @@ VALUES( ?, ?, ? ); "
 }
 
 pub fn delete_old_user_session() {
-  todo
+  let now = date.today() |> date.to_rata_die
+  let yesterday = now - 1
+
+  let sql = "DELETE FROM user_session WHERE created_at < ?;"
+  let result =
+    db.execute_write(sql, [sqlight.int(yesterday)], user_session_db_decoder())
+
+  case result {
+    Ok(_) -> Ok(Nil)
+    Error(_) -> Error("Problem deleting old user_session")
+  }
 }

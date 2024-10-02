@@ -1,41 +1,12 @@
 import client/model
 import client/msg
-import env.{get_api_url}
-import gleam/json
 import gleam/option.{None, Some}
-import gleam/string
 import lustre/attribute.{
   attribute, autocomplete, class, for, id, required, type_, value,
 }
-import lustre/effect.{type Effect}
 import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, form, h1, input, label, main, p}
 import lustre/event
-import lustre_http
-
-pub fn login(model: model.Model) -> Effect(msg.Msg) {
-  lustre_http.post(
-    get_api_url() <> "/auth/login",
-    json.object([
-      #("email", json.string(model.login_form.email)),
-      #("password", json.string(model.login_form.password)),
-    ]),
-    lustre_http.expect_json(msg.message_error_decoder(), msg.LoginResponded),
-  )
-}
-
-pub fn signup(model: model.Model) -> Effect(msg.Msg) {
-  lustre_http.post(
-    get_api_url() <> "/users",
-    json.object([
-      #("username", json.string(model.login_form.username |> string.lowercase)),
-      #("email", json.string(model.login_form.email)),
-      #("password", json.string(model.login_form.password)),
-      #("confirm_password", json.string(model.login_form.confirm_password)),
-    ]),
-    lustre_http.expect_json(msg.message_error_decoder(), msg.SignUpResponded),
-  )
-}
 
 pub fn login_view(model: model.Model) -> Element(msg.Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [

@@ -1,7 +1,7 @@
 import dot_env as dot
 import dot_env/env
+import gleam/io
 import gleam/result
-import wisp
 
 pub type Context {
   Context(static_directory: String)
@@ -23,7 +23,7 @@ pub type Config {
 
 pub fn read_config() {
   dot.new()
-  |> dot.set_path("./.env")
+  |> dot.set_path(".env")
   |> dot.load
 
   let assert Ok(database_path) = env.get_string("DATABASE_PATH")
@@ -37,10 +37,9 @@ pub fn read_config() {
 }
 
 pub fn is_dev() {
-  env.get_string("GLEAM_ENV") == Ok("development")
+  read_config().env == Development
 }
 
 pub fn conn_path() {
-  let assert Ok(database_path) = env.get_string("DATABASE_PATH")
-  database_path
+  read_config().database_path
 }

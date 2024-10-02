@@ -93,6 +93,10 @@ pub fn update_gifts(model: Model, gift_status: GiftStatus) -> Model {
   Model(..model, gift_status: gift_status)
 }
 
+pub fn update_gift_error(model: Model, error: Option(String)) -> Model {
+  Model(..model, gift_status: GiftStatus(..model.gift_status, error: error))
+}
+
 pub fn update_images(model: Model, gallery_images: List(String)) -> Model {
   Model(..model, gallery_images: gallery_images)
 }
@@ -163,4 +167,72 @@ pub fn turn_on_off_show_all(model: Model) -> Model {
       show_all: !model.admin_settings.show_all,
     ),
   )
+}
+
+// pub type ConfirmForm {
+//   ConfirmForm(
+//     name: String,
+//     invite_name: String,
+//     email: String,
+//     phone: String,
+//     people_count: Int,
+//     person_name: String,
+//     people_names: dict.Dict(Int, String),
+//     comments: Option(String),
+//     error: Option(String),
+//   )
+// }
+
+pub fn update_confirm_name(model: Model, name: String) -> Model {
+  Model(..model, confirm_form: ConfirmForm(..model.confirm_form, name: name))
+}
+
+pub fn update_confirm_invite_name(model: Model, invite_name: String) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, invite_name: invite_name),
+  )
+}
+
+pub fn update_confirm_email(model: Model, email: String) -> Model {
+  Model(..model, confirm_form: ConfirmForm(..model.confirm_form, email: email))
+}
+
+pub fn update_confirm_phone(model: Model, phone: String) -> Model {
+  Model(..model, confirm_form: ConfirmForm(..model.confirm_form, phone: phone))
+}
+
+pub fn update_confirm_people_count(model: Model, people_count: Int) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, people_count: people_count),
+  )
+}
+
+pub fn update_confirm_person_name(model: Model, person_name: String) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, person_name: person_name),
+  )
+}
+
+pub fn update_confirm_people_names(
+  model: Model,
+  people_names: dict.Dict(Int, String),
+) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, people_names: people_names),
+  )
+}
+
+pub fn update_confirm_comments(model: Model, comments: String) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, comments: Some(comments)),
+  )
+}
+
+pub fn update_confirm_error(model: Model, error: Option(String)) -> Model {
+  Model(..model, confirm_form: ConfirmForm(..model.confirm_form, error: error))
 }

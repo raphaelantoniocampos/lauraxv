@@ -4,12 +4,12 @@ import gleam/result
 import server/web
 import simplifile
 
-const dir_path = "priv/static/images/"
+const dir_path = "./priv/static/images/"
 
 pub fn list_images() {
   let result = {
     use images <- result.try(
-      simplifile.read_directory("../client/" <> dir_path)
+      simplifile.read_directory(dir_path)
       |> result.replace_error("Problem listing images"),
     )
     images_to_json(images)

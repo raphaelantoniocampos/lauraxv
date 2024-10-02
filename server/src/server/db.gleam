@@ -1,5 +1,5 @@
-import config
 import gleam/dynamic
+import server/config
 import sqlight
 
 pub fn execute_read(

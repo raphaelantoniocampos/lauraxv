@@ -4,12 +4,13 @@ import client/router.{
   type Route, Admin, Comments, ConfirmPresence, Event, Gallery, Gifts, Home,
   Login, NotFound,
 }
-import config.{type Context}
 import cors_builder as cors
 import gleam/dict
 import gleam/http.{Get, Post}
+import gleam/io
 import gleam/option.{None, Some}
 import lustre/element
+import server/config.{type Context}
 import server/db/user
 import server/db/user_session
 import server/routes/auth/login
@@ -47,8 +48,7 @@ pub fn handle_get(req: Request) {
     ["api", "images"] -> images.list_images()
     ["api", "confirm"] -> confirmations.list_confirmations()
     ["api", "comments"] -> comments.list_comments()
-    ["api", "auth", "validate", id_string] ->
-      validate.validate_session(id_string)
+    ["api", "auth", "validate"] -> validate.validate_session(req)
     _ -> wisp.not_found()
   }
 }

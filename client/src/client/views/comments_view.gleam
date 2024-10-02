@@ -1,5 +1,4 @@
 import client/model
-import client/msg
 import common.{type Comment, Comment}
 import gleam/list
 import gleam/option.{Some}

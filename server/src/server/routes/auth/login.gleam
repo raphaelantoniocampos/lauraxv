@@ -2,6 +2,8 @@ import beecrypt
 import gleam/bool
 import gleam/dynamic
 import gleam/http.{Post}
+import gleam/http/request
+import gleam/io
 import gleam/json
 import gleam/result
 import gleam/string
@@ -47,26 +49,24 @@ pub fn login(req: Request, body: dynamic.Dynamic) {
       return: Error("Senha incorreta"),
     )
 
+    use _ <- result.try(user_session.delete_old_user_session())
+
     use session_token <- result.try(user_session.create_user_session(user.id))
 
-    // Using user id for now
-    // let user_id = int.to_string(user.id)
-
+    io.debug(session_token)
     Ok(session_token)
   }
-
-  // web.generate_wisp_response(result)
 
   case result {
     Ok(session_token) ->
       wisp.json_response(
         json.object([#("message", json.string("Logged in"))])
           |> json.to_string_builder,
-        201,
+        200,
       )
       |> wisp.set_cookie(
         req,
-        "kk_session_token",
+        "session_token",
         session_token,
         wisp.PlainText,
         60 * 60 * 24 * 1000,
