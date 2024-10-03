@@ -16,7 +16,7 @@ pub fn event_view() -> Element(a) {
         img([
           class("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
           alt("Local da Festa"),
-          src("./priv/static/images/paiol.jpg"),
+          src("/static/images/paiol.jpg"),
         ]),
       ]),
       div([class("flex-1 bg-white text-gray-800 rounded-lg shadow-lg p-6")], [

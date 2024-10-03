@@ -33,7 +33,8 @@ pub fn read_config() {
     _ -> Production
   }
   let assert Ok(port) = env.get_int("PORT")
-  Config(database_path, secret_key_base, port, env)
+  let db_conn = "file:" <> database_path <> "?mode=rw"
+  Config(db_conn, secret_key_base, port, env)
 }
 
 pub fn is_dev() {

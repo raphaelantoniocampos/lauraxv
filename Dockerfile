@@ -2,6 +2,8 @@ ARG GLEAM_VERSION=v1.5.1
 
 FROM ghcr.io/gleam-lang/gleam:${GLEAM_VERSION}-erlang-alpine AS builder
 
+# COPY --from=flyio/litefs:0.5 /usr/local/bin/litefs /usr/local/bin/litefs
+
 WORKDIR /build
 
 COPY ./client /build/client
@@ -10,7 +12,7 @@ COPY ./common /build/common
 
 RUN apk update
 
-RUN apk add libbsd-dev build-base inotify-tools
+RUN apk add libbsd-dev build-base inotify-tools ca-certificates fuse3 sqlite
 
 # Compile frontend
 RUN cd /build/client \
@@ -28,5 +30,11 @@ EXPOSE 8083
 
 # Run the server
 WORKDIR /app
+
+COPY ./server/db/db.sqlite3 /db/db.sqlite3
+# COPY ./litefs.yml /etc/litefs.yml
+
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["run"]
+
+# ENTRYPOINT litefs mount
