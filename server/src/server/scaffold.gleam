@@ -1,4 +1,4 @@
-import lustre/attribute.{attribute, href, id, name, rel, type_}
+import lustre/attribute.{attribute, href, id, name, rel, src, type_}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div, head, html, link, meta, script, title}
 
@@ -34,14 +34,7 @@ pub fn page_scaffold() -> Element(a) {
       //   attribute("property", "og:url"),
       // ]),
       link([href("/static/client.css"), rel("stylesheet")]),
-      script(
-        [type_("module"), attribute("defer", "true")],
-        "import { main2 } from \"/static/client.mjs\"; main2()",
-      ),
-      script(
-        [type_("module"), attribute("defer", "true")],
-        "import { main3 } from \"/static/client.mjs\"; main3()",
-      ),
+      script([src("/static/client.min.mjs"), type_("module")], ""),
       link([
         rel("stylesheet"),
         href("https://fonts.googleapis.com/css2?family=Pacifico&display=swap"),

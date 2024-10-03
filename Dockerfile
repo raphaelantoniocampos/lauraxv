@@ -16,13 +16,15 @@ RUN apk add libbsd-dev build-base inotify-tools
 RUN cd /build/client \
   && gleam clean \
   && gleam deps download \
-  && gleam run -m lustre/dev build --outdir=build/server/priv/static
+  && gleam run -m lustre/dev build app --outdir=build/server/priv/static
 
 # Compile the project
 RUN cd /build/server \
   && gleam export erlang-shipment \
   && mv build/erlang-shipment /app \
   && rm -r /build
+
+EXPOSE 8083
 
 # Run the server
 WORKDIR /app

@@ -2,7 +2,6 @@ import cors_builder as cors
 import gleam/http.{Get, Post}
 import gleam/option.{None}
 import lustre/element
-import modem
 import server/config.{type Context}
 import server/routes/auth/login
 import server/routes/auth/validate
