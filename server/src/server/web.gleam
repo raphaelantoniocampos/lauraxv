@@ -1,11 +1,9 @@
 import gleam/json
 import gleam/string_builder.{type StringBuilder}
-import server/config.{type Context}
 import wisp
 
 pub fn middleware(
   req: wisp.Request,
-  ctx: Context,
   handle_request: fn(wisp.Request) -> wisp.Response,
 ) -> wisp.Response {
   let req = wisp.method_override(req)
@@ -13,7 +11,6 @@ pub fn middleware(
   use <- wisp.rescue_crashes
   use req <- wisp.handle_head(req)
 
-  use <- wisp.serve_static(req, under: "/static", from: ctx.static_directory)
   handle_request(req)
 }
 

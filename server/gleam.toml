@@ -1,7 +1,7 @@
 name = "server"
 version = "1.0.0"
 
-gleam = ">= 1.1.0"
+gleam = ">= 1.4.0"
 
 # Fill out these fields if you intend to generate HTML documentation or publish
 # your project to the Hex package manager.
@@ -21,8 +21,6 @@ simplifile = ">= 2.1.0 and < 3.0.0"
 gleam_json = ">= 1.0.1 and < 2.0.0"
 cors_builder = ">= 2.0.0 and < 3.0.0"
 decode = ">= 0.2.1 and < 1.0.0"
-common = { path = "../common" }
-client = { path = "../client" }
 beecrypt = ">= 0.3.1 and < 1.0.0"
 prng = ">= 3.0.3 and < 4.0.0"
 sqlight = ">= 0.9.1 and < 1.0.0"
@@ -31,7 +29,6 @@ glisten = ">= 2.0.0 and < 3.0.0"
 wisp = ">= 1.1.0 and < 2.0.0"
 dot_env = ">= 1.1.0 and < 2.0.0"
 gleam_erlang = ">= 0.26.0 and < 1.0.0"
-lustre = ">= 4.5.0 and < 5.0.0"
 rada = ">= 0.4.0 and < 1.0.0"
 
 [dev-dependencies]

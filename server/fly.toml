@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for lauraxv on 2024-09-29T17:51:16-03:00
+# fly.toml app configuration file generated for api-lauraxv on 2024-10-02T19:13:29-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'lauraxv'
+app = 'api-lauraxv'
 primary_region = 'gru'
 
 [build]

@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -254,6 +255,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error.gleam_error = variant;
   error.module = module;
   error.line = line;
+  error.function = fn;
   error.fn = fn;
   for (let k in extra)
     error[k] = extra[k];
@@ -2986,14 +2988,14 @@ function morph(prev, next, dispatch) {
 function createElementNode({ prev, next, dispatch, stack }) {
   const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
-  const el2 = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
+  const el = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
   let handlersForEl;
-  if (!registeredHandlers.has(el2)) {
+  if (!registeredHandlers.has(el)) {
     const emptyHandlers = /* @__PURE__ */ new Map();
-    registeredHandlers.set(el2, emptyHandlers);
+    registeredHandlers.set(el, emptyHandlers);
     handlersForEl = emptyHandlers;
   } else {
-    handlersForEl = registeredHandlers.get(el2);
+    handlersForEl = registeredHandlers.get(el);
   }
   const prevHandlers = canMorph ? new Set(handlersForEl.keys()) : null;
   const prevAttributes = canMorph ? new Set(Array.from(prev.attributes, (a2) => a2.name)) : null;
@@ -3003,21 +3005,22 @@ function createElementNode({ prev, next, dispatch, stack }) {
   if (canMorph && next.tag === "textarea") {
     const innertText = next.children[Symbol.iterator]().next().value?.content;
     if (innertText !== void 0)
-      el2.value = innertText;
+      el.value = innertText;
   }
+  const delegated = [];
   for (const attr of next.attrs) {
     const name2 = attr[0];
     const value3 = attr[1];
     if (attr.as_property) {
-      if (el2[name2] !== value3)
-        el2[name2] = value3;
+      if (el[name2] !== value3)
+        el[name2] = value3;
       if (canMorph)
         prevAttributes.delete(name2);
     } else if (name2.startsWith("on")) {
       const eventName = name2.slice(2);
       const callback = dispatch(value3, eventName === "input");
       if (!handlersForEl.has(eventName)) {
-        el2.addEventListener(eventName, lustreGenericEventHandler);
+        el.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
       if (canMorph)
@@ -3026,10 +3029,13 @@ function createElementNode({ prev, next, dispatch, stack }) {
       const eventName = name2.slice(15);
       const callback = dispatch(lustreServerEventHandler);
       if (!handlersForEl.has(eventName)) {
-        el2.addEventListener(eventName, lustreGenericEventHandler);
+        el.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
-      el2.setAttribute(name2, value3);
+      el.setAttribute(name2, value3);
+    } else if (name2.startsWith("delegate:data-") || name2.startsWith("delegate:aria-")) {
+      el.setAttribute(name2, value3);
+      delegated.push([name2.slice(10), value3]);
     } else if (name2 === "class") {
       className = className === null ? value3 : className + " " + value3;
     } else if (name2 === "style") {
@@ -3037,40 +3043,51 @@ function createElementNode({ prev, next, dispatch, stack }) {
     } else if (name2 === "dangerous-unescaped-html") {
       innerHTML = value3;
     } else {
-      if (el2.getAttribute(name2) !== value3)
-        el2.setAttribute(name2, value3);
+      if (el.getAttribute(name2) !== value3)
+        el.setAttribute(name2, value3);
       if (name2 === "value" || name2 === "selected")
-        el2[name2] = value3;
+        el[name2] = value3;
       if (canMorph)
         prevAttributes.delete(name2);
     }
   }
   if (className !== null) {
-    el2.setAttribute("class", className);
+    el.setAttribute("class", className);
     if (canMorph)
       prevAttributes.delete("class");
   }
   if (style !== null) {
-    el2.setAttribute("style", style);
+    el.setAttribute("style", style);
     if (canMorph)
       prevAttributes.delete("style");
   }
   if (canMorph) {
     for (const attr of prevAttributes) {
-      el2.removeAttribute(attr);
+      el.removeAttribute(attr);
     }
     for (const eventName of prevHandlers) {
       handlersForEl.delete(eventName);
-      el2.removeEventListener(eventName, lustreGenericEventHandler);
+      el.removeEventListener(eventName, lustreGenericEventHandler);
     }
   }
-  if (next.key !== void 0 && next.key !== "") {
-    el2.setAttribute("data-lustre-key", next.key);
-  } else if (innerHTML !== null) {
-    el2.innerHTML = innerHTML;
-    return el2;
+  if (next.tag === "slot") {
+    window.queueMicrotask(() => {
+      for (const child of el.assignedElements()) {
+        for (const [name2, value3] of delegated) {
+          if (!child.hasAttribute(name2)) {
+            child.setAttribute(name2, value3);
+          }
+        }
+      }
+    });
   }
-  let prevChild = el2.firstChild;
+  if (next.key !== void 0 && next.key !== "") {
+    el.setAttribute("data-lustre-key", next.key);
+  } else if (innerHTML !== null) {
+    el.innerHTML = innerHTML;
+    return el;
+  }
+  let prevChild = el.firstChild;
   let seenKeys = null;
   let keyedChildren = null;
   let incomingKeyedChildren = null;
@@ -3085,7 +3102,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
       prevChild = diffKeyedChild(
         prevChild,
         child,
-        el2,
+        el,
         stack,
         incomingKeyedChildren,
         keyedChildren,
@@ -3094,16 +3111,16 @@ function createElementNode({ prev, next, dispatch, stack }) {
     }
   } else {
     for (const child of children(next)) {
-      stack.unshift({ prev: prevChild, next: child, parent: el2 });
+      stack.unshift({ prev: prevChild, next: child, parent: el });
       prevChild = prevChild?.nextSibling;
     }
   }
   while (prevChild) {
     const next2 = prevChild.nextSibling;
-    el2.removeChild(prevChild);
+    el.removeChild(prevChild);
     prevChild = next2;
   }
-  return el2;
+  return el;
 }
 var registeredHandlers = /* @__PURE__ */ new WeakMap();
 function lustreGenericEventHandler(event2) {
@@ -3120,10 +3137,10 @@ function lustreGenericEventHandler(event2) {
   handlersForEventTarget.get(event2.type)(event2);
 }
 function lustreServerEventHandler(event2) {
-  const el2 = event2.currentTarget;
-  const tag = el2.getAttribute(`data-lustre-on-${event2.type}`);
-  const data = JSON.parse(el2.getAttribute("data-lustre-data") || "{}");
-  const include = JSON.parse(el2.getAttribute("data-lustre-include") || "[]");
+  const el = event2.currentTarget;
+  const tag = el.getAttribute(`data-lustre-on-${event2.type}`);
+  const data = JSON.parse(el.getAttribute("data-lustre-data") || "{}");
+  const include = JSON.parse(el.getAttribute("data-lustre-include") || "[]");
   switch (event2.type) {
     case "input":
     case "change":
@@ -3150,10 +3167,10 @@ function lustreServerEventHandler(event2) {
     )
   };
 }
-function getKeyedChildren(el2) {
+function getKeyedChildren(el) {
   const keyedChildren = /* @__PURE__ */ new Map();
-  if (el2) {
-    for (const child of children(el2)) {
+  if (el) {
+    for (const child of children(el)) {
       const key = child?.key || child?.getAttribute?.("data-lustre-key");
       if (key)
         keyedChildren.set(key, child);
@@ -3161,43 +3178,41 @@ function getKeyedChildren(el2) {
   }
   return keyedChildren;
 }
-function diffKeyedChild(prevChild, child, el2, stack, incomingKeyedChildren, keyedChildren, seenKeys) {
+function diffKeyedChild(prevChild, child, el, stack, incomingKeyedChildren, keyedChildren, seenKeys) {
   while (prevChild && !incomingKeyedChildren.has(prevChild.getAttribute("data-lustre-key"))) {
     const nextChild = prevChild.nextSibling;
-    el2.removeChild(prevChild);
+    el.removeChild(prevChild);
     prevChild = nextChild;
   }
   if (keyedChildren.size === 0) {
-    for (const currChild of children(child)) {
-      stack.unshift({ prev: prevChild, next: currChild, parent: el2 });
-      prevChild = prevChild?.nextSibling;
-    }
+    stack.unshift({ prev: prevChild, next: child, parent: el });
+    prevChild = prevChild?.nextSibling;
     return prevChild;
   }
   if (seenKeys.has(child.key)) {
     console.warn(`Duplicate key found in Lustre vnode: ${child.key}`);
-    stack.unshift({ prev: null, next: child, parent: el2 });
+    stack.unshift({ prev: null, next: child, parent: el });
     return prevChild;
   }
   seenKeys.add(child.key);
   const keyedChild = keyedChildren.get(child.key);
   if (!keyedChild && !prevChild) {
-    stack.unshift({ prev: null, next: child, parent: el2 });
+    stack.unshift({ prev: null, next: child, parent: el });
     return prevChild;
   }
   if (!keyedChild && prevChild !== null) {
     const placeholder2 = document.createTextNode("");
-    el2.insertBefore(placeholder2, prevChild);
-    stack.unshift({ prev: placeholder2, next: child, parent: el2 });
+    el.insertBefore(placeholder2, prevChild);
+    stack.unshift({ prev: placeholder2, next: child, parent: el });
     return prevChild;
   }
   if (!keyedChild || keyedChild === prevChild) {
-    stack.unshift({ prev: prevChild, next: child, parent: el2 });
+    stack.unshift({ prev: prevChild, next: child, parent: el });
     prevChild = prevChild?.nextSibling;
     return prevChild;
   }
-  el2.insertBefore(keyedChild, prevChild);
-  stack.unshift({ prev: keyedChild, next: child, parent: el2 });
+  el.insertBefore(keyedChild, prevChild);
+  stack.unshift({ prev: keyedChild, next: child, parent: el });
   return prevChild;
 }
 function* children(element2) {
@@ -3231,13 +3246,13 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {Gleam.Ok<(action: Lustre.Action<Lustre.Client, Msg>>) => void>}
    */
-  static start({ init: init5, update: update2, view: view2 }, selector, flags) {
+  static start({ init: init4, update: update2, view: view2 }, selector, flags) {
     if (!is_browser())
       return new Error(new NotABrowser());
     const root = selector instanceof HTMLElement ? selector : document.querySelector(selector);
     if (!root)
       return new Error(new ElementNotFound(selector));
-    const app = new _LustreClientApplication(root, init5(flags), update2, view2);
+    const app = new _LustreClientApplication(root, init4(flags), update2, view2);
     return new Ok((action) => app.send(action));
   }
   /**
@@ -3248,9 +3263,9 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {LustreClientApplication}
    */
-  constructor(root, [init5, effects2], update2, view2) {
+  constructor(root, [init4, effects2], update2, view2) {
     this.root = root;
-    this.#model = init5;
+    this.#model = init4;
     this.#update = update2;
     this.#view = view2;
     this.#tickScheduled = window.requestAnimationFrame(
@@ -3370,9 +3385,9 @@ var LustreClientApplication = class _LustreClientApplication {
 };
 var start = LustreClientApplication.start;
 var LustreServerApplication = class _LustreServerApplication {
-  static start({ init: init5, update: update2, view: view2, on_attribute_change }, flags) {
+  static start({ init: init4, update: update2, view: view2, on_attribute_change }, flags) {
     const app = new _LustreServerApplication(
-      init5(flags),
+      init4(flags),
       update2,
       view2,
       on_attribute_change
@@ -3488,9 +3503,9 @@ var prevent_default = (event2) => event2.preventDefault();
 
 // build/dev/javascript/lustre/lustre.mjs
 var App = class extends CustomType {
-  constructor(init5, update2, view2, on_attribute_change) {
+  constructor(init4, update2, view2, on_attribute_change) {
     super();
-    this.init = init5;
+    this.init = init4;
     this.update = update2;
     this.view = view2;
     this.on_attribute_change = on_attribute_change;
@@ -3504,8 +3519,8 @@ var ElementNotFound = class extends CustomType {
 };
 var NotABrowser = class extends CustomType {
 };
-function application(init5, update2, view2) {
-  return new App(init5, update2, view2, new None());
+function application(init4, update2, view2) {
+  return new App(init4, update2, view2, new None());
 }
 function start2(app, selector, flags) {
   return guard(
@@ -3988,139 +4003,6 @@ function expect_json(decoder, to_msg) {
   );
 }
 
-// build/dev/javascript/modem/modem.ffi.mjs
-var defaults = {
-  handle_external_links: false,
-  handle_internal_links: true
-};
-var initial_location = window?.location?.href;
-var do_init = (dispatch, options = defaults) => {
-  document.addEventListener("click", (event2) => {
-    const a2 = find_anchor(event2.target);
-    if (!a2)
-      return;
-    try {
-      const url = new URL(a2.href);
-      const uri = uri_from_url(url);
-      const is_external = url.host !== window.location.host;
-      if (!options.handle_external_links && is_external)
-        return;
-      if (!options.handle_internal_links && !is_external)
-        return;
-      event2.preventDefault();
-      if (!is_external) {
-        window.history.pushState({}, "", a2.href);
-        window.requestAnimationFrame(() => {
-          if (url.hash) {
-            document.getElementById(url.hash.slice(1))?.scrollIntoView();
-          }
-        });
-      }
-      return dispatch(uri);
-    } catch {
-      return;
-    }
-  });
-  window.addEventListener("popstate", (e) => {
-    e.preventDefault();
-    const url = new URL(window.location.href);
-    const uri = uri_from_url(url);
-    window.requestAnimationFrame(() => {
-      if (url.hash) {
-        document.getElementById(url.hash.slice(1))?.scrollIntoView();
-      }
-    });
-    dispatch(uri);
-  });
-  window.addEventListener("modem-push", ({ detail }) => {
-    dispatch(detail);
-  });
-  window.addEventListener("modem-replace", ({ detail }) => {
-    dispatch(detail);
-  });
-};
-var do_push = (uri) => {
-  window.history.pushState({}, "", to_string4(uri));
-  window.requestAnimationFrame(() => {
-    if (uri.fragment[0]) {
-      document.getElementById(uri.fragment[0])?.scrollIntoView();
-    }
-  });
-  window.dispatchEvent(new CustomEvent("modem-push", { detail: uri }));
-};
-var find_anchor = (el2) => {
-  if (!el2 || el2.tagName === "BODY") {
-    return null;
-  } else if (el2.tagName === "A") {
-    return el2;
-  } else {
-    return find_anchor(el2.parentElement);
-  }
-};
-var uri_from_url = (url) => {
-  return new Uri(
-    /* scheme   */
-    url.protocol ? new Some(url.protocol.slice(0, -1)) : new None(),
-    /* userinfo */
-    new None(),
-    /* host     */
-    url.hostname ? new Some(url.hostname) : new None(),
-    /* port     */
-    url.port ? new Some(Number(url.port)) : new None(),
-    /* path     */
-    url.pathname,
-    /* query    */
-    url.search ? new Some(url.search.slice(1)) : new None(),
-    /* fragment */
-    url.hash ? new Some(url.hash.slice(1)) : new None()
-  );
-};
-
-// build/dev/javascript/modem/modem.mjs
-function init2(handler) {
-  return from2(
-    (dispatch) => {
-      return guard(
-        !is_browser(),
-        void 0,
-        () => {
-          return do_init(
-            (uri) => {
-              let _pipe = uri;
-              let _pipe$1 = handler(_pipe);
-              return dispatch(_pipe$1);
-            }
-          );
-        }
-      );
-    }
-  );
-}
-var relative = /* @__PURE__ */ new Uri(
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None(),
-  "",
-  /* @__PURE__ */ new None(),
-  /* @__PURE__ */ new None()
-);
-function push(path, query, fragment) {
-  return from2(
-    (_) => {
-      return guard(
-        !is_browser(),
-        void 0,
-        () => {
-          return do_push(
-            relative.withFields({ path, query, fragment })
-          );
-        }
-      );
-    }
-  );
-}
-
 // build/dev/javascript/rada/rada_ffi.mjs
 function get_year_month_day() {
   let date = /* @__PURE__ */ new Date();
@@ -4430,37 +4312,6 @@ function diff2(unit, date1, date2) {
   }
 }
 
-// build/dev/javascript/common/common.mjs
-var Gift = class extends CustomType {
-  constructor(id2, name2, pic, link, selected_by) {
-    super();
-    this.id = id2;
-    this.name = name2;
-    this.pic = pic;
-    this.link = link;
-    this.selected_by = selected_by;
-  }
-};
-var Confirmation = class extends CustomType {
-  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
-    super();
-    this.id = id2;
-    this.user_id = user_id;
-    this.name = name2;
-    this.invite_name = invite_name;
-    this.phone = phone;
-    this.comments = comments;
-    this.people_names = people_names;
-  }
-};
-var Comment = class extends CustomType {
-  constructor(name2, comment) {
-    super();
-    this.name = name2;
-    this.comment = comment;
-  }
-};
-
 // build/dev/javascript/client/ffi.mjs
 function get_route() {
   return window.location.pathname;
@@ -4530,14 +4381,45 @@ function get_route2() {
   }
 }
 
+// build/dev/javascript/client/common.mjs
+var Gift = class extends CustomType {
+  constructor(id2, name2, pic, link, selected_by) {
+    super();
+    this.id = id2;
+    this.name = name2;
+    this.pic = pic;
+    this.link = link;
+    this.selected_by = selected_by;
+  }
+};
+var Confirmation = class extends CustomType {
+  constructor(id2, user_id, name2, invite_name, phone, comments, people_names) {
+    super();
+    this.id = id2;
+    this.user_id = user_id;
+    this.name = name2;
+    this.invite_name = invite_name;
+    this.phone = phone;
+    this.comments = comments;
+    this.people_names = people_names;
+  }
+};
+var Comment = class extends CustomType {
+  constructor(name2, comment) {
+    super();
+    this.name = name2;
+    this.comment = comment;
+  }
+};
+
 // build/dev/javascript/client/client/model.mjs
 var Model2 = class extends CustomType {
-  constructor(route, auth_user, gift_status, gallery_images, login_form, confirm_form, event_countdown, admin_settings, comments) {
+  constructor(route, auth_user, gift_status, gallery_images2, login_form, confirm_form, event_countdown, admin_settings, comments) {
     super();
     this.route = route;
     this.auth_user = auth_user;
     this.gift_status = gift_status;
-    this.gallery_images = gallery_images;
+    this.gallery_images = gallery_images2;
     this.login_form = login_form;
     this.confirm_form = confirm_form;
     this.event_countdown = event_countdown;
@@ -4596,19 +4478,6 @@ var AdminSettings = class extends CustomType {
     this.show_all = show_all;
   }
 };
-function init3() {
-  return new Model2(
-    get_route2(),
-    new None(),
-    new GiftStatus(toList([]), toList([]), new None()),
-    toList([]),
-    new LoginForm("", "", "", "", false, new None()),
-    new ConfirmForm("", "", "", "", 1, "", new$(), new None(), new None()),
-    0,
-    new AdminSettings(0, toList([]), new$(), false),
-    toList([])
-  );
-}
 function update_all(first3, _) {
   return first3;
 }
@@ -4626,8 +4495,8 @@ function update_gift_error(model, error) {
     gift_status: model.gift_status.withFields({ error })
   });
 }
-function update_images(model, gallery_images) {
-  return model.withFields({ gallery_images });
+function update_images(model, gallery_images2) {
+  return model.withFields({ gallery_images: gallery_images2 });
 }
 function update_comments(model, comments) {
   return model.withFields({ comments });
@@ -4728,6 +4597,24 @@ function update_confirm_error(model, error) {
   return model.withFields({
     confirm_form: model.confirm_form.withFields({ error })
   });
+}
+var gallery_images = /* @__PURE__ */ toList([
+  "./priv/static/images/gallery/image1.jpeg",
+  "./priv/static/images/gallery/image2.jpeg",
+  "./priv/static/images/gallery/image3.jpeg"
+]);
+function init2() {
+  return new Model2(
+    get_route2(),
+    new None(),
+    new GiftStatus(toList([]), toList([]), new None()),
+    gallery_images,
+    new LoginForm("", "", "", "", false, new None()),
+    new ConfirmForm("", "", "", "", 1, "", new$(), new None(), new None()),
+    0,
+    new AdminSettings(0, toList([]), new$(), false),
+    toList([])
+  );
 }
 
 // build/dev/javascript/client/client/msg.mjs
@@ -4934,7 +4821,7 @@ function message_error_decoder() {
 
 // build/dev/javascript/client/env.mjs
 function get_api_url() {
-  return "http://localhost:8083";
+  return "https://api-lauraxv.fly.dev/";
 }
 
 // build/dev/javascript/client/client/api.mjs
@@ -5039,10 +4926,7 @@ function get_auth_user() {
 function validate_login(model, data) {
   if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
     let updated_model = reset_login_form(model);
-    let effects2 = toList([
-      push("/", new None(), new None()),
-      get_auth_user()
-    ]);
+    let effects2 = toList([get_auth_user()]);
     return new Ok([updated_model, effects2]);
   } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
     let error = data.error[0];
@@ -5071,10 +4955,7 @@ function validate_login(model, data) {
 }
 function validate_confirm_presence(model, data) {
   if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
-    let effects2 = toList([
-      push("/confirm", new None(), new None()),
-      get_auth_user()
-    ]);
+    let effects2 = toList([get_auth_user()]);
     return new Ok([model, effects2]);
   } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
     let error = data.error[0];
@@ -5233,11 +5114,11 @@ function confirm_presence(model) {
     let $ = to_result(model.auth_user, "Usu\xE1rio n\xE3o est\xE1 logado");
     if (!$.isOk()) {
       throw makeError(
-        "assignment_no_match",
+        "let_assert",
         "client/api",
-        284,
+        293,
         "confirm_presence",
-        "Assignment pattern did not match",
+        "Pattern match failed, no pattern matched the value.",
         { value: $ }
       );
     }
@@ -5304,7 +5185,7 @@ function select_gift(model, gift, to2) {
       )
     );
   } else {
-    return push("/login", new None(), new None());
+    return none();
   }
 }
 
@@ -5409,7 +5290,7 @@ function home_view(model) {
                     "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
                   ),
                   alt("Laura's Birthday"),
-                  src("/priv/static/profile.jpeg")
+                  src("./priv/static/images/profile.jpeg")
                 ])
               ),
               div(
@@ -6689,7 +6570,7 @@ function event_view() {
                 toList([
                   class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
                   alt("Local da Festa"),
-                  src("/priv/static/images/paiol.jpg")
+                  src("./priv/static/images/paiol.jpg")
                 ])
               )
             ])
@@ -7028,9 +6909,6 @@ function not_found_view() {
 }
 
 // build/dev/javascript/client/client.mjs
-function on_url_change(_) {
-  return new OnRouteChange(get_route2());
-}
 function view(model) {
   return body(
     toList([
@@ -7426,21 +7304,21 @@ function update(model, msg) {
     );
   }
 }
-function init4(_) {
-  let _pipe = init3();
+function init3(_) {
+  let _pipe = init2();
   return effects(
     _pipe,
     toList([
-      init2(on_url_change),
       get_gifts(),
       get_images(),
       get_comments(),
+      get_auth_user(),
       update_countdown()
     ])
   );
 }
 function main2() {
-  let _pipe = application(init4, update, view);
+  let _pipe = application(init3, update, view);
   return start2(_pipe, "#app", void 0);
 }
 

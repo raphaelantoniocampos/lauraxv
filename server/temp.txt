@@ -1,5 +1,0 @@
-
-export function main2() { let _pipe = application(init4, update, view); return start2(_pipe, #app, void 0);}
-// build/.lustre/entry.mjs
-main2();
-

@@ -1,9 +1,5 @@
 import cors_builder as cors
 import gleam/http.{Get, Post}
-import gleam/option.{None}
-import lustre/element
-import modem
-import server/config.{type Context}
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/comments
@@ -11,16 +7,15 @@ import server/routes/confirmations
 import server/routes/gifts
 import server/routes/images
 import server/routes/users
-import server/scaffold.{page_scaffold}
 import server/web
 import wisp.{type Request, type Response}
 
-pub fn handle_request(req: Request, ctx: Context) {
-  use req <- web.middleware(req, ctx)
+pub fn handle_request(req: Request) {
+  use req <- web.middleware(req)
   use req <- cors.wisp_middleware(
     req,
     cors.new()
-      |> cors.allow_origin("*")
+      |> cors.allow_origin("https://lauraxv.fly.dev")
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")
@@ -29,7 +24,7 @@ pub fn handle_request(req: Request, ctx: Context) {
 
   case wisp.path_segments(req) {
     ["api", ..] -> handle_api_request(req)
-    _ -> page_routes(req)
+    _ -> wisp.not_found()
   }
 }
 
@@ -61,13 +56,4 @@ fn handle_api_request(req: Request) -> Response {
     Post -> handle_post(req)
     _ -> wisp.method_not_allowed([Get, Post])
   }
-}
-
-fn page_routes(req: Request) -> Response {
-  wisp.response(200)
-  |> wisp.set_header("Content-Type", "text/html")
-  |> wisp.html_body(
-    page_scaffold()
-    |> element.to_document_string_builder(),
-  )
 }

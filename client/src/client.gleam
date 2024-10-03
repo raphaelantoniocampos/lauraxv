@@ -24,7 +24,6 @@ import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import lustre_http
-import modem
 import rada/date
 
 pub fn main() {
@@ -35,7 +34,6 @@ pub fn main() {
 pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   model.init()
   |> update.effects([
-    modem.init(on_url_change),
     api.get_gifts(),
     api.get_images(),
     api.get_comments(),

@@ -3,6 +3,12 @@ import common
 import gleam/dict
 import gleam/option.{type Option, None, Some}
 
+const gallery_images = [
+  "./priv/static/images/gallery/image1.jpeg",
+  "./priv/static/images/gallery/image2.jpeg",
+  "./priv/static/images/gallery/image3.jpeg",
+]
+
 pub type Model {
   Model(
     route: router.Route,
@@ -68,7 +74,7 @@ pub fn init() -> Model {
     route: router.get_route(),
     auth_user: None,
     gift_status: GiftStatus([], [], None),
-    gallery_images: [],
+    gallery_images: gallery_images,
     login_form: LoginForm("", "", "", "", False, None),
     confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
     event_countdown: 0,

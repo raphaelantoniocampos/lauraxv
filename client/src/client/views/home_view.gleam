@@ -38,7 +38,7 @@ pub fn home_view(model: model.Model) -> Element(msg.Msg) {
               "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3",
             ),
             alt("Laura's Birthday"),
-            src("/priv/static/profile.jpeg"),
+            src("./priv/static/images/profile.jpeg"),
           ]),
           div([class("flex-1 ml-12")], [
             h1([class("text-5xl font-bold text-pink-600 mb-4")], [
