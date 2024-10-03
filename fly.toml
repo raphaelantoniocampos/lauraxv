@@ -6,26 +6,15 @@
 app = 'lauraxv'
 primary_region = 'gru'
 
-[build]
-
 [http_service]
   internal_port = 8083
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  [http_service.concurrency]
-    type = "requests"
-    soft_limit = 200
-    hard_limit = 250
-
+  processes = ['app']
 
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-
-# [mounts]
-#   source = "litefs"
-#   destination = "/var/lib/litefs"
-

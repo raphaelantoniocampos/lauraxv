@@ -1,5 +1,6 @@
 import cors_builder as cors
 import gleam/http.{Get, Post}
+import gleam/io
 import lustre/element
 import server/config.{type Context}
 import server/routes/auth/login
@@ -19,6 +20,7 @@ pub fn handle_request(req: Request, ctx: Context) {
     req,
     cors.new()
       |> cors.allow_origin("https://lauraxv.fly.dev")
+      |> cors.allow_origin("http://lauraxv.fly.dev")
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")

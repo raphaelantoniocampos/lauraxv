@@ -1,3 +1,3 @@
 pub fn get_api_url() {
-  "http://localhost:8083"
+  "http://localhost:8083/"
 }
