@@ -18,10 +18,7 @@ pub fn handle_request(req: Request, ctx: Context) {
   use req <- cors.wisp_middleware(
     req,
     cors.new()
-      |> cors.allow_origin("http://localhost:8083")
-      |> cors.allow_origin("http://localhost:1234")
       |> cors.allow_origin("https://lauraxv.fly.dev")
-      |> cors.allow_origin("http://lauraxv.fly.dev")
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")

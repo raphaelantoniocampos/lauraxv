@@ -4,7 +4,7 @@ import gleam/io
 import gleam/result
 
 pub type Context {
-  Context(static_directory: String)
+  Context(static_directory: String, port: Int)
 }
 
 pub type Environment {

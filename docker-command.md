@@ -1,4 +1,4 @@
-docker run -d -p 8083:8083 -e DATABASE_PATH="file:/app/db/db.sqlite3?mode=rw" -e SECRET_KEY_BASE="pu5wrezu1yv84v04l6gwlfxcc4a9f8mrr2i5mfz0r3kijvq86c2ccqodziplivv4" -e GLEAM_ENV="development" -e PORT="8083" -v /home/raphaelac/repositories/lauraxv/server/db:/app/db --name lauraxv lauraxv:latest
+docker run -d -p 8083:8083 -e DATABASE_PATH="file:/db/db.sqlite3?mode=rw" -e SECRET_KEY_BASE="pu5wrezu1yv84v04l6gwlfxcc4a9f8mrr2i5mfz0r3kijvq86c2ccqodziplivv4" -e GLEAM_ENV="development" -e PORT="8083" -v /home/raphaelac/repositories/lauraxv/server/db:/db --name lauraxv lauraxv:latest
 
 docker run -d \
   -p 8083:8083 \

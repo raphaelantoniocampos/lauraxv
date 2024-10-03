@@ -26,10 +26,11 @@ RUN cd /build/server \
   && mv build/erlang-shipment /app \
   && rm -r /build
 
-EXPOSE 8083
 
 # Run the server
 WORKDIR /app
+
+EXPOSE 8083
 
 COPY ./server/db/db.sqlite3 /db/db.sqlite3
 # COPY ./litefs.yml /etc/litefs.yml

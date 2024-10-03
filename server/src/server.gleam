@@ -14,7 +14,7 @@ pub fn main() {
   let cnf = config.read_config()
   let secret_key_base = cnf.secret_key_base
 
-  let ctx = Context(static_directory: static_directory())
+  let ctx = Context(static_directory: static_directory(), port: cnf.port)
 
   let handler = router.handle_request(_, ctx)
 
