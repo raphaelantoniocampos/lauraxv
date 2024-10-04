@@ -1,6 +1,5 @@
 import cors_builder as cors
 import gleam/http.{Get, Post}
-import gleam/io
 import lustre/element
 import server/config.{type Context}
 import server/routes/auth/login
@@ -19,11 +18,11 @@ pub fn handle_request(req: Request, ctx: Context) {
   use req <- cors.wisp_middleware(
     req,
     cors.new()
-      |> cors.allow_origin("https://lauraxv.fly.dev")
-      |> cors.allow_origin("http://lauraxv.fly.dev")
+      |> cors.allow_origin("*")
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")
+      |> cors.allow_header("origin")
       |> cors.max_age(86_400),
   )
 
@@ -66,6 +65,7 @@ fn handle_api_request(req: Request) -> Response {
 fn page_routes() -> Response {
   wisp.response(200)
   |> wisp.set_header("Content-Type", "text/html")
+  |> wisp.set_header("Allow-Origin", "*")
   |> wisp.html_body(
     page_scaffold()
     |> element.to_document_string_builder(),

@@ -28,10 +28,8 @@ RUN cd /build/server \
 
 EXPOSE 8083
 
-# Run the server
-WORKDIR /app
-
 COPY ./server/db/db.sqlite3 /db/db.sqlite3
 
+WORKDIR /app
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["run"]
