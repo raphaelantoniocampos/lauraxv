@@ -7,7 +7,7 @@ app = 'lauraxv'
 primary_region = 'gru'
 
 [http_service]
-  internal_port = 8083
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true

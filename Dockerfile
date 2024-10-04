@@ -26,7 +26,7 @@ RUN cd /build/server \
   && rm -r /build
 
 
-EXPOSE 8083
+EXPOSE 8080
 
 COPY ./server/db/db.sqlite3 /db/db.sqlite3
 

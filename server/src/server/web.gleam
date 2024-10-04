@@ -1,3 +1,4 @@
+import gleam/io
 import gleam/json
 import gleam/string_builder.{type StringBuilder}
 import server/config.{type Context}
@@ -18,6 +19,7 @@ pub fn middleware(
 }
 
 pub fn generate_wisp_response(result: Result(StringBuilder, String)) {
+  io.debug(result)
   case result {
     Ok(json) -> wisp.json_response(json, 201)
     Error(error) ->

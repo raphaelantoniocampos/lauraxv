@@ -71,7 +71,7 @@ fn handle_api_request(req: Request) -> Response {
 
 fn page_routes() -> Response {
   wisp.response(200)
-  |> wisp.set_header("Content-Type", "text/html")
+  // |> wisp.set_header("Content-Type", "text/html")
   |> wisp.html_body(
     page_scaffold()
     |> element.to_document_string_builder(),
