@@ -1,5 +1,10 @@
 import cors_builder as cors
 import gleam/http.{Get, Post}
+<<<<<<< HEAD
+=======
+import lustre/element
+import server/config.{type Context}
+>>>>>>> monorepo
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/comments
@@ -10,8 +15,12 @@ import server/routes/users
 import server/web
 import wisp.{type Request, type Response}
 
+<<<<<<< HEAD
 pub fn handle_request(req: Request) {
   use req <- web.middleware(req)
+=======
+pub fn handle_request(req: Request, ctx: Context) {
+>>>>>>> monorepo
   use req <- cors.wisp_middleware(
     req,
     cors.new()
@@ -21,10 +30,15 @@ pub fn handle_request(req: Request) {
       |> cors.allow_header("Content-Type")
       |> cors.max_age(86_400),
   )
+  use req <- web.middleware(req, ctx)
 
   case wisp.path_segments(req) {
     ["api", ..] -> handle_api_request(req)
+<<<<<<< HEAD
     _ -> wisp.not_found()
+=======
+    _ -> page_routes()
+>>>>>>> monorepo
   }
 }
 
@@ -57,3 +71,15 @@ fn handle_api_request(req: Request) -> Response {
     _ -> wisp.method_not_allowed([Get, Post])
   }
 }
+<<<<<<< HEAD
+=======
+
+fn page_routes() -> Response {
+  wisp.response(200)
+  |> wisp.set_header("Content-Type", "text/html")
+  |> wisp.html_body(
+    page_scaffold()
+    |> element.to_document_string_builder(),
+  )
+}
+>>>>>>> monorepo

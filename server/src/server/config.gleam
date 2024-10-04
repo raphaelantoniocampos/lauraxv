@@ -2,6 +2,13 @@ import dot_env as dot
 import dot_env/env
 import gleam/result
 
+<<<<<<< HEAD
+=======
+pub type Context {
+  Context(static_directory: String, port: Int)
+}
+
+>>>>>>> monorepo
 pub type Environment {
   Development
   Production
@@ -28,7 +35,8 @@ pub fn read_config() {
     _ -> Production
   }
   let assert Ok(port) = env.get_int("PORT")
-  Config(database_path, secret_key_base, port, env)
+  let db_conn = "file:" <> database_path <> "?mode=rw"
+  Config(db_conn, secret_key_base, port, env)
 }
 
 pub fn is_dev() {
