@@ -31,7 +31,7 @@ fn gift_db_decoder() {
 }
 
 pub fn get_gift_by_id(gift_id: Int) -> Result(Gift, String) {
-  let sql = get_gifts_base_query <> "WHERE gift.id = ?"
+  let sql = get_gifts_base_query <> "WHERE id = ?"
   let gift = case
     db.execute_read(sql, [sqlight.int(gift_id)], gift_db_decoder())
   {

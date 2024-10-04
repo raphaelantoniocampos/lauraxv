@@ -5,8 +5,6 @@ FROM ghcr.io/gleam-lang/gleam:${GLEAM_VERSION}-erlang-alpine AS builder
 WORKDIR /build
 
 COPY ./client /build/client
-# COPY ./client/priv/static/images /app/server/priv/static/images
-# COPY ./client/priv/static/favicon.ico /app/server/priv/static/favicon.ico
 COPY ./server /build/server
 COPY ./common /build/common
 
@@ -31,6 +29,9 @@ RUN cd /build/server \
 EXPOSE 8080
 
 COPY ./server/db/db.sqlite3 /db/db.sqlite3
+
+COPY ./client/priv/static/images /app/server/priv/images
+COPY ./client/priv/static/favicon.ico /app/server/priv/favicon.ico
 
 WORKDIR /app
 ENTRYPOINT ["/app/entrypoint.sh"]
