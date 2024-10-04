@@ -22,7 +22,6 @@ pub fn handle_request(req: Request, ctx: Context) {
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")
-      |> cors.allow_header("origin")
       |> cors.max_age(86_400),
   )
 
@@ -41,6 +40,7 @@ pub fn handle_get(req: Request) {
     ["api", "auth", "validate"] -> validate.validate_session(req)
     _ -> wisp.not_found()
   }
+  |> wisp.set_header("Allow-Origin", "*")
 }
 
 pub fn handle_post(req: Request) {
@@ -52,6 +52,7 @@ pub fn handle_post(req: Request) {
     ["api", "auth", "login"] -> login.login(req, body)
     _ -> wisp.not_found()
   }
+  |> wisp.set_header("Allow-Origin", "*")
 }
 
 fn handle_api_request(req: Request) -> Response {
@@ -65,7 +66,6 @@ fn handle_api_request(req: Request) -> Response {
 fn page_routes() -> Response {
   wisp.response(200)
   |> wisp.set_header("Content-Type", "text/html")
-  |> wisp.set_header("Allow-Origin", "*")
   |> wisp.html_body(
     page_scaffold()
     |> element.to_document_string_builder(),
