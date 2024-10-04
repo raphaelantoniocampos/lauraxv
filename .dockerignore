@@ -9,4 +9,5 @@ shared/**/*.beam
 shared/**/*.ez
 shared/build
 shared/**/erl_crash.dump
+server/priv
 fly.toml
