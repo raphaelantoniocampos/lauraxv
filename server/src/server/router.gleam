@@ -1,5 +1,5 @@
 import cors_builder as cors
-import gleam/http.{Get, Options, Post}
+import gleam/http.{Get, Post}
 import lustre/element
 import server/config.{type Context}
 import server/routes/auth/login
@@ -20,8 +20,8 @@ pub fn handle_request(req: Request, ctx: Context) {
       |> cors.allow_origin("*")
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
-      |> cors.allow_header("Content-Type"),
-    // |> cors.max_age(86_400),
+      |> cors.allow_header("Content-Type")
+      |> cors.max_age(86_400),
   )
   use req <- web.middleware(req, ctx)
 
@@ -30,13 +30,6 @@ pub fn handle_request(req: Request, ctx: Context) {
     _ -> page_routes()
   }
 }
-
-// fn handle_options(_req: Request) -> Response {
-//   wisp.response(200)
-//   |> wisp.set_header("Access-Control-Allow-Origin", "*")
-//   |> wisp.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-//   |> wisp.set_header("Access-Control-Allow-Headers", "Content-Type")
-// }
 
 pub fn handle_get(req: Request) {
   case wisp.path_segments(req) {
@@ -64,14 +57,13 @@ fn handle_api_request(req: Request) -> Response {
   case req.method {
     Get -> handle_get(req)
     Post -> handle_post(req)
-    // Options -> handle_options(req)
-    _ -> wisp.method_not_allowed([Get, Post, Options])
+    _ -> wisp.method_not_allowed([Get, Post])
   }
 }
 
 fn page_routes() -> Response {
   wisp.response(200)
-  // |> wisp.set_header("Content-Type", "text/html")
+  |> wisp.set_header("Content-Type", "text/html")
   |> wisp.html_body(
     page_scaffold()
     |> element.to_document_string_builder(),

@@ -29,6 +29,13 @@ pub fn page_scaffold() -> Element(a) {
         attribute("content", "Festa de 15 anos da Laura"),
         attribute("property", "og:description"),
       ]),
+      link([href("/static/favicon.ico"), type_("image/x-icon"), rel("icon")]),
+      link([
+        href("/static/client.min.css"),
+        type_("text/css"),
+        rel("stylesheet"),
+      ]),
+      script([src("/static/client.min.mjs"), type_("module")], ""),
       link([
         rel("stylesheet"),
         href("https://fonts.googleapis.com/css2?family=Pacifico&display=swap"),
@@ -39,13 +46,6 @@ pub fn page_scaffold() -> Element(a) {
           "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css",
         ),
       ]),
-      link([href("/static/favicon.ico"), type_("image/x-icon"), rel("icon")]),
-      link([
-        href("/static/client.min.css"),
-        type_("text/css"),
-        rel("stylesheet"),
-      ]),
-      script([src("/static/client.min.mjs"), type_("module")], ""),
     ]),
     body([], [div([id("app")], [])]),
   ])
