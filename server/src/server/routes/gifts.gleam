@@ -71,7 +71,6 @@ pub fn select_gift(body: dynamic.Dynamic) -> Response {
       request_select_gift.gift_id
       |> gift.get_gift_by_id,
     )
-    io.debug(gift)
 
     let confirm_request = {
       { option.is_some(gift.selected_by) && request_select_gift.to }

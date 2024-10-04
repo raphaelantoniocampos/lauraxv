@@ -144,7 +144,11 @@ pub fn validate_confirm_presence(
 ) {
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
-      let effects = [modem.push("/confirm", None, None), get_auth_user()]
+      let effects = [
+        modem.push("/confirm", None, None),
+        get_auth_user(),
+        get_comments(),
+      ]
       Ok(#(model, effects))
     }
 
