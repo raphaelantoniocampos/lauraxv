@@ -27,5 +27,5 @@ fn images_to_json(images: List(String)) {
 
 fn gallery_directory() {
   let assert Ok(priv_directory) = wisp.priv_directory("server")
-  priv_directory <> "/static/images/gallery"
+  priv_directory <> "/static/images/gallery/"
 }
