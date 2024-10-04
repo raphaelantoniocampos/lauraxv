@@ -8,8 +8,7 @@ import sqlight
 const get_gifts_base_query = "
 SELECT *
 FROM 'gift'
-GROUP BY gift.id
-  "
+"
 
 pub fn get_gifts() -> Result(List(Gift), String) {
   let sql = get_gifts_base_query
@@ -51,7 +50,7 @@ pub fn set_selected_by(select_gift: SelectGift) {
     "
     UPDATE gift
     SET select_by = ?
-    WHERE gift.id = ?"
+    WHERE id = ?"
 
   let args = case select_gift.to {
     True -> [sqlight.int(select_gift.user_id), sqlight.int(select_gift.gift_id)]

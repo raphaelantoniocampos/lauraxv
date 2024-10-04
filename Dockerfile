@@ -28,7 +28,6 @@ RUN cd /build/server \
 
 EXPOSE 8080
 
-COPY ./db/db.sqlite3 /db/db.sqlite3
 COPY ./client/priv/static/images /app/server/priv/static/images
 COPY ./client/priv/static/favicon.ico /app/server/priv/static/favicon.ico
 

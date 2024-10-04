@@ -13,12 +13,7 @@ pub type Environment {
 }
 
 pub type Config {
-  Config(
-    database_path: String,
-    secret_key_base: String,
-    port: Int,
-    env: Environment,
-  )
+  Config(db_conn: String, secret_key_base: String, port: Int, env: Environment)
 }
 
 pub fn read_config() {
@@ -33,7 +28,7 @@ pub fn read_config() {
     _ -> Production
   }
   let assert Ok(port) = env.get_int("PORT")
-  let db_conn = "file:" <> database_path <> "?mode=rw"
+  let db_conn = "file:" <> database_path <> "?mode=rw&cache=shared"
   Config(db_conn, secret_key_base, port, env)
 }
 
@@ -42,5 +37,5 @@ pub fn is_dev() {
 }
 
 pub fn conn_path() {
-  read_config().database_path
+  read_config().db_conn
 }
