@@ -49,7 +49,7 @@ pub fn set_selected_by(select_gift: SelectGift) {
   let sql =
     "
     UPDATE gift
-    SET select_by = ?
+    SET selected_by = ?
     WHERE id = ?"
 
   let args = case select_gift.to {
