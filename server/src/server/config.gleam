@@ -1,10 +1,9 @@
 import dot_env as dot
 import dot_env/env
-import gleam/io
 import gleam/result
 
 pub type Context {
-  Context(static_directory: String, port: Int)
+  Context(static_directory: String, url: String)
 }
 
 pub type Environment {

@@ -12,6 +12,8 @@ RUN apk update
 
 RUN apk add libbsd-dev build-base inotify-tools sqlite
 
+RUN echo "pub fn get_api_url() { \"https://lauraxv.fly.dev\" }" > /build/client/src/env.gleam 
+
 # Compile frontend
 RUN cd /build/client \
   && gleam clean \

@@ -11,6 +11,7 @@ import lustre/event
 pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
   nav(
     [
+      // fixed z-50 w-full bg-white shadow-md py-4 px-4 sm:px-6 md:px-8 flex justify-between items-center
       class(
         "fixed z-50 w-full bg-white shadow-md py-4 px-8 flex justify-between items-center",
       ),

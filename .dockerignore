@@ -3,6 +3,7 @@
 **/*/*.ez
 **/*/build
 **/*/erl_crash.dump
+client/src/env.gleam
 
 # flyctl launch added from shared/.gitignore
 shared/**/*.beam

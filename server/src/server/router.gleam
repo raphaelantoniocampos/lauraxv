@@ -17,7 +17,7 @@ pub fn handle_request(req: Request, ctx: Context) {
   use req <- cors.wisp_middleware(
     req,
     cors.new()
-      |> cors.allow_origin("*")
+      |> cors.allow_origin(ctx.url)
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")
