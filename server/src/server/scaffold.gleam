@@ -1,13 +1,8 @@
 import lustre/attribute.{attribute, href, id, name, rel, src, type_}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div, head, html, link, meta, script, title}
-import server/config.{Development, Production}
 
 pub fn page_scaffold() -> Element(a) {
-  let dev_priv = case config.read_config().env {
-    Development -> ""
-    Production -> ""
-  }
   html([], [
     head([], [
       meta([attribute("charset", "UTF-8")]),
@@ -34,17 +29,13 @@ pub fn page_scaffold() -> Element(a) {
         attribute("content", "Festa de 15 anos da Laura"),
         attribute("property", "og:description"),
       ]),
+      link([href("/static/favicon.ico"), type_("image/x-icon"), rel("icon")]),
       link([
-        href(dev_priv <> "/static/favicon.ico"),
-        type_("image/x-icon"),
-        rel("icon"),
-      ]),
-      link([
-        href(dev_priv <> "/static/client.min.css"),
+        href("/static/client.min.css"),
         type_("text/css"),
         rel("stylesheet"),
       ]),
-      script([src(dev_priv <> "/static/client.min.mjs"), type_("module")], ""),
+      script([src("/static/client.min.mjs"), type_("module")], ""),
       link([
         rel("stylesheet"),
         href("https://fonts.googleapis.com/css2?family=Pacifico&display=swap"),

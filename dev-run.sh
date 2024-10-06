@@ -1,3 +1,5 @@
+fly app open
+
 mv ./db/db.sqlite3 ./db/db.sqlite3.temp
 fly sftp get /mnt/sqlite3/db.sqlite3 ./db/db.sqlite3
 
@@ -8,7 +10,7 @@ cd ./client \
 
 
 cd ..
-
+rm -r ./server/build/dev/erlang/server/priv
 mv ./server/priv ./server/build/dev/erlang/server/
 
 mkdir ./server/build/dev/erlang/server/priv/static/images
