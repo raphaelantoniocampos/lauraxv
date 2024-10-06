@@ -17,7 +17,7 @@ pub fn gallery_view(model: model.Model) -> Element(a) {
     h1(
       [
         attribute("style", "font-family: 'Pacifico', cursive;"),
-        class("text-5xl text-white font-bold mb-12"),
+        class("text-4xl text-white font-bold mb-12"),
       ],
       [text("Fotos do Evento")],
     ),

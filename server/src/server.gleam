@@ -1,5 +1,4 @@
 import gleam/erlang/process
-import gleam/io
 import mist
 import server/config.{Context}
 import server/router
@@ -33,6 +32,5 @@ pub fn main() {
 
 fn static_directory() {
   let assert Ok(priv_directory) = wisp.priv_directory("server")
-  io.debug(priv_directory)
   priv_directory <> "/static"
 }

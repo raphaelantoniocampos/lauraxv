@@ -11,9 +11,8 @@ import lustre/event
 pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
   nav(
     [
-      // fixed z-50 w-full bg-white shadow-md py-4 px-4 sm:px-6 md:px-8 flex justify-between items-center
       class(
-        "fixed z-50 w-full bg-white shadow-md py-4 px-8 flex justify-between items-center",
+        "fixed z-50 w-full bg-white shadow-md py-4 px-4 sm:px-6 md:px-8 flex flex-wrap justify-between items-center",
       ),
     ],
     [
@@ -30,7 +29,7 @@ pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
         Some(_) -> div([], [])
         None -> element.none()
       },
-      ul([class("flex space-x-8  font-semibold")], [
+      ul([class("flex flex-wrap space-x-4 sm:space-x-8 font-semibold")], [
         li([], [
           a(
             [
@@ -44,7 +43,7 @@ pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
               ),
               href("/"),
             ],
-            [text("Página Inicial")],
+            [text("Home")],
           ),
         ]),
         li([], [
