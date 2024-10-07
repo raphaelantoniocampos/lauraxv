@@ -2,3 +2,8 @@
 */*.ez
 */build
 */erl_crash.dump
+./client/priv/static/client.css
+./client/priv/static/client.min.css
+./client/priv/static/client.min.mjs
+./client/priv/static/client.mjs
+
