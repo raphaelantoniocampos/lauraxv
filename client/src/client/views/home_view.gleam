@@ -32,34 +32,12 @@ pub fn home_view(model: model.Model) -> Element(msg.Msg) {
         ),
       ],
       [
-<<<<<<< HEAD
-        div([class("flex items-center justify-between mb-8")], [
-          img([
-            class(
-              "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3",
-            ),
-            alt("Laura's Birthday"),
-<<<<<<< HEAD
-            src("./priv/static/images/profile.jpeg"),
-=======
-            src("/static/images/profile.jpeg"),
->>>>>>> monorepo
-          ]),
-          div([class("flex-1 ml-12")], [
-            h1([class("text-5xl font-bold text-pink-600 mb-4")], [
-              text("Aniversário de 15 Anos de Laura"),
-            ]),
-            p([class("text-gray-600 text-lg mb-6")], [
-              text(
-                "Lhe convido para celebrar esse dia tão especial em minha vida, meus 15 anos! Confirme sua presença até o dia 06/12 para receber seu convite individual.",
-=======
         div(
           [class("flex flex-col sm:flex-row items-center justify-between mb-8")],
           [
             img([
               class(
                 "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-2/3 sm:w-1/3 mb-6 sm:mb-0",
->>>>>>> monorepo
               ),
               alt("Laura's Birthday"),
               src("/static/images/profile.jpeg"),

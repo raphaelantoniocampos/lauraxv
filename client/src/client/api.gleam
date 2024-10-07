@@ -13,6 +13,7 @@ import gleam/option.{None, Some}
 import gleam/string
 import lustre/effect
 import lustre_http
+import modem
 
 pub fn validate_default(
   _model: model.Model,
@@ -63,7 +64,7 @@ pub fn validate_login(
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
       let updated_model = model.reset_login_form(model)
-      let effects = [get_auth_user()]
+      let effects = [modem.push("/", None, None), get_auth_user()]
       Ok(#(updated_model, effects))
     }
 
@@ -140,15 +141,11 @@ pub fn validate_confirm_presence(
 ) {
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
-<<<<<<< HEAD
-      let effects = [get_auth_user()]
-=======
       let effects = [
         modem.push("/confirm", None, None),
         get_auth_user(),
         get_comments(),
       ]
->>>>>>> monorepo
       Ok(#(model, effects))
     }
 
@@ -356,6 +353,6 @@ pub fn select_gift(
         ),
       )
     }
-    None -> effect.none()
+    None -> modem.push("/login", None, None)
   }
 }

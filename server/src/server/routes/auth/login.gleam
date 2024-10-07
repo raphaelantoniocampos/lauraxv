@@ -1,16 +1,12 @@
 import beecrypt
 import gleam/bool
 import gleam/dynamic
-import gleam/http.{Post}
-import gleam/http/request
-import gleam/io
 import gleam/json
 import gleam/result
 import gleam/string
 import server/db/user.{get_user_by_email}
 import server/db/user_session
-import server/generate_token.{generate_token}
-import wisp.{type Request, type Response}
+import wisp.{type Request}
 
 type Login {
   Login(email: String, password: String)

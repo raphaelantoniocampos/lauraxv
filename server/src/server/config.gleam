@@ -2,13 +2,10 @@ import dot_env as dot
 import dot_env/env
 import gleam/result
 
-<<<<<<< HEAD
-=======
 pub type Context {
   Context(static_directory: String, url: String)
 }
 
->>>>>>> monorepo
 pub type Environment {
   Development
   Production

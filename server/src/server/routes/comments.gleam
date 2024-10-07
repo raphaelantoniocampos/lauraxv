@@ -1,5 +1,4 @@
 import common.{type Comment}
-import gleam/http.{Get}
 import gleam/json
 import gleam/result
 import server/db/confirmation

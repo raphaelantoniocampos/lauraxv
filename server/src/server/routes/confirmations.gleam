@@ -1,6 +1,5 @@
 import gleam/bool
 import gleam/dynamic
-import gleam/http.{Get, Post}
 import gleam/int
 import gleam/json
 import gleam/result

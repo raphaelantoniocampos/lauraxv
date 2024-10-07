@@ -1,10 +1,7 @@
 import cors_builder as cors
 import gleam/http.{Get, Post}
-<<<<<<< HEAD
-=======
 import lustre/element
 import server/config.{type Context}
->>>>>>> monorepo
 import server/routes/auth/login
 import server/routes/auth/validate
 import server/routes/comments
@@ -12,23 +9,15 @@ import server/routes/confirmations
 import server/routes/gifts
 import server/routes/images
 import server/routes/users
+import server/scaffold.{page_scaffold}
 import server/web
 import wisp.{type Request, type Response}
 
-<<<<<<< HEAD
-pub fn handle_request(req: Request) {
-  use req <- web.middleware(req)
-=======
 pub fn handle_request(req: Request, ctx: Context) {
->>>>>>> monorepo
   use req <- cors.wisp_middleware(
     req,
     cors.new()
-<<<<<<< HEAD
-      |> cors.allow_origin("https://lauraxv.fly.dev")
-=======
       |> cors.allow_origin(ctx.url)
->>>>>>> monorepo
       |> cors.allow_method(http.Get)
       |> cors.allow_method(http.Post)
       |> cors.allow_header("Content-Type")
@@ -38,11 +27,7 @@ pub fn handle_request(req: Request, ctx: Context) {
 
   case wisp.path_segments(req) {
     ["api", ..] -> handle_api_request(req)
-<<<<<<< HEAD
-    _ -> wisp.not_found()
-=======
     _ -> page_routes()
->>>>>>> monorepo
   }
 }
 
@@ -75,8 +60,6 @@ fn handle_api_request(req: Request) -> Response {
     _ -> wisp.method_not_allowed([Get, Post])
   }
 }
-<<<<<<< HEAD
-=======
 
 fn page_routes() -> Response {
   wisp.response(200)
@@ -86,4 +69,3 @@ fn page_routes() -> Response {
     |> element.to_document_string_builder(),
   )
 }
->>>>>>> monorepo
