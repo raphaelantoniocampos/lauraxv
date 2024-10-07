@@ -308,13 +308,6 @@ pub fn view(model: model.Model) -> Element(msg.Msg) {
   )
 }
 
-// fn get_id_from_response(response: String) -> String {
-//   response
-//   |> string.trim
-//   |> string.crop(":")
-//   |> string.drop_left(1)
-// }
-
 pub fn update_countdown() -> Effect(msg.Msg) {
   let countdown =
     date.diff(
