@@ -7,7 +7,7 @@ pub fn event_view() -> Element(a) {
     h1(
       [
         attribute("style", "font-family: 'Pacifico', cursive;"),
-        class("text-5xl text-white font-bold mb-12"),
+        class("text-4xl text-white font-bold mb-12"),
       ],
       [text("Detalhes do Evento")],
     ),

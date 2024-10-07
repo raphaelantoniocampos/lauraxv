@@ -28,7 +28,7 @@ fn auth_admin_view(model: model.Model) -> Element(msg.Msg) {
     h1(
       [
         attribute("style", "font-family: 'Pacifico', cursive;"),
-        class("text-5xl text-white font-bold mb-12"),
+        class("text-4xl text-white font-bold mb-12"),
       ],
       [text("Lista de confirmados")],
     ),
@@ -41,16 +41,32 @@ fn auth_admin_view(model: model.Model) -> Element(msg.Msg) {
         ),
       ]),
     ]),
-    button(
-      [
-        class(
-          "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
-        ),
-        id("show_all"),
-        event.on_click(msg.AdminClickedShowAll),
-      ],
-      [text("Mostrar todos os dados")],
-    ),
+    case model.admin_settings.show_all {
+      True -> {
+        button(
+          [
+            class(
+              "bg-white hover:bg-emerald-300 text-emerald font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
+            ),
+            id("show_all"),
+            event.on_click(msg.AdminClickedShowAll),
+          ],
+          [text("Esconder dados")],
+        )
+      }
+      False -> {
+        button(
+          [
+            class(
+              "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
+            ),
+            id("show_all"),
+            event.on_click(msg.AdminClickedShowAll),
+          ],
+          [text("Mostrar todos os dados")],
+        )
+      }
+    },
     div([class("grid grid-cols-1 gap-6 w-full"), id("lista_confirmados")], {
       let confirmations = model.admin_settings.confirmations
       confirmations
@@ -136,7 +152,7 @@ fn details(confirmation: Confirmation) -> Element(a) {
       0 -> element.none()
       _ -> {
         div([], [
-          strong([], [text("Acompanhantes")]),
+          strong([], [text("Pessoas")]),
           ul(
             [class("list-disc ml-6 mt-2")],
             confirmation.people_names

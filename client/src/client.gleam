@@ -38,6 +38,7 @@ pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
     api.get_images(),
     api.get_comments(),
     api.get_auth_user(),
+    api.get_confirmation_data(),
     update_countdown(),
   ])
 }

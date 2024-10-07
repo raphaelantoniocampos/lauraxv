@@ -1,7 +1,6 @@
 import common.{type Gift, type SelectGift, Gift, SelectGift}
 import gleam/bool
 import gleam/dynamic
-import gleam/http.{Get, Post}
 import gleam/int
 import gleam/json
 import gleam/list
@@ -9,7 +8,7 @@ import gleam/option
 import gleam/result
 import server/db/gift
 import server/web
-import wisp.{type Request, type Response}
+import wisp.{type Response}
 
 fn gift_to_json(gift: Gift) {
   json.object([

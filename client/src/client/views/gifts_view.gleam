@@ -9,6 +9,39 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p}
 import lustre/event
 
+pub fn gifts_view(model: model.Model) -> Element(msg.Msg) {
+  main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
+    h1(
+      [
+        attribute("style", "font-family: 'Pacifico', cursive;"),
+        class("text-4xl text-white font-bold mb-12"),
+      ],
+      [text("Lista de Presentes")],
+    ),
+    h2([class("text-3xl text-white font-bold mb-6")], [
+      text("Sugestões de Presentes"),
+    ]),
+    div(
+      [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full")],
+      list.map(model.gift_status.sugestion, sugestion_gift),
+    ),
+    h2([class("text-3xl text-white font-bold mb-6 p-12")], [
+      text("Presentes Únicos"),
+    ]),
+    div(
+      [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")],
+      list.map(model.gift_status.unique, fn(gift) { unique_gift(model, gift) }),
+    ),
+    div([], [
+      case model.gift_status.error {
+        Some(err) ->
+          p([class("text-red-500 text-center")], [text("Erro: " <> err)])
+        None -> element.none()
+      },
+    ]),
+  ])
+}
+
 fn sugestion_gift(gift: Gift) -> Element(a) {
   div(
     [
@@ -131,38 +164,5 @@ fn selected_gift(gift: Gift) -> Element(a) {
       ],
       [text("Presente Selecionado")],
     ),
-  ])
-}
-
-pub fn gifts_view(model: model.Model) -> Element(msg.Msg) {
-  main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
-    h1(
-      [
-        attribute("style", "font-family: 'Pacifico', cursive;"),
-        class("text-5xl text-white font-bold mb-12 p-12"),
-      ],
-      [text("Lista de Presentes")],
-    ),
-    h2([class("text-3xl text-white font-bold mb-6")], [
-      text("Sugestões de Presentes"),
-    ]),
-    div(
-      [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full")],
-      list.map(model.gift_status.sugestion, sugestion_gift),
-    ),
-    h2([class("text-3xl text-white font-bold mb-6 p-12")], [
-      text("Presentes Únicos"),
-    ]),
-    div(
-      [class("grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full")],
-      list.map(model.gift_status.unique, fn(gift) { unique_gift(model, gift) }),
-    ),
-    div([], [
-      case model.gift_status.error {
-        Some(err) ->
-          p([class("text-red-500 text-center")], [text("Erro: " <> err)])
-        None -> element.none()
-      },
-    ]),
   ])
 }

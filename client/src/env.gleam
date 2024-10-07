@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pub fn get_api_url() {
 <<<<<<< HEAD
   "https://api-lauraxv.fly.dev/"
@@ -6,3 +7,6 @@ pub fn get_api_url() {
   "http://localhost:8083"
 >>>>>>> monorepo
 }
+=======
+pub fn get_api_url() { "http://localhost:8080" }
+>>>>>>> monorepo

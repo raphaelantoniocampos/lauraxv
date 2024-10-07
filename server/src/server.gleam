@@ -5,7 +5,6 @@ import server/router
 import wisp
 import wisp/wisp_mist
 
-//TODO: Deploy
 //TODO: Ultimos testes
 
 pub fn main() {
@@ -15,8 +14,16 @@ pub fn main() {
   let secret_key_base = cnf.secret_key_base
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   let ctx = Context(static_directory: static_directory(), port: cnf.port)
+=======
+  let url = case cnf.env {
+    config.Development -> "http://localhost:1234"
+    config.Production -> "https://lauraxv.fly.dev"
+  }
+  let ctx = Context(static_directory: static_directory(), url: url)
+>>>>>>> monorepo
 
   let handler = router.handle_request(_, ctx)
 

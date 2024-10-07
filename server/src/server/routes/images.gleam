@@ -4,6 +4,8 @@ import server/web
 import simplifile
 import wisp
 
+const gallery_path = "/static/images/gallery/"
+
 pub fn list_images() {
   let result = {
     use images <- result.try(
@@ -19,12 +21,12 @@ pub fn list_images() {
 
 fn images_to_json(images: List(String)) {
   json.array(images, fn(image) {
-    json.object([#("src", json.string(gallery_directory() <> image))])
+    json.object([#("src", json.string(gallery_path <> image))])
   })
   |> json.to_string_builder
 }
 
-fn gallery_directory() {
+pub fn gallery_directory() {
   let assert Ok(priv_directory) = wisp.priv_directory("server")
-  priv_directory <> "/static/images/gallery/"
+  priv_directory <> gallery_path
 }

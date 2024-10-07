@@ -4003,6 +4003,142 @@ function expect_json(decoder, to_msg) {
   );
 }
 
+<<<<<<< HEAD
+=======
+// build/dev/javascript/modem/modem.ffi.mjs
+var defaults = {
+  handle_external_links: false,
+  handle_internal_links: true
+};
+var initial_location = window?.location?.href;
+var do_init = (dispatch, options = defaults) => {
+  document.addEventListener("click", (event2) => {
+    const a2 = find_anchor(event2.target);
+    if (!a2)
+      return;
+    try {
+      const url = new URL(a2.href);
+      const uri = uri_from_url(url);
+      const is_external = url.host !== window.location.host;
+      if (!options.handle_external_links && is_external)
+        return;
+      if (!options.handle_internal_links && !is_external)
+        return;
+      event2.preventDefault();
+      if (!is_external) {
+        window.history.pushState({}, "", a2.href);
+        window.requestAnimationFrame(() => {
+          if (url.hash) {
+            document.getElementById(url.hash.slice(1))?.scrollIntoView();
+          }
+        });
+      }
+      return dispatch(uri);
+    } catch {
+      return;
+    }
+  });
+  window.addEventListener("popstate", (e) => {
+    e.preventDefault();
+    const url = new URL(window.location.href);
+    const uri = uri_from_url(url);
+    window.requestAnimationFrame(() => {
+      if (url.hash) {
+        document.getElementById(url.hash.slice(1))?.scrollIntoView();
+      }
+    });
+    dispatch(uri);
+  });
+  window.addEventListener("modem-push", ({ detail }) => {
+    dispatch(detail);
+  });
+  window.addEventListener("modem-replace", ({ detail }) => {
+    dispatch(detail);
+  });
+};
+var do_push = (uri) => {
+  window.history.pushState({}, "", to_string4(uri));
+  window.requestAnimationFrame(() => {
+    if (uri.fragment[0]) {
+      document.getElementById(uri.fragment[0])?.scrollIntoView();
+    }
+  });
+  window.dispatchEvent(new CustomEvent("modem-push", { detail: uri }));
+};
+var find_anchor = (el) => {
+  if (!el || el.tagName === "BODY") {
+    return null;
+  } else if (el.tagName === "A") {
+    return el;
+  } else {
+    return find_anchor(el.parentElement);
+  }
+};
+var uri_from_url = (url) => {
+  return new Uri(
+    /* scheme   */
+    url.protocol ? new Some(url.protocol.slice(0, -1)) : new None(),
+    /* userinfo */
+    new None(),
+    /* host     */
+    url.hostname ? new Some(url.hostname) : new None(),
+    /* port     */
+    url.port ? new Some(Number(url.port)) : new None(),
+    /* path     */
+    url.pathname,
+    /* query    */
+    url.search ? new Some(url.search.slice(1)) : new None(),
+    /* fragment */
+    url.hash ? new Some(url.hash.slice(1)) : new None()
+  );
+};
+
+// build/dev/javascript/modem/modem.mjs
+function init2(handler) {
+  return from2(
+    (dispatch) => {
+      return guard(
+        !is_browser(),
+        void 0,
+        () => {
+          return do_init(
+            (uri) => {
+              let _pipe = uri;
+              let _pipe$1 = handler(_pipe);
+              return dispatch(_pipe$1);
+            }
+          );
+        }
+      );
+    }
+  );
+}
+var relative = /* @__PURE__ */ new Uri(
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  "",
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None()
+);
+function push(path, query, fragment) {
+  return from2(
+    (_) => {
+      return guard(
+        !is_browser(),
+        void 0,
+        () => {
+          return do_push(
+            relative.withFields({ path, query, fragment })
+          );
+        }
+      );
+    }
+  );
+}
+
+>>>>>>> monorepo
 // build/dev/javascript/rada/rada_ffi.mjs
 function get_year_month_day() {
   let date = /* @__PURE__ */ new Date();
@@ -4819,11 +4955,14 @@ function message_error_decoder() {
   );
 }
 
+<<<<<<< HEAD
 // build/dev/javascript/client/env.mjs
 function get_api_url() {
   return "https://api-lauraxv.fly.dev/";
 }
 
+=======
+>>>>>>> monorepo
 // build/dev/javascript/client/client/api.mjs
 function validate_default(_, api_data) {
   let _pipe = [api_data, toList([])];
@@ -4858,9 +4997,10 @@ function validate_gift_status(model, gifts) {
   ];
   return new Ok(_pipe);
 }
+var api_url = "https://lauraxv.fly.dev";
 function login(model) {
   return post(
-    get_api_url() + "/api/auth/login",
+    api_url + "/api/auth/login",
     object2(
       toList([
         ["email", string2(model.login_form.email)],
@@ -4877,7 +5017,7 @@ function login(model) {
 }
 function signup(model) {
   return post(
-    get_api_url() + "/api/users",
+    api_url + "/api/users",
     object2(
       toList([
         [
@@ -4903,7 +5043,7 @@ function signup(model) {
   );
 }
 function get_auth_user() {
-  let url = get_api_url() + "/api/auth/validate";
+  let url = api_url + "/api/auth/validate";
   let decoder = decode4(
     (var0, var1, var2, var3) => {
       return new AuthUser(var0, var1, var2, var3);
@@ -4953,6 +5093,7 @@ function validate_login(model, data) {
     return new Error(effects2);
   }
 }
+<<<<<<< HEAD
 function validate_confirm_presence(model, data) {
   if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
     let effects2 = toList([get_auth_user()]);
@@ -4982,8 +5123,10 @@ function validate_confirm_presence(model, data) {
     return new Error(effects2);
   }
 }
+=======
+>>>>>>> monorepo
 function get_gifts() {
-  let url = get_api_url() + "/api/gifts";
+  let url = api_url + "/api/gifts";
   let decoder = list(
     decode5(
       (var0, var1, var2, var3, var4) => {
@@ -5043,7 +5186,7 @@ function validate_select_gift(model, data) {
   }
 }
 function get_images() {
-  let url = get_api_url() + "/api/images";
+  let url = api_url + "/api/images";
   let decoder = list(field("src", string));
   return get2(
     url,
@@ -5056,7 +5199,7 @@ function get_images() {
   );
 }
 function get_comments() {
-  let url = get_api_url() + "/api/comments";
+  let url = api_url + "/api/comments";
   let decoder = list(
     decode2(
       (var0, var1) => {
@@ -5076,8 +5219,41 @@ function get_comments() {
     )
   );
 }
+function validate_confirm_presence(model, data) {
+  if (data instanceof MessageErrorResponse && data.message instanceof Some && data.error instanceof None) {
+    let effects2 = toList([
+      push("/confirm", new None(), new None()),
+      get_auth_user(),
+      get_comments()
+    ]);
+    return new Ok([model, effects2]);
+  } else if (data instanceof MessageErrorResponse && data.error instanceof Some) {
+    let error = data.error[0];
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(new ConfirmUpdateError(new Some(error)));
+        }
+      )
+    ]);
+    return new Error(effects2);
+  } else {
+    let effects2 = toList([
+      from2(
+        (dispatch) => {
+          return dispatch(
+            new LoginUpdateError(
+              new Some("Problemas no servidor, por favor tente mais tarde.")
+            )
+          );
+        }
+      )
+    ]);
+    return new Error(effects2);
+  }
+}
 function get_confirmation_data() {
-  let url = get_api_url() + "/api/confirm";
+  let url = api_url + "/api/confirm";
   let confirmation_decoder = list(
     decode7(
       (var0, var1, var2, var3, var4, var5, var6) => {
@@ -5116,7 +5292,11 @@ function confirm_presence(model) {
       throw makeError(
         "let_assert",
         "client/api",
+<<<<<<< HEAD
         293,
+=======
+        302,
+>>>>>>> monorepo
         "confirm_presence",
         "Pattern match failed, no pattern matched the value.",
         { value: $ }
@@ -5131,7 +5311,7 @@ function confirm_presence(model) {
     return values(_pipe$1);
   })();
   return post(
-    get_api_url() + "/api/confirm",
+    api_url + "/api/confirm",
     object2(
       toList([
         ["id", int2(0)],
@@ -5169,7 +5349,7 @@ function select_gift(model, gift, to2) {
   if ($ instanceof Some) {
     let user = $[0];
     return post(
-      get_api_url() + "/api/gifts",
+      api_url + "/api/gifts",
       object2(
         toList([
           ["gift_id", int2(gift.id)],
@@ -5290,7 +5470,11 @@ function home_view(model) {
                     "rounded-full shadow-md transform hover:scale-105 transition duration-500 w-1/3"
                   ),
                   alt("Laura's Birthday"),
+<<<<<<< HEAD
                   src("./priv/static/images/profile.jpeg")
+=======
+                  src("/static/images/profile.jpeg")
+>>>>>>> monorepo
                 ])
               ),
               div(
@@ -6570,7 +6754,11 @@ function event_view() {
                 toList([
                   class$("rounded-lg shadow-lg w-full mb-8 lg:mb-0"),
                   alt("Local da Festa"),
+<<<<<<< HEAD
                   src("./priv/static/images/paiol.jpg")
+=======
+                  src("/static/images/paiol.jpg")
+>>>>>>> monorepo
                 ])
               )
             ])

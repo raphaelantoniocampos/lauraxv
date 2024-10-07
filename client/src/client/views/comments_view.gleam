@@ -8,11 +8,11 @@ import lustre/element/html.{div, h1, h2, li, main, p, ul}
 
 pub fn comments_view(model: model.Model) -> Element(a) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
-    div([class("text-center mt-12")], [
+    div([class("text-center")], [
       h1(
         [
           attribute("style", "font-family: 'Pacifico', cursive;"),
-          class("text-5xl text-white font-bold"),
+          class("text-4xl text-white font-bold"),
         ],
         [text("Comentários")],
       ),
@@ -39,7 +39,7 @@ pub fn comments_view(model: model.Model) -> Element(a) {
 fn comment_list_item(comment: Comment) -> Element(a) {
   case comment.name, comment.comment {
     name, Some(comment) if comment != "" -> {
-      li([], [
+      li([class("mb-6")], [
         div([class("space-y-6")], [
           div([class("bg-gray-100 p-6 rounded-lg shadow-inner")], [
             p([class("text-lg font-semibold text-pink-600")], [text(name)]),
