@@ -120,7 +120,6 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
       model.update_login_error(model, value) |> update.none
 
     msg.UserRequestedLoginSignUp -> {
-      // handle_login_signup(model)
       model |> update.effect(handle_login_signup(model))
     }
 
