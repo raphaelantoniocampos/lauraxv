@@ -211,16 +211,6 @@ pub fn get_auth_user() -> effect.Effect(msg.Msg) {
       dynamic.field("is_admin", dynamic.bool),
     )
 
-  // let req =   Request(
-  //   method: http.Get,
-  //   headers: List(Header),
-  //   body: body,
-  //   scheme: Scheme,
-  //   host: String,
-  //   port: Option(Int),
-  //   path: String,
-  //   query: Option(String),
-  // )
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.AuthUserRecieved))
 }
 

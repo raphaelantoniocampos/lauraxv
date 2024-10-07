@@ -175,20 +175,6 @@ pub fn turn_on_off_show_all(model: Model) -> Model {
   )
 }
 
-// pub type ConfirmForm {
-//   ConfirmForm(
-//     name: String,
-//     invite_name: String,
-//     email: String,
-//     phone: String,
-//     people_count: Int,
-//     person_name: String,
-//     people_names: dict.Dict(Int, String),
-//     comments: Option(String),
-//     error: Option(String),
-//   )
-// }
-
 pub fn update_confirm_name(model: Model, name: String) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, name: name))
 }
