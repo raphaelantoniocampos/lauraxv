@@ -6,9 +6,9 @@
 client/src/env.gleam
 
 # flyctl launch added from shared/.gitignore
-shared/**/*.beam
-shared/**/*.ez
-shared/build
-shared/**/erl_crash.dump
+common/**/*.beam
+common/**/*.ez
+common/build
+common/**/erl_crash.dump
 server/priv
 fly.toml
