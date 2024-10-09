@@ -5,8 +5,6 @@ import server/router
 import wisp
 import wisp/wisp_mist
 
-//TODO: Ultimos testes
-
 pub fn main() {
   wisp.configure_logger()
 
