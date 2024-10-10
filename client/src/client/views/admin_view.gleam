@@ -11,7 +11,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
 import lustre/event
 
-pub fn admin_view(model: model.Model) -> Element(msg.Msg) {
+pub fn admin_view2(model: model.Model) -> Element(msg.Msg) {
   case model.auth_user {
     None -> home_view(model)
     Some(user) -> {
@@ -21,6 +21,122 @@ pub fn admin_view(model: model.Model) -> Element(msg.Msg) {
       }
     }
   }
+}
+
+pub fn admin_view(model: model.Model) -> Element(msg.Msg) {
+  html.main([attribute.class("bg-gray-100")], [
+    html.nav([attribute.class("bg-blue-500 text-white p-4")], [
+      html.ul([attribute.class("flex justify-around")], [
+        html.li([], [
+          html.a([attribute.class("hover:text-gray-200"), attribute.href("#")], [
+            html.text("Feed"),
+          ]),
+        ]),
+        html.li([], [
+          html.a([attribute.class("hover:text-gray-200"), attribute.href("#")], [
+            html.text("Novo"),
+          ]),
+        ]),
+        html.li([], [
+          html.a([attribute.class("hover:text-gray-200"), attribute.href("#")], [
+            html.text("Perfil"),
+          ]),
+        ]),
+        html.li([], [
+          html.button(
+            [
+              attribute.class("hover:text-gray-200"),
+              attribute.id("configButton"),
+            ],
+            [html.text("Configurações")],
+          ),
+        ]),
+      ]),
+    ]),
+    html.div(
+      [
+        attribute.class(
+          "absolute hidden bg-white border border-gray-300 shadow-lg rounded-lg mt-2 p-4 w-64",
+        ),
+        attribute.id("configBox"),
+      ],
+      [
+        html.ul([attribute.class("space-y-2")], [
+          html.li([], [
+            html.a(
+              [
+                attribute.class("block text-gray-700 hover:text-blue-500"),
+                attribute.href("#"),
+              ],
+              [html.text("Editar conta")],
+            ),
+          ]),
+          html.li([], [
+            html.a(
+              [
+                attribute.class("block text-gray-700 hover:text-blue-500"),
+                attribute.href("#"),
+              ],
+              [html.text("Editar imagens")],
+            ),
+          ]),
+          html.li([], [
+            html.a(
+              [
+                attribute.class("block text-gray-700 hover:text-blue-500"),
+                attribute.href("#"),
+              ],
+              [html.text("Preferências de pagamento")],
+            ),
+          ]),
+          html.li([], [
+            html.a(
+              [
+                attribute.class("block text-gray-700 hover:text-blue-500"),
+                attribute.href("#"),
+              ],
+              [html.text("Alterar modo de uso")],
+            ),
+          ]),
+        ]),
+      ],
+    ),
+    html.div([attribute.class("p-8")], [
+      html.p([attribute.class("text-lg text-gray-700")], [
+        html.text(
+          "Aqui está uma frase aleatória para preencher o espaço. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nec lacus a ante aliquet vehicula.",
+        ),
+      ]),
+    ]),
+    //     html.script([], [
+  //       html.text(
+  //         "const configButton = document.getElementById('configButton');
+  //   const configBox = document.getElementById('configBox');
+  //
+  //   // Mostrar/Ocultar a caixa de configurações
+  //   configButton.addEventListener('click', (e) => {
+  //     // Verifica se a caixa está oculta, e a exibe ou a esconde
+  //     if (configBox.classList.contains('hidden')) {
+  //       // Posiciona a caixa abaixo do botão \"Configurações\"
+  //       const rect = configButton.getBoundingClientRect();
+  //       configBox.style.top = `${rect.bottom + window.scrollY}px`;
+  //       configBox.style.left = `${rect.left}px`;
+  //       configBox.classList.remove('hidden');
+  //     } else {
+  //       configBox.classList.add('hidden');
+  //     }
+  //   });
+  //
+  //   // Fecha a caixa de configurações se clicar fora dela
+  //   window.addEventListener('click', (e) => {
+  //     if (!configBox.contains(e.target) && e.target !== configButton) {
+  //       configBox.classList.add('hidden');
+  //     }
+  //   });
+  // ",
+  //       ),
+  //     ]),
+  ])
 }
 
 fn auth_admin_view(model: model.Model) -> Element(msg.Msg) {
