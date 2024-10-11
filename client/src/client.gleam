@@ -23,13 +23,24 @@ import lustre/attribute.{class, id}
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div}
+import lustre/event
 import lustre_http
 import modem
 import rada/date
+import tardis
+
+// pub fn main() {
+//   lustre.application(init, update, view)
+//   |> lustre.start("#app", Nil)
+// }
 
 pub fn main() {
+  let assert Ok(main) = tardis.single("main")
+
   lustre.application(init, update, view)
+  |> tardis.wrap(with: main)
   |> lustre.start("#app", Nil)
+  |> tardis.activate(with: main)
 }
 
 pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
@@ -278,8 +289,10 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
           },
         ],
       )
-    msg.UserClickedProfile -> model.switch_profile_menu(model) |> update.none
-    msg.ToggleMobileMenu -> model.switch_mobile_menu(model) |> update.none
+    msg.ToggleProfileMenu(to) ->
+      model.toggle_profile_menu(model, to) |> update.none
+    msg.ToggleMobileMenu(to) ->
+      model.toggle_mobile_menu(model, to) |> update.none
   }
 }
 

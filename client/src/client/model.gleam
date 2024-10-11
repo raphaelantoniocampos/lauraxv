@@ -233,10 +233,10 @@ pub fn update_confirm_error(model: Model, error: Option(String)) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, error: error))
 }
 
-pub fn switch_profile_menu(model: Model) -> Model {
-  Model(..model, show_profile_menu: !model.show_profile_menu)
+pub fn toggle_profile_menu(model: Model, to: Bool) -> Model {
+  Model(..model, show_profile_menu: to)
 }
 
-pub fn switch_mobile_menu(model: Model) -> Model {
-  Model(..model, show_mobile_menu: !model.show_mobile_menu)
+pub fn toggle_mobile_menu(model: Model, to: Bool) -> Model {
+  Model(..model, show_mobile_menu: to)
 }

@@ -58,8 +58,8 @@ pub type Msg {
   ConfirmPresenceResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
-  UserClickedProfile
-  ToggleMobileMenu
+  ToggleProfileMenu(to: Bool)
+  ToggleMobileMenu(to: Bool)
 }
 
 pub type MessageErrorResponse {

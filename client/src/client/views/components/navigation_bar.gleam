@@ -16,39 +16,37 @@ pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
       ),
     ],
     [
-      div([class("sm:hidden flex min-w-10 text-pink-600 font-semibold")], [
-        a(
-          [
-            class("text-2xl hover:text-emerald-800 transition duration-300"),
-            href("../"),
-          ],
-          [text("\u{21B6}")],
-        ),
-      ]),
-      case model.auth_user {
-        Some(_) -> div([], [])
-        None -> element.none()
-      },
+      div(
+        [class("hidden lg:visible flex min-w-10 text-pink-600 font-semibold")],
+        [
+          a(
+            [
+              class("text-2xl hover:text-emerald-800 transition duration-300"),
+              href("../"),
+            ],
+            [text("\u{21B6}")],
+          ),
+        ],
+      ),
       div([class("inline-block lg:hidden")], [
         button(
           [
             class(
               "text-pink-600 font-semibold hover:text-emerald-800 transition duration-300 text-base p-2 m-0 h-auto w-auto",
             ),
-            event.on_click(msg.ToggleMobileMenu),
+            event.on_click(msg.ToggleMobileMenu(!model.show_mobile_menu)),
           ],
-          [text("Menu"), icon.hamburger_menu([class("w-6 h-6")])],
-          // ajusta o tamanho do ícone
+          [icon.hamburger_menu([class("w-6 h-6")])],
         ),
+        case model.show_mobile_menu {
+          True -> {
+            mobile_menu(model)
+          }
+          False -> {
+            element.none()
+          }
+        },
       ]),
-      case model.show_mobile_menu {
-        True -> {
-          mobile_menu(model)
-        }
-        False -> {
-          element.none()
-        }
-      },
       wide_menu(model),
       case model.auth_user {
         None -> {
@@ -100,7 +98,7 @@ fn user_menu(model: model.Model, user: model.AuthUser) -> Element(msg.Msg) {
             class(
               "text-pink-600 font-semibold flex items-center space-x-2 hover:text-emerald-800",
             ),
-            event.on_click(msg.UserClickedProfile),
+            event.on_click(msg.ToggleProfileMenu(!model.show_profile_menu)),
           ],
           [span([], [text("Olá, " <> user.username)])],
         ),
@@ -119,6 +117,7 @@ fn profile_menu(user: model.AuthUser) -> Element(msg.Msg) {
       class(
         "absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-10",
       ),
+      event.on_mouse_leave(msg.ToggleProfileMenu(False)),
     ],
     [
       case user.is_confirmed {
@@ -173,15 +172,16 @@ fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
   div(
     [
       class(
-        "absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-10 flex flex-col space-y-2",
-        // adiciona flex-col e space-y-2 para espaçamento vertical
+        "absolute mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-10 flex flex-col space-y-2",
       ),
+      event.on_mouse_leave(msg.ToggleMobileMenu(False)),
     ],
     [
       a(
         [
+          // class("block px-4 py-2 text-pink-600 hover:text-emerald-800"),
           class(
-            "hover:text-emerald-800 "
+            "font-semibold block px-4 py-2 hover:text-emerald-800 "
             <> case model.route {
               router.Home -> "text-emerald-600"
               _ -> "text-pink-600"
@@ -195,7 +195,7 @@ fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
       a(
         [
           class(
-            "hover:text-emerald-800 "
+            "font-semibold block px-4 py-2 hover:text-emerald-800 "
             <> case model.route {
               router.Event -> "text-emerald-600"
               _ -> "text-pink-600"
@@ -209,7 +209,7 @@ fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
       a(
         [
           class(
-            "hover:text-emerald-800 "
+            "font-semibold block px-4 py-2 hover:text-emerald-800 "
             <> case model.route {
               router.Gifts -> "text-emerald-600"
               _ -> "text-pink-600"
@@ -224,7 +224,7 @@ fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
       a(
         [
           class(
-            "hover:text-emerald-800 "
+            "font-semibold block px-4 py-2 hover:text-emerald-800 "
             <> case model.route {
               router.Gallery -> "text-emerald-600"
               _ -> "text-pink-600"
@@ -239,7 +239,7 @@ fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
       a(
         [
           class(
-            "hover:text-emerald-800 "
+            "font-semibold block px-4 py-2 hover:text-emerald-800 "
             <> case model.route {
               router.Comments -> "text-emerald-600"
               _ -> "text-pink-600"
