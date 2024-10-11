@@ -199,6 +199,14 @@ pub fn signup(model: model.Model) -> effect.Effect(msg.Msg) {
   )
 }
 
+pub fn logout(model _: model.Model) {
+  lustre_http.post(
+    get_api_url() <> "/api/auth/logout",
+    json.object([]),
+    lustre_http.expect_json(msg.message_error_decoder(), msg.LogoutResponded),
+  )
+}
+
 pub fn get_auth_user() -> effect.Effect(msg.Msg) {
   let url = get_api_url() <> "/api/auth/validate"
 

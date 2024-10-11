@@ -32,6 +32,10 @@ pub type Msg {
   SignUpResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
+  UserRequestedLogout
+  LogoutResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
 
   UserOpenedGiftsView
   UserOpenedGalleryView

@@ -3,6 +3,7 @@ import gleam/http.{Get, Post}
 import lustre/element
 import server/config.{type Context}
 import server/routes/auth/login
+import server/routes/auth/logout
 import server/routes/auth/validate
 import server/routes/comments
 import server/routes/confirmations
@@ -38,6 +39,7 @@ pub fn handle_get(req: Request) {
     ["api", "confirm"] -> confirmations.list_confirmations()
     ["api", "comments"] -> comments.list_comments()
     ["api", "auth", "validate"] -> validate.validate_session(req)
+    ["api", "auth", "logout"] -> logout.logout(req)
     _ -> wisp.not_found()
   }
 }

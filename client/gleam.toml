@@ -25,7 +25,6 @@ rada = ">= 0.4.0 and < 1.0.0"
 lustre_ui = ">= 0.6.0 and < 1.0.0"
 decode = ">= 0.2.1 and < 1.0.0"
 modem = ">= 2.0.1 and < 3.0.0"
-tardis = ">= 0.1.0 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

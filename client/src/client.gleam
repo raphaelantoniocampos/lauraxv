@@ -23,25 +23,25 @@ import lustre/attribute.{class, id}
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div}
-import lustre/event
 import lustre_http
 import modem
 import rada/date
-import tardis
 
-// pub fn main() {
-//   lustre.application(init, update, view)
-//   |> lustre.start("#app", Nil)
-// }
+// import tardis
 
 pub fn main() {
-  let assert Ok(main) = tardis.single("main")
-
   lustre.application(init, update, view)
-  |> tardis.wrap(with: main)
   |> lustre.start("#app", Nil)
-  |> tardis.activate(with: main)
 }
+
+// pub fn main() {
+//   let assert Ok(main) = tardis.single("main")
+//
+//   lustre.application(init, update, view)
+//   |> tardis.wrap(with: main)
+//   |> lustre.start("#app", Nil)
+//   |> tardis.activate(with: main)
+// }
 
 pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   model.init()
@@ -174,6 +174,18 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
           },
         ],
       )
+
+    msg.UserRequestedLogout -> model |> update.effect(api.logout(model))
+
+    msg.LogoutResponded(_) ->
+      model.init()
+      |> update.effects([
+        api.get_gifts(),
+        api.get_images(),
+        api.get_comments(),
+        api.get_confirmation_data(),
+        update_countdown(),
+      ])
 
     msg.UserOpenedGiftsView ->
       case model.gift_status.sugestion, model.gift_status.unique {
