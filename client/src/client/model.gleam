@@ -20,6 +20,8 @@ pub type Model {
     event_countdown: Int,
     admin_settings: AdminSettings,
     comments: List(common.Comment),
+    show_profile_menu: Bool,
+    show_mobile_menu: Bool,
   )
 }
 
@@ -80,6 +82,8 @@ pub fn init() -> Model {
     event_countdown: 0,
     admin_settings: AdminSettings(0, [], dict.new(), False),
     comments: [],
+    show_profile_menu: False,
+    show_mobile_menu: False,
   )
 }
 
@@ -227,4 +231,12 @@ pub fn update_confirm_comments(model: Model, comments: String) -> Model {
 
 pub fn update_confirm_error(model: Model, error: Option(String)) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, error: error))
+}
+
+pub fn switch_profile_menu(model: Model) -> Model {
+  Model(..model, show_profile_menu: !model.show_profile_menu)
+}
+
+pub fn switch_mobile_menu(model: Model) -> Model {
+  Model(..model, show_mobile_menu: !model.show_mobile_menu)
 }

@@ -278,6 +278,8 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
           },
         ],
       )
+    msg.UserClickedProfile -> model.switch_profile_menu(model) |> update.none
+    msg.ToggleMobileMenu -> model.switch_mobile_menu(model) |> update.none
   }
 }
 
