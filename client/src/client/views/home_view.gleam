@@ -1,11 +1,11 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import gleam/int
 import lustre/attribute.{alt, attribute, class, href, id, src}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p, span}
 
-pub fn home_view(model: model.Model) -> Element(msg.Msg) {
+pub fn home_view(model: model.Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -44,7 +44,7 @@ pub fn home_view(model: model.Model) -> Element(msg.Msg) {
             ]),
             div([class("flex-1 sm:ml-12 text-center sm:text-left")], [
               h1([class("text-2xl sm:text-3xl font-bold text-pink-600 mb-4")], [
-                text("Aniversário de 15 Anos de Laura"),
+                text("Aniversário de 15 Anos da Laura"),
               ]),
               p([class("text-gray-600 text-lg mb-6")], [
                 text(
@@ -75,11 +75,11 @@ pub fn home_view(model: model.Model) -> Element(msg.Msg) {
         div([class("bg-gray-100 p-6 rounded-lg shadow-inner")], [
           h2(
             [class("text-2xl sm:text-3xl font-semibold text-emerald-600 mb-4")],
-            [text("Sobre Laura")],
+            [text("Sobre Mim")],
           ),
           p([class("text-gray-700 text-lg")], [
             text(
-              "Laura está completando 15 anos e queremos celebrar com todos que fazem parte de sua vida. A festa será cheia de alegria, música, e muita diversão. Não perca!",
+              "Estou completando 15 anos e quero celebrar com todos que fazem parte da minha vida. A festa será cheia de alegria, música, e muita diversão. Não perca!",
             ),
           ]),
         ]),

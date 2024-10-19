@@ -1,5 +1,5 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import gleam/option.{None, Some}
 import lustre/attribute.{
   attribute, autocomplete, class, for, id, required, type_, value,
@@ -8,7 +8,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, form, h1, input, label, main, p}
 import lustre/event
 
-pub fn login_view(model: model.Model) -> Element(msg.Msg) {
+pub fn login_view(model: model.Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     div([class("w-full max-w-md p-8 bg-white rounded-lg shadow-lg")], [
       h1(

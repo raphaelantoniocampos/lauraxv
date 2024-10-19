@@ -1,5 +1,5 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import client/views/home_view.{home_view}
 import common.{type Confirmation}
 import gleam/dict
@@ -11,7 +11,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
 import lustre/event
 
-pub fn admin_view(model: model.Model) -> Element(msg.Msg) {
+pub fn admin_view(model: model.Model) -> Element(Msg) {
   case model.auth_user {
     None -> home_view(model)
     Some(user) -> {
@@ -23,7 +23,7 @@ pub fn admin_view(model: model.Model) -> Element(msg.Msg) {
   }
 }
 
-fn auth_admin_view(model: model.Model) -> Element(msg.Msg) {
+fn auth_admin_view(model: model.Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -78,7 +78,7 @@ fn auth_admin_view(model: model.Model) -> Element(msg.Msg) {
 fn confirmation_box(
   model: model.Model,
   confirmation: Confirmation,
-) -> Element(msg.Msg) {
+) -> Element(Msg) {
   div(
     [
       class(

@@ -1,5 +1,5 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import client/views/login_view.{login_view}
 import gleam/int
 import gleam/list
@@ -14,7 +14,7 @@ import lustre/element/html.{
 }
 import lustre/event
 
-fn name_box_element(model: model.Model, n: Int) -> Element(msg.Msg) {
+fn name_box_element(model: model.Model, n: Int) -> Element(Msg) {
   let string_n = { n + 1 } |> int.to_string
   element.element("name_box", [], [
     case n {
@@ -94,7 +94,7 @@ fn confirmed_user_view() -> Element(a) {
   ])
 }
 
-pub fn confirm_presence_view(model: model.Model) -> Element(msg.Msg) {
+pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
   case model.auth_user {
     None -> login_view(model)
     Some(user) ->

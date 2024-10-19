@@ -1,5 +1,5 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import common.{
   type Comment, type Confirmation, type Gift, Comment, Confirmation, Gift,
 }
@@ -57,10 +57,7 @@ pub fn validate_gift_status(
 pub fn validate_login(
   model: model.Model,
   data: msg.MessageErrorResponse,
-) -> Result(
-  #(model.Model, List(effect.Effect(msg.Msg))),
-  List(effect.Effect(msg.Msg)),
-) {
+) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
       let updated_model = model.reset_login_form(model)
@@ -97,10 +94,7 @@ pub fn validate_login(
 pub fn validate_select_gift(
   model: model.Model,
   data: msg.MessageErrorResponse,
-) -> Result(
-  #(model.Model, List(effect.Effect(msg.Msg))),
-  List(effect.Effect(msg.Msg)),
-) {
+) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
       let effects = [get_gifts()]
@@ -135,10 +129,7 @@ pub fn validate_select_gift(
 pub fn validate_confirm_presence(
   model: model.Model,
   data: msg.MessageErrorResponse,
-) -> Result(
-  #(model.Model, List(effect.Effect(msg.Msg))),
-  List(effect.Effect(msg.Msg)),
-) {
+) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
       let effects = [
@@ -175,7 +166,7 @@ pub fn validate_confirm_presence(
   }
 }
 
-pub fn login(model: model.Model) -> effect.Effect(msg.Msg) {
+pub fn login(model: model.Model) -> effect.Effect(Msg) {
   lustre_http.post(
     get_api_url() <> "/api/auth/login",
     json.object([
@@ -186,7 +177,7 @@ pub fn login(model: model.Model) -> effect.Effect(msg.Msg) {
   )
 }
 
-pub fn signup(model: model.Model) -> effect.Effect(msg.Msg) {
+pub fn signup(model: model.Model) -> effect.Effect(Msg) {
   lustre_http.post(
     get_api_url() <> "/api/users",
     json.object([
@@ -207,7 +198,7 @@ pub fn logout(model _: model.Model) {
   )
 }
 
-pub fn get_auth_user() -> effect.Effect(msg.Msg) {
+pub fn get_auth_user() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/auth/validate"
 
   let decoder =
@@ -222,7 +213,7 @@ pub fn get_auth_user() -> effect.Effect(msg.Msg) {
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.AuthUserRecieved))
 }
 
-pub fn get_gifts() -> effect.Effect(msg.Msg) {
+pub fn get_gifts() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/gifts"
   let decoder =
     dynamic.list(dynamic.decode5(
@@ -246,14 +237,14 @@ pub fn get_gifts() -> effect.Effect(msg.Msg) {
   )
 }
 
-pub fn get_images() -> effect.Effect(msg.Msg) {
+pub fn get_images() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/images"
   let decoder = dynamic.list(dynamic.field("src", dynamic.string))
 
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.ImagesRecieved))
 }
 
-pub fn get_comments() -> effect.Effect(msg.Msg) {
+pub fn get_comments() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/comments"
 
   let decoder =
@@ -265,7 +256,7 @@ pub fn get_comments() -> effect.Effect(msg.Msg) {
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.CommentsRecieved))
 }
 
-pub fn get_confirmation_data() -> effect.Effect(msg.Msg) {
+pub fn get_confirmation_data() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/confirm"
   let confirmation_decoder =
     dynamic.list(dynamic.decode7(
@@ -292,7 +283,7 @@ pub fn get_confirmation_data() -> effect.Effect(msg.Msg) {
   )
 }
 
-pub fn confirm_presence(model: model.Model) -> effect.Effect(msg.Msg) {
+pub fn confirm_presence(model: model.Model) -> effect.Effect(Msg) {
   let user_id = {
     let assert Ok(user) =
       option.to_result(model.auth_user, "Usuário não está logado")
@@ -335,7 +326,7 @@ pub fn select_gift(
   model: model.Model,
   gift: Gift,
   to: Bool,
-) -> effect.Effect(msg.Msg) {
+) -> effect.Effect(Msg) {
   case model.auth_user {
     Some(user) -> {
       lustre_http.post(

@@ -1,5 +1,5 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import common.{type Gift, Gift}
 import gleam/int
 import gleam/list
@@ -9,7 +9,7 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p}
 import lustre/event
 
-pub fn gifts_view(model: model.Model) -> Element(msg.Msg) {
+pub fn gifts_view(model: model.Model) -> Element(Msg) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
     h1(
       [
@@ -62,7 +62,7 @@ fn sugestion_gift(gift: Gift) -> Element(a) {
   )
 }
 
-fn unique_gift(model: model.Model, gift: Gift) -> Element(msg.Msg) {
+fn unique_gift(model: model.Model, gift: Gift) -> Element(Msg) {
   case gift.link, gift.selected_by, model.auth_user {
     Some(link), Some(selected_by), Some(user) if selected_by == user.user_id -> {
       selected_by_user_gift(gift, link)
@@ -73,7 +73,7 @@ fn unique_gift(model: model.Model, gift: Gift) -> Element(msg.Msg) {
   }
 }
 
-fn unselected_gift(gift: Gift, link: String) -> Element(msg.Msg) {
+fn unselected_gift(gift: Gift, link: String) -> Element(Msg) {
   div(
     [
       class(
@@ -109,7 +109,7 @@ fn unselected_gift(gift: Gift, link: String) -> Element(msg.Msg) {
   )
 }
 
-fn selected_by_user_gift(gift: Gift, link: String) -> Element(msg.Msg) {
+fn selected_by_user_gift(gift: Gift, link: String) -> Element(Msg) {
   div(
     [
       class(

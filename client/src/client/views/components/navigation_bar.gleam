@@ -1,5 +1,5 @@
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import client/router
 import gleam/option.{None, Some}
 import lustre/attribute.{class, href}
@@ -8,7 +8,7 @@ import lustre/element/html.{a, button, div, li, nav, span, ul}
 import lustre/event
 import lustre/ui/icon
 
-pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
+pub fn navigation_bar_view(model: model.Model) -> Element(Msg) {
   nav(
     [
       class(
@@ -81,7 +81,7 @@ pub fn navigation_bar_view(model: model.Model) -> Element(msg.Msg) {
   )
 }
 
-fn user_menu(model: model.Model, user: model.AuthUser) -> Element(msg.Msg) {
+fn user_menu(model: model.Model, user: model.AuthUser) -> Element(Msg) {
   div([class("flex items-center space-x-4")], [
     case user.is_confirmed {
       True -> element.none()
@@ -115,7 +115,7 @@ fn user_menu(model: model.Model, user: model.AuthUser) -> Element(msg.Msg) {
   ])
 }
 
-fn profile_menu(user: model.AuthUser) -> Element(msg.Msg) {
+fn profile_menu(user: model.AuthUser) -> Element(Msg) {
   div(
     [
       class(
@@ -161,7 +161,7 @@ fn profile_menu(user: model.AuthUser) -> Element(msg.Msg) {
   )
 }
 
-fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
+fn mobile_menu(model: model.Model) -> Element(Msg) {
   div(
     [
       class(
@@ -247,7 +247,7 @@ fn mobile_menu(model: model.Model) -> Element(msg.Msg) {
   )
 }
 
-fn wide_menu(model: model.Model) -> Element(msg.Msg) {
+fn wide_menu(model: model.Model) -> Element(Msg) {
   div(
     [
       // "hidden lg:flex flex-grow lg:items-center lg:w-auto w-full lg:justify-center space-y-4 lg:space-y-0 font-semibold",
