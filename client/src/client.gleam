@@ -1,6 +1,6 @@
 import client/api
 import client/model
-import client/msg
+import client/msg.{type Msg}
 import client/router
 import client/update
 import client/views/admin_view.{admin_view}
@@ -43,7 +43,7 @@ pub fn main() {
 //   |> tardis.activate(with: main)
 // }
 
-pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
+pub fn init(_) -> #(model.Model, Effect(Msg)) {
   model.init()
   |> update.effects([
     modem.init(on_url_change),
@@ -56,11 +56,11 @@ pub fn init(_) -> #(model.Model, Effect(msg.Msg)) {
   ])
 }
 
-fn on_url_change(_uri: Uri) -> msg.Msg {
+fn on_url_change(_uri: Uri) -> Msg {
   msg.OnRouteChange(router.get_route())
 }
 
-fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
+fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
   case msg {
     msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
     msg.AuthUserRecieved(user_result) ->
@@ -308,7 +308,7 @@ fn update(model: model.Model, msg: msg.Msg) -> #(model.Model, Effect(msg.Msg)) {
   }
 }
 
-pub fn view(model: model.Model) -> Element(msg.Msg) {
+pub fn view(model: model.Model) -> Element(Msg) {
   body(
     [
       class(
@@ -335,7 +335,7 @@ pub fn view(model: model.Model) -> Element(msg.Msg) {
   )
 }
 
-pub fn update_countdown() -> Effect(msg.Msg) {
+pub fn update_countdown() -> Effect(Msg) {
   let countdown =
     date.diff(
       date.Days,
@@ -350,13 +350,10 @@ fn handle_api_response(
   model: model.Model,
   response: Result(data, lustre_http.HttpError),
   validate_data: fn(model.Model, data) ->
-    Result(
-      #(model_data, List(effect.Effect(msg.Msg))),
-      List(effect.Effect(msg.Msg)),
-    ),
+    Result(#(model_data, List(effect.Effect(Msg))), List(effect.Effect(Msg))),
   apply_update: fn(model.Model, model_data) -> model.Model,
-  error_effects: List(Effect(msg.Msg)),
-) -> #(model.Model, effect.Effect(msg.Msg)) {
+  error_effects: List(Effect(Msg)),
+) -> #(model.Model, effect.Effect(Msg)) {
   case response {
     Ok(api_data) -> {
       case model |> validate_data(api_data) {
@@ -370,7 +367,7 @@ fn handle_api_response(
   }
 }
 
-fn handle_login_signup(model: model.Model) -> effect.Effect(msg.Msg) {
+fn handle_login_signup(model: model.Model) -> effect.Effect(Msg) {
   case model.login_form.sign_up {
     True -> api.signup(model)
     False -> api.login(model)
