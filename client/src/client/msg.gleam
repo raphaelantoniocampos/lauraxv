@@ -49,7 +49,7 @@ pub type Msg {
   )
   GiftUpdateError(value: Option(String))
 
-  UserRequestedValidadeEmail(value: String)
+  UserRequestedValidateEmail(value: String)
   ConfirmUpdateName(value: String)
   ConfirmUpdateInviteName(value: String)
   ConfirmUpdateEmail(value: String)

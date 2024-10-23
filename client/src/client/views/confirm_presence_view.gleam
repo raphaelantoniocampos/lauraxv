@@ -5,8 +5,8 @@ import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{
-  attribute, class, for, href, id, max, min, name, pattern, placeholder,
-  required, type_, value,
+  attribute, class, disabled, for, href, id, max, min, name, pattern,
+  placeholder, required, type_, value,
 }
 import lustre/element.{type Element, text}
 import lustre/element/html.{
@@ -31,6 +31,10 @@ fn name_box_element(model: model.Model, n: Int) -> Element(Msg) {
             class(
               "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
             ),
+            case model.confirm_form.validated {
+              False -> disabled(True)
+              True -> disabled(False)
+            },
             required(True),
             name("people_names_" <> string_n),
             id("people_names_" <> string_n),
@@ -107,7 +111,7 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
       form(
         [class("space-y-6"), event.on_submit(msg.UserRequestedConfirmPresence)],
         [
-          div([class("mb-4")], [
+          div([class("mt-8 mb-10")], [
             label(
               [class("block text-sm font-medium text-gray-700"), for("email")],
               [text("Email")],
@@ -128,7 +132,7 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
                 class(
                   "mt-4 w-full bg-pink-500 text-white font-medium py-2 rounded-md hover:bg-pink-600 transition duration-300",
                 ),
-                event.on_click(msg.UserRequestedValidadeEmail(
+                event.on_click(msg.UserRequestedValidateEmail(
                   model.confirm_form.email,
                 )),
               ],
@@ -147,6 +151,10 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
               class(
                 "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
+              case model.confirm_form.validated {
+                False -> disabled(True)
+                True -> disabled(False)
+              },
               required(True),
               name("first_name"),
               id("first_name"),
@@ -167,6 +175,10 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
               class(
                 "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
+              case model.confirm_form.validated {
+                False -> disabled(True)
+                True -> disabled(False)
+              },
               required(True),
               name("invite_name"),
               id("invite_name"),
@@ -184,6 +196,10 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
               class(
                 "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
+              case model.confirm_form.validated {
+                False -> disabled(True)
+                True -> disabled(False)
+              },
               required(True),
               placeholder("Digite apenas números"),
               pattern("\\d{4,15}"),
@@ -206,6 +222,10 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
               class(
                 "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
+              case model.confirm_form.validated {
+                False -> disabled(True)
+                True -> disabled(False)
+              },
               required(True),
               min("1"),
               max("99"),
@@ -241,6 +261,10 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
               class(
                 "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
+              case model.confirm_form.validated {
+                False -> disabled(True)
+                True -> disabled(False)
+              },
               name("comments"),
               id("comments"),
               type_("text"),

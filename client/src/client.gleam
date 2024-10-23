@@ -225,7 +225,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
     msg.GiftUpdateError(value) ->
       model.update_gift_error(model, value) |> update.none
 
-    msg.UserRequestedValidadeEmail(value) -> model |> update.none
+    msg.UserRequestedValidateEmail(value) -> model |> update.none
 
     msg.ConfirmUpdateName(value) ->
       model.update_confirm_name(model, value) |> update.none

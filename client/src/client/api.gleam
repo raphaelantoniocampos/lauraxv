@@ -258,10 +258,11 @@ pub fn get_comments() -> effect.Effect(Msg) {
 pub fn get_confirmation_data() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/confirm"
   let confirmation_decoder =
-    dynamic.list(dynamic.decode7(
+    dynamic.list(dynamic.decode8(
       Confirmation,
       dynamic.field("id", dynamic.int),
       dynamic.field("user_id", dynamic.int),
+      dynamic.field("email", dynamic.string),
       dynamic.field("name", dynamic.string),
       dynamic.field("invite_name", dynamic.string),
       dynamic.field("phone", dynamic.string),
@@ -299,6 +300,7 @@ pub fn confirm_presence(model: model.Model) -> effect.Effect(Msg) {
     json.object([
       #("id", json.int(0)),
       #("user_id", json.int(user_id)),
+      #("email", json.string(model.confirm_form.email)),
       #("name", json.string(model.confirm_form.name)),
       #("invite_name", json.string(model.confirm_form.invite_name)),
       #("phone", json.string(model.confirm_form.phone)),

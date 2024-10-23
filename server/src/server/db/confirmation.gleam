@@ -21,6 +21,7 @@ pub type ListConfirmationDBRow {
   ListConfirmationDBRow(
     id: Int,
     user_id: Int,
+    email: String,
     name: String,
     invite_name: String,
     phone: String,
@@ -32,6 +33,7 @@ pub type ListConfirmationDBRow {
 pub type CreateConfirmation {
   CreateConfirmation(
     user_id: Int,
+    email: String,
     name: String,
     invite_name: String,
     phone: String,
@@ -70,6 +72,7 @@ pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
               Confirmation(
                 id: first_row.id,
                 user_id: first_row.user_id,
+                email: first_row.email,
                 name: first_row.name,
                 invite_name: first_row.invite_name,
                 phone: first_row.phone,
@@ -80,6 +83,7 @@ pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
               Confirmation(
                 id: 0,
                 user_id: 0,
+                email: "",
                 name: "",
                 invite_name: "",
                 phone: "",
@@ -96,28 +100,30 @@ pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
 }
 
 pub fn list_confirmation_db_decoder() {
-  dynamic.decode7(
+  dynamic.decode8(
     ListConfirmationDBRow,
     dynamic.element(0, dynamic.int),
     dynamic.element(1, dynamic.int),
     dynamic.element(2, dynamic.string),
     dynamic.element(3, dynamic.string),
     dynamic.element(4, dynamic.string),
-    dynamic.element(5, dynamic.optional(dynamic.string)),
+    dynamic.element(5, dynamic.string),
     dynamic.element(6, dynamic.optional(dynamic.string)),
+    dynamic.element(7, dynamic.optional(dynamic.string)),
   )
 }
 
 pub fn insert_confirmation_to_db(create_confirmation: CreateConfirmation) {
   let sql =
     "
-INSERT INTO confirmation (user_id, name, invite_name, phone, comments)
-VALUES( ?, ?, ?, ?, ? ); "
+INSERT INTO confirmation (user_id, email,name, invite_name, phone, comments)
+VALUES( ?, ?, ?, ?, ?, ? ); "
 
   db.execute_write(
     sql,
     [
       sqlight.int(create_confirmation.user_id),
+      sqlight.text(create_confirmation.email),
       sqlight.text(create_confirmation.name),
       sqlight.text(create_confirmation.invite_name),
       sqlight.text(create_confirmation.phone),
@@ -128,13 +134,14 @@ VALUES( ?, ?, ?, ?, ? ); "
 }
 
 pub fn create_confirmation_db_decoder() {
-  dynamic.decode5(
+  dynamic.decode6(
     CreateConfirmation,
     dynamic.element(0, dynamic.int),
     dynamic.element(1, dynamic.string),
     dynamic.element(2, dynamic.string),
     dynamic.element(3, dynamic.string),
-    dynamic.element(4, dynamic.optional(dynamic.string)),
+    dynamic.element(4, dynamic.string),
+    dynamic.element(5, dynamic.optional(dynamic.string)),
   )
 }
 
@@ -142,9 +149,10 @@ pub fn decode_create_confirmation(
   json: dynamic.Dynamic,
 ) -> Result(CreateConfirmation, dynamic.DecodeErrors) {
   let decoder =
-    dynamic.decode5(
+    dynamic.decode6(
       CreateConfirmation,
       dynamic.field("user_id", dynamic.int),
+      dynamic.field("email", dynamic.string),
       dynamic.field("name", dynamic.string),
       dynamic.field("invite_name", dynamic.string),
       dynamic.field("phone", dynamic.string),
@@ -154,6 +162,7 @@ pub fn decode_create_confirmation(
     Ok(create_confirmation) ->
       Ok(CreateConfirmation(
         user_id: create_confirmation.user_id,
+        email: create_confirmation.email,
         name: create_confirmation.name,
         invite_name: create_confirmation.invite_name,
         phone: create_confirmation.phone,

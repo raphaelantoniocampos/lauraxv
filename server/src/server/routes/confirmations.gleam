@@ -19,6 +19,7 @@ fn confirmation_to_json(confirmation: Confirmation) {
     #("phone", json.string(confirmation.phone)),
     #("comments", json.nullable(confirmation.comments, json.string)),
     #("people_names", json.array(confirmation.people_names, json.string)),
+    #("email", json.string(confirmation.email)),
   ])
 }
 
@@ -53,15 +54,9 @@ pub fn create_confirmation(body: dynamic.Dynamic) {
       Error(_) -> Error("Invalid body recieved - People")
     })
 
-    use user <- result.try({
-      case user.get_user_by_id(confirmation.user_id) {
-        Ok(user) -> Ok(user)
-        Error(_) -> Error("Usuário não encontrado")
-      }
-    })
-
     use <- bool.guard(
-      when: user.is_confirmed,
+      when: confirmation.get_confirmation_by_user_id(confirmation.user_id)
+        |> result.is_error,
       return: Error("Usuário já está confirmou presença"),
     )
 
@@ -80,15 +75,8 @@ pub fn create_confirmation(body: dynamic.Dynamic) {
     })
 
     use inserted_confirmation <- result.try(
-      confirmation.get_confirmation_by_user_id(user.id),
+      confirmation.get_confirmation_by_user_id(confirmation.user_id),
     )
-
-    use _ <- result.try(case user.set_is_confirmed(user.id, True) {
-      Ok(_) -> Ok(Nil)
-      Error(_) -> {
-        Error("Problema configurando presença do usuário")
-      }
-    })
 
     Ok(
       json.object([

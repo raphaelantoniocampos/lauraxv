@@ -51,6 +51,7 @@ pub type LoginForm {
 pub type ConfirmForm {
   ConfirmForm(
     name: String,
+    validated: Bool,
     invite_name: String,
     email: String,
     phone: String,
@@ -84,7 +85,18 @@ pub fn init() -> Model {
     gift_status: GiftStatus([], [], None),
     gallery_images: gallery_images,
     login_form: LoginForm("", "", "", "", False, None),
-    confirm_form: ConfirmForm("", "", "", "", 1, "", dict.new(), None, None),
+    confirm_form: ConfirmForm(
+      "",
+      False,
+      "",
+      "",
+      "",
+      1,
+      "",
+      dict.new(),
+      None,
+      None,
+    ),
     event_countdown: 0,
     admin_settings: AdminSettings(0, [], dict.new(), False),
     comments: [],
@@ -206,6 +218,13 @@ pub fn update_confirm_invite_name(model: Model, invite_name: String) -> Model {
 
 pub fn update_confirm_email(model: Model, email: String) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, email: email))
+}
+
+pub fn update_confirm_validated(model: Model, validated: Bool) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, validated: validated),
+  )
 }
 
 pub fn update_confirm_phone(model: Model, phone: String) -> Model {

@@ -33,6 +33,7 @@ pub type Confirmation {
   Confirmation(
     id: Int,
     user_id: Int,
+    email: String,
     name: String,
     invite_name: String,
     phone: String,
