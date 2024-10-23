@@ -7,6 +7,7 @@ import wisp.{type Response}
 pub fn get_server_status() -> Response {
   let result = {
     let server_status = config.read_config().server_status
+
     server_status_to_json(server_status)
     |> json.to_string_builder
     |> Ok
