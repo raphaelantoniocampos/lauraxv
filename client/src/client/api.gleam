@@ -213,6 +213,21 @@ pub fn get_auth_user() -> effect.Effect(Msg) {
   lustre_http.get(url, lustre_http.expect_json(decoder, msg.AuthUserRecieved))
 }
 
+pub fn get_server_status() -> effect.Effect(Msg) {
+  let url = get_api_url() <> "/api/server/status"
+
+  let decoder =
+    dynamic.decode1(
+      common.string_to_server_status,
+      dynamic.element(0, dynamic.string),
+    )
+
+  lustre_http.get(
+    url,
+    lustre_http.expect_json(decoder, msg.ServerStatusRecieved),
+  )
+}
+
 pub fn get_gifts() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/gifts"
   let decoder =

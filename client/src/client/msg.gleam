@@ -5,10 +5,11 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import common.{type Comment, type Confirmation, type Gift}
+import common.{type Comment, type Confirmation, type Gift, type ServerStatus}
 
 pub type Msg {
   OnRouteChange(router.Route)
+  ServerStatusRecieved(Result(ServerStatus, lustre_http.HttpError))
   AuthUserRecieved(Result(model.AuthUser, lustre_http.HttpError))
   GiftsRecieved(Result(#(List(Gift), List(Gift)), lustre_http.HttpError))
   ImagesRecieved(Result(List(String), lustre_http.HttpError))

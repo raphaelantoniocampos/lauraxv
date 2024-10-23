@@ -1,5 +1,5 @@
 import client/router
-import common
+import common.{type Comment, type Confirmation, type Gift, type ServerStatus}
 import gleam/dict
 import gleam/option.{type Option, None, Some}
 
@@ -12,6 +12,7 @@ const gallery_images = [
 pub type Model {
   Model(
     route: router.Route,
+    server_status: ServerStatus,
     auth_user: Option(AuthUser),
     gift_status: GiftStatus,
     gallery_images: List(String),
@@ -19,7 +20,7 @@ pub type Model {
     confirm_form: ConfirmForm,
     event_countdown: Int,
     admin_settings: AdminSettings,
-    comments: List(common.Comment),
+    comments: List(Comment),
     show_profile_menu: Bool,
     show_mobile_menu: Bool,
   )
@@ -55,17 +56,13 @@ pub type ConfirmForm {
 }
 
 pub type GiftStatus {
-  GiftStatus(
-    sugestion: List(common.Gift),
-    unique: List(common.Gift),
-    error: Option(String),
-  )
+  GiftStatus(sugestion: List(Gift), unique: List(Gift), error: Option(String))
 }
 
 pub type AdminSettings {
   AdminSettings(
     total: Int,
-    confirmations: List(common.Confirmation),
+    confirmations: List(Confirmation),
     show_details: dict.Dict(Int, Bool),
     show_all: Bool,
   )
@@ -74,6 +71,7 @@ pub type AdminSettings {
 pub fn init() -> Model {
   Model(
     route: router.get_route(),
+    server_status: common.Online,
     auth_user: None,
     gift_status: GiftStatus([], [], None),
     gallery_images: gallery_images,
@@ -95,6 +93,10 @@ pub fn update_route(model: Model, route: router.Route) -> Model {
   Model(..model, route: route)
 }
 
+pub fn update_server_status(model: Model, server_status: ServerStatus) -> Model {
+  Model(..model, server_status: server_status)
+}
+
 pub fn update_user(model: Model, auth_user: AuthUser) -> Model {
   Model(..model, auth_user: Some(auth_user))
 }
@@ -111,7 +113,7 @@ pub fn update_images(model: Model, gallery_images: List(String)) -> Model {
   Model(..model, gallery_images: gallery_images)
 }
 
-pub fn update_comments(model: Model, comments: List(common.Comment)) -> Model {
+pub fn update_comments(model: Model, comments: List(Comment)) -> Model {
   Model(..model, comments: comments)
 }
 

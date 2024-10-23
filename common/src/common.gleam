@@ -25,6 +25,12 @@ pub type User {
   )
 }
 
+pub type ServerStatus {
+  Online
+  Maintenance
+  Offline
+}
+
 pub type UserSession {
   UserSession(id: Int, user_id: Int, token: String, created_at: Int)
 }
@@ -43,4 +49,20 @@ pub type Confirmation {
 
 pub type Comment {
   Comment(name: String, comment: Option(String))
+}
+
+pub fn server_status_to_string(server_status: ServerStatus) -> String {
+  case server_status {
+    Online -> "online"
+    Maintenance -> "maintenance"
+    Offline -> "offline"
+  }
+}
+
+pub fn string_to_server_status(string: String) -> ServerStatus {
+  case string {
+    "online" -> Online
+    "maintenance" -> Maintenance
+    _ -> Offline
+  }
 }

@@ -9,6 +9,7 @@ import server/routes/comments
 import server/routes/confirmations
 import server/routes/gifts
 import server/routes/images
+import server/routes/server/status
 import server/routes/users
 import server/scaffold.{page_scaffold}
 import server/web
@@ -40,6 +41,7 @@ pub fn handle_get(req: Request) {
     ["api", "comments"] -> comments.list_comments()
     ["api", "auth", "validate"] -> validate.validate_session(req)
     ["api", "auth", "logout"] -> logout.logout(req)
+    ["api", "server", "status"] -> status.get_server_status()
     _ -> wisp.not_found()
   }
 }

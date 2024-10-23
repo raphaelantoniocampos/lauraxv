@@ -13,7 +13,9 @@ import client/views/gallery_view.{gallery_view}
 import client/views/gifts_view.{gifts_view}
 import client/views/home_view.{home_view}
 import client/views/login_view.{login_view}
+import client/views/maintenance_view.{maintenance_view}
 import client/views/not_found_view.{not_found_view}
+import common.{Online}
 import gleam/dict
 import gleam/int
 import gleam/option.{None, Some}
@@ -27,26 +29,16 @@ import lustre_http
 import modem
 import rada/date
 
-// import tardis
-
 pub fn main() {
   lustre.application(init, update, view)
   |> lustre.start("#app", Nil)
 }
 
-// pub fn main() {
-//   let assert Ok(main) = tardis.single("main")
-//
-//   lustre.application(init, update, view)
-//   |> tardis.wrap(with: main)
-//   |> lustre.start("#app", Nil)
-//   |> tardis.activate(with: main)
-// }
-
 pub fn init(_) -> #(model.Model, Effect(Msg)) {
   model.init()
   |> update.effects([
     modem.init(on_url_change),
+    api.get_server_status(),
     api.get_gifts(),
     api.get_images(),
     api.get_comments(),
@@ -63,6 +55,16 @@ fn on_url_change(_uri: Uri) -> Msg {
 fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
   case msg {
     msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
+
+    msg.ServerStatusRecieved(status_result) ->
+      case status_result {
+        Ok(status) ->
+          model.update_server_status(model, status)
+          |> update.none
+        Error(_) ->
+          model.update_server_status(model, common.Maintenance) |> update.none
+      }
+
     msg.AuthUserRecieved(user_result) ->
       handle_api_response(
         model,
@@ -316,22 +318,27 @@ pub fn view(model: model.Model) -> Element(Msg) {
       ),
       id("app"),
     ],
-    [
-      navigation_bar_view(model),
-      div([class("mt-10")], []),
-      case model.route {
-        router.Home -> home_view(model)
-        router.Event -> event_view()
-        router.Gallery -> gallery_view(model)
-        router.Gifts -> gifts_view(model)
-        router.Login -> login_view(model)
-        router.Comments -> comments_view(model)
-        router.Admin -> admin_view(model)
-        router.ConfirmPresence -> confirm_presence_view(model)
-        router.NotFound -> not_found_view()
-      },
-      footer_view(),
-    ],
+    case model.server_status {
+      Online -> {
+        [
+          navigation_bar_view(model),
+          div([class("mt-10")], []),
+          case model.route {
+            router.Home -> home_view(model)
+            router.Event -> event_view()
+            router.Gallery -> gallery_view(model)
+            router.Gifts -> gifts_view(model)
+            router.Login -> login_view(model)
+            router.Comments -> comments_view(model)
+            router.Admin -> admin_view(model)
+            router.ConfirmPresence -> confirm_presence_view(model)
+            router.NotFound -> not_found_view()
+          },
+          footer_view(),
+        ]
+      }
+      _ -> [maintenance_view(), footer_view()]
+    },
   )
 }
 
