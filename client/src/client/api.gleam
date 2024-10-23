@@ -202,11 +202,10 @@ pub fn get_auth_user() -> effect.Effect(Msg) {
   let url = get_api_url() <> "/api/auth/validate"
 
   let decoder =
-    dynamic.decode4(
+    dynamic.decode3(
       model.AuthUser,
       dynamic.field("user_id", dynamic.int),
       dynamic.field("username", dynamic.string),
-      dynamic.field("is_confirmed", dynamic.bool),
       dynamic.field("is_admin", dynamic.bool),
     )
 

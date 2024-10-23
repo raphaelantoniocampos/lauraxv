@@ -33,3 +33,30 @@ pub fn get_route() -> Route {
     _ -> NotFound
   }
 }
+
+pub fn route_to_path(route: Route) -> String {
+  case route {
+    Admin -> "/admin"
+    Login -> "/login"
+    Gifts -> "/gifts"
+    Event -> "/event"
+    Gallery -> "/gallery"
+    Comments -> "/comments"
+    ConfirmPresence -> "/confirm"
+    _ -> "/"
+  }
+}
+
+pub fn route_to_string(route: Route) -> String {
+  case route {
+    Home -> "Home"
+    Admin -> "Admin"
+    Login -> "Login"
+    Gifts -> "Presentes"
+    Event -> "Evento"
+    Gallery -> "Galeria"
+    Comments -> "Comentários"
+    ConfirmPresence -> "Confirmar Presença"
+    _ -> "/"
+  }
+}

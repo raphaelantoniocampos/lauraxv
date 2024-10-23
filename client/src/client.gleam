@@ -40,7 +40,6 @@ pub fn init(_) -> #(model.Model, Effect(Msg)) {
     api.get_gifts(),
     api.get_images(),
     api.get_comments(),
-    api.get_auth_user(),
     api.get_confirmation_data(),
     update_countdown(),
   ])
@@ -225,6 +224,8 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
 
     msg.GiftUpdateError(value) ->
       model.update_gift_error(model, value) |> update.none
+
+    msg.UserRequestedValidadeEmail(value) -> model |> update.none
 
     msg.ConfirmUpdateName(value) ->
       model.update_confirm_name(model, value) |> update.none

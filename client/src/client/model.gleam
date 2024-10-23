@@ -14,6 +14,7 @@ pub type Model {
     route: router.Route,
     server_status: ServerStatus,
     auth_user: Option(AuthUser),
+    is_confirmed: Bool,
     gift_status: GiftStatus,
     gallery_images: List(String),
     login_form: LoginForm,
@@ -33,7 +34,7 @@ pub type ServerStatus {
 }
 
 pub type AuthUser {
-  AuthUser(user_id: Int, username: String, is_confirmed: Bool, is_admin: Bool)
+  AuthUser(user_id: Int, username: String, is_admin: Bool)
 }
 
 pub type LoginForm {
@@ -79,6 +80,7 @@ pub fn init() -> Model {
     route: router.get_route(),
     server_status: Maintenance,
     auth_user: None,
+    is_confirmed: False,
     gift_status: GiftStatus([], [], None),
     gallery_images: gallery_images,
     login_form: LoginForm("", "", "", "", False, None),
@@ -105,6 +107,10 @@ pub fn update_server_status(model: Model, server_status: ServerStatus) -> Model 
 
 pub fn update_user(model: Model, auth_user: AuthUser) -> Model {
   Model(..model, auth_user: Some(auth_user))
+}
+
+pub fn update_is_confirmed(model: Model, is_confirmed: Bool) -> Model {
+  Model(..model, is_confirmed: is_confirmed)
 }
 
 pub fn update_gifts(model: Model, gift_status: GiftStatus) -> Model {

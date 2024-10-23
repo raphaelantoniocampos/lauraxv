@@ -107,6 +107,34 @@ pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
       form(
         [class("space-y-6"), event.on_submit(msg.UserRequestedConfirmPresence)],
         [
+          div([class("mb-4")], [
+            label(
+              [class("block text-sm font-medium text-gray-700"), for("email")],
+              [text("Email")],
+            ),
+            input([
+              class(
+                "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+              ),
+              required(True),
+              name("email"),
+              id("email"),
+              type_("email"),
+              value(model.confirm_form.email),
+              event.on_input(msg.ConfirmUpdateEmail),
+            ]),
+            button(
+              [
+                class(
+                  "mt-4 w-full bg-pink-500 text-white font-medium py-2 rounded-md hover:bg-pink-600 transition duration-300",
+                ),
+                event.on_click(msg.UserRequestedValidadeEmail(
+                  model.confirm_form.email,
+                )),
+              ],
+              [text("Validar Email")],
+            ),
+          ]),
           div([], [
             label(
               [

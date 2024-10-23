@@ -14,7 +14,6 @@ pub fn validate_session(req: Request) -> Response {
       json.object([
         #("user_id", json.int(user_id)),
         #("username", json.string(user.username)),
-        #("is_confirmed", json.bool(user.is_confirmed)),
         #("is_admin", json.bool(user.is_admin)),
       ])
       |> json.to_string_builder,
