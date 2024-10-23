@@ -1,5 +1,5 @@
 import client/router
-import common.{type Comment, type Confirmation, type Gift, type ServerStatus}
+import common.{type Comment, type Confirmation, type Gift}
 import gleam/dict
 import gleam/option.{type Option, None, Some}
 
@@ -24,6 +24,12 @@ pub type Model {
     show_profile_menu: Bool,
     show_mobile_menu: Bool,
   )
+}
+
+pub type ServerStatus {
+  Normal
+  Maintenance
+  Offline
 }
 
 pub type AuthUser {
@@ -71,7 +77,7 @@ pub type AdminSettings {
 pub fn init() -> Model {
   Model(
     route: router.get_route(),
-    server_status: common.Online,
+    server_status: Maintenance,
     auth_user: None,
     gift_status: GiftStatus([], [], None),
     gallery_images: gallery_images,
