@@ -6,7 +6,7 @@ import client/update
 import client/views/admin_view.{admin_view}
 import client/views/comments_view.{comments_view}
 import client/views/components/footer.{footer_view}
-import client/views/components/navigation_bar.{navigation_bar_view}
+import client/views/components/nav_bar.{nav_bar_view}
 import client/views/confirm_presence_view.{confirm_presence_view}
 import client/views/event_view.{event_view}
 import client/views/gallery_view.{gallery_view}
@@ -310,7 +310,7 @@ pub fn view(model: model.Model) -> Element(Msg) {
     case model.server_status {
       model.Normal -> {
         [
-          navigation_bar_view(model),
+          nav_bar_view(model),
           div([class("mt-10")], []),
           case model.route {
             router.Home -> home_view(model)

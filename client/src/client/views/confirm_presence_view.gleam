@@ -95,165 +95,148 @@ fn confirmed_user_view() -> Element(a) {
 }
 
 pub fn confirm_presence_view(model: model.Model) -> Element(Msg) {
-  case model.auth_user {
-    None -> login_view(model)
-    Some(user) ->
-      main([class("w-full max-w-2xl p-8 mt-20 bg-white rounded-lg shadow-lg")], [
-        case user.is_confirmed {
-          True -> confirmed_user_view()
-          False -> {
-            div([class("p-2 mt-6 mx-4")], [
-              h1(
-                [
-                  attribute("style", "font-family: 'Pacifico', cursive;"),
-                  class("text-4xl text-pink-700 font-bold mb-6 text-center"),
-                ],
-                [text("Confirmação de Presença")],
+  main([class("w-full max-w-2xl p-8 mt-20 bg-white rounded-lg shadow-lg")], [
+    div([class("p-2 mt-6 mx-4")], [
+      h1(
+        [
+          attribute("style", "font-family: 'Pacifico', cursive;"),
+          class("text-4xl text-pink-700 font-bold mb-6 text-center"),
+        ],
+        [text("Confirmação de Presença")],
+      ),
+      form(
+        [class("space-y-6"), event.on_submit(msg.UserRequestedConfirmPresence)],
+        [
+          div([], [
+            label(
+              [
+                class("block text-sm font-medium text-gray-700"),
+                for("first_name"),
+              ],
+              [text("Nome completo")],
+            ),
+            input([
+              class(
+                "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
-              form(
-                [
-                  class("space-y-6"),
-                  event.on_submit(msg.UserRequestedConfirmPresence),
-                ],
-                [
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("first_name"),
-                      ],
-                      [text("Nome completo")],
-                    ),
-                    input([
-                      class(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                      ),
-                      required(True),
-                      name("first_name"),
-                      id("first_name"),
-                      type_("name"),
-                      value(model.confirm_form.name),
-                      event.on_input(msg.ConfirmUpdateName),
-                    ]),
-                  ]),
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("invite_name"),
-                      ],
-                      [text("Nome no Convite")],
-                    ),
-                    input([
-                      class(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                      ),
-                      required(True),
-                      name("invite_name"),
-                      id("invite_name"),
-                      type_("text"),
-                      event.on_input(msg.ConfirmUpdateInviteName),
-                      value(model.confirm_form.invite_name),
-                    ]),
-                  ]),
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("phone"),
-                      ],
-                      [text("Telefone")],
-                    ),
-                    input([
-                      class(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                      ),
-                      required(True),
-                      placeholder("Digite apenas números"),
-                      pattern("\\d{4,15}"),
-                      name("phone"),
-                      id("phone"),
-                      type_("tel"),
-                      event.on_input(msg.ConfirmUpdatePhone),
-                      value(model.confirm_form.phone),
-                    ]),
-                  ]),
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("people_count"),
-                      ],
-                      [text("Quantidade de pessoas (incluindo você)")],
-                    ),
-                    input([
-                      class(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                      ),
-                      required(True),
-                      min("1"),
-                      max("99"),
-                      name("people_count"),
-                      id("people_count"),
-                      type_("number"),
-                      event.on_input(msg.ConfirmUpdatePeopleCount),
-                    ]),
-                  ]),
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("people_names"),
-                      ],
-                      [text("Nome completo das pessoas (se houver)")],
-                    ),
-                    ul(
-                      [class("block text-sm font-medium text-gray-700")],
-                      list.range(0, model.confirm_form.people_count - 1)
-                        |> list.map(fn(n) { name_box_element(model, n) }),
-                    ),
-                  ]),
-                  div([], [
-                    label(
-                      [
-                        class("block text-sm font-medium text-gray-700"),
-                        for("comments"),
-                      ],
-                      [text("Comentários (se houver)")],
-                    ),
-                    input([
-                      class(
-                        "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
-                      ),
-                      name("comments"),
-                      id("comments"),
-                      type_("text"),
-                      event.on_input(msg.ConfirmUpdateComments),
-                    ]),
-                  ]),
-                  div([class("flex items-center justify-center")], [
-                    button(
-                      [
-                        class(
-                          "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
-                        ),
-                        type_("submit"),
-                      ],
-                      [text("Enviar Confirmação")],
-                    ),
-                  ]),
-                  case model.confirm_form.error {
-                    Some(err) ->
-                      p([class("text-red-500 text-center")], [
-                        text("Erro: " <> err),
-                      ])
-                    None -> element.none()
-                  },
-                ],
+              required(True),
+              name("first_name"),
+              id("first_name"),
+              type_("name"),
+              value(model.confirm_form.name),
+              event.on_input(msg.ConfirmUpdateName),
+            ]),
+          ]),
+          div([], [
+            label(
+              [
+                class("block text-sm font-medium text-gray-700"),
+                for("invite_name"),
+              ],
+              [text("Nome no Convite")],
+            ),
+            input([
+              class(
+                "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
               ),
-            ])
-          }
-        },
-      ])
-  }
+              required(True),
+              name("invite_name"),
+              id("invite_name"),
+              type_("text"),
+              event.on_input(msg.ConfirmUpdateInviteName),
+              value(model.confirm_form.invite_name),
+            ]),
+          ]),
+          div([], [
+            label(
+              [class("block text-sm font-medium text-gray-700"), for("phone")],
+              [text("Telefone")],
+            ),
+            input([
+              class(
+                "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+              ),
+              required(True),
+              placeholder("Digite apenas números"),
+              pattern("\\d{4,15}"),
+              name("phone"),
+              id("phone"),
+              type_("tel"),
+              event.on_input(msg.ConfirmUpdatePhone),
+              value(model.confirm_form.phone),
+            ]),
+          ]),
+          div([], [
+            label(
+              [
+                class("block text-sm font-medium text-gray-700"),
+                for("people_count"),
+              ],
+              [text("Quantidade de pessoas (incluindo você)")],
+            ),
+            input([
+              class(
+                "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+              ),
+              required(True),
+              min("1"),
+              max("99"),
+              name("people_count"),
+              id("people_count"),
+              type_("number"),
+              event.on_input(msg.ConfirmUpdatePeopleCount),
+            ]),
+          ]),
+          div([], [
+            label(
+              [
+                class("block text-sm font-medium text-gray-700"),
+                for("people_names"),
+              ],
+              [text("Nome completo das pessoas (se houver)")],
+            ),
+            ul(
+              [class("block text-sm font-medium text-gray-700")],
+              list.range(0, model.confirm_form.people_count - 1)
+                |> list.map(fn(n) { name_box_element(model, n) }),
+            ),
+          ]),
+          div([], [
+            label(
+              [
+                class("block text-sm font-medium text-gray-700"),
+                for("comments"),
+              ],
+              [text("Comentários (se houver)")],
+            ),
+            input([
+              class(
+                "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500",
+              ),
+              name("comments"),
+              id("comments"),
+              type_("text"),
+              event.on_input(msg.ConfirmUpdateComments),
+            ]),
+          ]),
+          div([class("flex items-center justify-center")], [
+            button(
+              [
+                class(
+                  "bg-emerald-600 hover:bg-emerald-700 min-w-60 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
+                ),
+                type_("submit"),
+              ],
+              [text("Enviar Confirmação")],
+            ),
+          ]),
+          case model.confirm_form.error {
+            Some(err) ->
+              p([class("text-red-500 text-center")], [text("Erro: " <> err)])
+            None -> element.none()
+          },
+        ],
+      ),
+    ]),
+  ])
 }
