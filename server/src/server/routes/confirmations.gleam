@@ -1,10 +1,11 @@
 import gleam/bool
 import gleam/dynamic
 import gleam/int
+import gleam/io
 import gleam/json
+import gleam/regex
 import gleam/result
 import server/db/confirmation
-import server/db/user
 
 import common.{type Confirmation, Confirmation}
 import server/web
@@ -40,7 +41,7 @@ pub fn list_confirmations() -> Response {
   web.generate_wisp_response(result)
 }
 
-pub fn create_confirmation(body: dynamic.Dynamic) {
+pub fn create_confirmation(body: dynamic.Dynamic) -> Response {
   let result = {
     use confirmation <- result.try(case
       confirmation.decode_create_confirmation(body)
@@ -55,7 +56,7 @@ pub fn create_confirmation(body: dynamic.Dynamic) {
     })
 
     use <- bool.guard(
-      when: confirmation.get_confirmation_by_user_id(confirmation.user_id)
+      when: confirmation.email_is_confirmed(confirmation.email)
         |> result.is_error,
       return: Error("Usuário já está confirmou presença"),
     )
@@ -74,23 +75,62 @@ pub fn create_confirmation(body: dynamic.Dynamic) {
       }
     })
 
-    use inserted_confirmation <- result.try(
-      confirmation.get_confirmation_by_user_id(confirmation.user_id),
-    )
+    use inserted_confirmation <- result.try(confirmation.email_is_confirmed(
+      confirmation.email,
+    ))
 
     Ok(
       json.object([
         #(
           "message",
-          json.string(
-            "Presence confirmed. id:"
-            <> inserted_confirmation.user_id
-            |> int.to_string,
-          ),
+          json.string("Presence confirmed. email:" <> inserted_confirmation),
         ),
       ])
       |> json.to_string_builder,
     )
+  }
+
+  web.generate_wisp_response(result)
+}
+
+fn decode_email(json: dynamic.Dynamic) -> Result(String, dynamic.DecodeErrors) {
+  let decoder = dynamic.field("email", dynamic.string)
+  case decoder(json) {
+    Ok(email) -> Ok(email)
+    Error(error) -> Error(error)
+  }
+}
+
+pub fn validate_email(body: dynamic.Dynamic) -> Response {
+  let result = {
+    use email <- result.try(case decode_email(body) {
+      Ok(val) -> Ok(val)
+      Error(_) -> Error("Endereço de email inválido")
+    })
+
+    use <- bool.guard(
+      when: {
+        let assert Ok(re) =
+          regex.from_string(
+            "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])",
+          )
+        !regex.check(with: re, content: email)
+      },
+      return: Error("Endereço de email inválido"),
+    )
+
+    use confirmed <- result.try(case confirmation.email_is_confirmed(email) {
+      Ok(_) -> Ok(True)
+      Error(err) -> Error(err)
+    })
+
+    // use confirmed <- result.try(confirmation.email_is_confirmed(email))
+
+    Ok(
+      json.object([#("message", json.string(confirmed |> bool.to_string))])
+      |> json.to_string_builder,
+    )
+    |> io.debug
   }
 
   web.generate_wisp_response(result)

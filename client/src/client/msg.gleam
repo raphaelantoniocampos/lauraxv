@@ -50,6 +50,9 @@ pub type Msg {
   GiftUpdateError(value: Option(String))
 
   UserRequestedValidateEmail(value: String)
+  ValidateEmailResponded(
+    resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
+  )
   ConfirmUpdateName(value: String)
   ConfirmUpdateInviteName(value: String)
   ConfirmUpdateEmail(value: String)
@@ -59,6 +62,7 @@ pub type Msg {
   ConfirmUpdatePeopleNames(value: Dict(Int, String))
   ConfirmUpdateComments(value: String)
   ConfirmUpdateError(value: Option(String))
+  ConfirmUpdateValidateError(value: Option(String))
   UserRequestedConfirmPresence
   ConfirmPresenceResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),

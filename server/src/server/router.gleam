@@ -49,6 +49,7 @@ pub fn handle_post(req: Request) {
   case wisp.path_segments(req) {
     ["api", "gifts"] -> gifts.select_gift(body)
     ["api", "users"] -> users.create_user(req, body)
+    ["api", "confirm", "validate"] -> confirmations.validate_email(body)
     ["api", "confirm"] -> confirmations.create_confirmation(body)
     ["api", "auth", "login"] -> login.login(req, body)
     _ -> wisp.not_found()

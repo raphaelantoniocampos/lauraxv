@@ -7,7 +7,9 @@ import client/views/admin_view.{admin_view}
 import client/views/comments_view.{comments_view}
 import client/views/components/footer.{footer_view}
 import client/views/components/nav_bar.{nav_bar_view}
-import client/views/confirm_presence_view.{confirm_presence_view}
+import client/views/confirm_presence_view.{
+  confirm_presence_view, confirmed_user_view,
+}
 import client/views/event_view.{event_view}
 import client/views/gallery_view.{gallery_view}
 import client/views/gifts_view.{gifts_view}
@@ -57,7 +59,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         user_result,
-        api.validate_default,
+        api.handle_default,
         model.update_user,
         [effect.none()],
       )
@@ -66,7 +68,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         gifts_result,
-        api.validate_gift_status,
+        api.handle_gift_status,
         model.update_gifts,
         [effect.none()],
       )
@@ -75,7 +77,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         images_result,
-        api.validate_default,
+        api.handle_default,
         model.update_images,
         [effect.none()],
       )
@@ -84,7 +86,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         comments_result,
-        api.validate_default,
+        api.handle_default,
         model.update_comments,
         [effect.none()],
       )
@@ -93,7 +95,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         confirmations_result,
-        api.validate_admin_settings,
+        api.handle_admin_settings,
         model.update_admin_settings,
         [effect.none()],
       )
@@ -133,7 +135,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         resp_result,
-        api.validate_login,
+        api.handle_login,
         model.update_all,
         [
           {
@@ -151,7 +153,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         resp_result,
-        api.validate_login,
+        api.handle_login,
         model.update_all,
         [
           {
@@ -217,7 +219,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         resp_result,
-        api.validate_select_gift,
+        api.handle_select_gift,
         model.update_all,
         [effect.none()],
       )
@@ -225,7 +227,18 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
     msg.GiftUpdateError(value) ->
       model.update_gift_error(model, value) |> update.none
 
-    msg.UserRequestedValidateEmail(value) -> model |> update.none
+    msg.UserRequestedValidateEmail(value) ->
+      model
+      |> update.effect(value |> api.validate_email)
+
+    msg.ValidateEmailResponded(resp_result) ->
+      handle_api_response(
+        model,
+        resp_result,
+        api.handle_validate_email,
+        model.update_all,
+        [effect.none()],
+      )
 
     msg.ConfirmUpdateName(value) ->
       model.update_confirm_name(model, value) |> update.none
@@ -272,6 +285,9 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
     msg.ConfirmUpdateError(value) ->
       model.update_confirm_error(model, value) |> update.none
 
+    msg.ConfirmUpdateValidateError(value) ->
+      model.update_confirm_validate_error(model, value) |> update.none
+
     msg.UserRequestedConfirmPresence ->
       model
       |> update.effect(api.confirm_presence(model))
@@ -280,7 +296,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle_api_response(
         model,
         resp_result,
-        api.validate_confirm_presence,
+        api.handle_confirm_presence,
         model.update_all,
         [
           {
@@ -346,14 +362,14 @@ pub fn update_countdown() -> Effect(Msg) {
 fn handle_api_response(
   model: model.Model,
   response: Result(data, lustre_http.HttpError),
-  validate_data: fn(model.Model, data) ->
+  handle_data: fn(model.Model, data) ->
     Result(#(model_data, List(effect.Effect(Msg))), List(effect.Effect(Msg))),
   apply_update: fn(model.Model, model_data) -> model.Model,
   error_effects: List(Effect(Msg)),
 ) -> #(model.Model, effect.Effect(Msg)) {
   case response {
     Ok(api_data) -> {
-      case model |> validate_data(api_data) {
+      case model |> handle_data(api_data) {
         Ok(return) -> {
           apply_update(model, return.0) |> update.effects(return.1)
         }

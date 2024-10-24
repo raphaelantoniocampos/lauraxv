@@ -52,6 +52,7 @@ pub type ConfirmForm {
   ConfirmForm(
     name: String,
     validated: Bool,
+    validate_error: Option(String),
     invite_name: String,
     email: String,
     phone: String,
@@ -88,6 +89,7 @@ pub fn init() -> Model {
     confirm_form: ConfirmForm(
       "",
       False,
+      None,
       "",
       "",
       "",
@@ -264,6 +266,16 @@ pub fn update_confirm_comments(model: Model, comments: String) -> Model {
 
 pub fn update_confirm_error(model: Model, error: Option(String)) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, error: error))
+}
+
+pub fn update_confirm_validate_error(
+  model: Model,
+  error: Option(String),
+) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(..model.confirm_form, validate_error: error),
+  )
 }
 
 pub fn toggle_profile_menu(model: Model, to: Bool) -> Model {

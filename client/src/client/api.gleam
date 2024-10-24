@@ -15,7 +15,7 @@ import lustre/effect
 import lustre_http
 import modem
 
-pub fn validate_default(
+pub fn handle_default(
   _model: model.Model,
   api_data: data,
 ) -> Result(#(data, List(a)), error) {
@@ -23,7 +23,7 @@ pub fn validate_default(
   |> Ok
 }
 
-pub fn validate_admin_settings(
+pub fn handle_admin_settings(
   model: model.Model,
   confirmation_data: #(Int, List(common.Confirmation)),
 ) -> Result(#(model.AdminSettings, List(a)), error) {
@@ -43,7 +43,7 @@ pub fn validate_admin_settings(
   |> Ok
 }
 
-pub fn validate_gift_status(
+pub fn handle_gift_status(
   model: model.Model,
   gifts: #(List(common.Gift), List(common.Gift)),
 ) -> Result(#(model.GiftStatus, List(a)), error) {
@@ -54,7 +54,43 @@ pub fn validate_gift_status(
   |> Ok
 }
 
-pub fn validate_login(
+pub fn handle_validate_email(
+  model: model.Model,
+  data: msg.MessageErrorResponse,
+) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
+  case data {
+    msg.MessageErrorResponse(Some(_response), None) -> {
+      let effects = [modem.push("/confirm", None, None)]
+      Ok(#(model, effects))
+    }
+
+    msg.MessageErrorResponse(_, Some(error)) -> {
+      let effects = [
+        {
+          use dispatch <- effect.from()
+          dispatch(msg.ConfirmUpdateValidateError(Some(error)))
+        },
+      ]
+      Error(effects)
+    }
+
+    msg.MessageErrorResponse(None, None) -> {
+      let effects = [
+        {
+          use dispatch <- effect.from()
+          dispatch(
+            msg.ConfirmUpdateValidateError(Some(
+              "Problemas no servidor, por favor tente mais tarde.",
+            )),
+          )
+        },
+      ]
+      Error(effects)
+    }
+  }
+}
+
+pub fn handle_login(
   model: model.Model,
   data: msg.MessageErrorResponse,
 ) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
@@ -91,7 +127,7 @@ pub fn validate_login(
   }
 }
 
-pub fn validate_select_gift(
+pub fn handle_select_gift(
   model: model.Model,
   data: msg.MessageErrorResponse,
 ) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
@@ -126,7 +162,7 @@ pub fn validate_select_gift(
   }
 }
 
-pub fn validate_confirm_presence(
+pub fn handle_confirm_presence(
   model: model.Model,
   data: msg.MessageErrorResponse,
 ) -> Result(#(model.Model, List(effect.Effect(Msg))), List(effect.Effect(Msg))) {
@@ -155,7 +191,7 @@ pub fn validate_confirm_presence(
         {
           use dispatch <- effect.from()
           dispatch(
-            msg.LoginUpdateError(Some(
+            msg.ConfirmUpdateError(Some(
               "Problemas no servidor, por favor tente mais tarde.",
             )),
           )
@@ -345,4 +381,15 @@ pub fn select_gift(
     }
     None -> modem.push("/login", None, None)
   }
+}
+
+pub fn validate_email(email: String) -> effect.Effect(Msg) {
+  lustre_http.post(
+    get_api_url() <> "/api/confirm/validate",
+    json.object([#("email", json.string(email))]),
+    lustre_http.expect_json(
+      msg.message_error_decoder(),
+      msg.ValidateEmailResponded,
+    ),
+  )
 }

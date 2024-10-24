@@ -1,5 +1,6 @@
 import gleam/dict
 import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
@@ -14,7 +15,7 @@ FROM 'confirmation'
 LEFT JOIN 'person' ON confirmation.user_id = person.user_id"
 
 const get_confirmation_base_query = "
-SELECT confirmation.user_id, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments
+SELECT confirmation.user_id, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments, confirmation.email
 FROM 'confirmation'"
 
 pub type ListConfirmationDBRow {
@@ -172,28 +173,24 @@ pub fn decode_create_confirmation(
   }
 }
 
-pub fn get_confirmation_by_user_id(
-  user_id: Int,
-) -> Result(CreateConfirmation, String) {
-  let sql = get_confirmation_base_query <> "WHERE confirmation.user_id = ?"
+pub fn email_is_confirmed(email: String) -> Result(String, String) {
+  let base_query = "SELECT confirmation.email FROM 'confirmation'"
+  let sql = base_query <> "WHERE confirmation.email = ?"
+  let decoder = dynamic.element(0, dynamic.string)
 
-  let confirmation = case
-    db.execute_read(
-      sql,
-      [sqlight.int(user_id)],
-      create_confirmation_db_decoder(),
-    )
-  {
-    Ok(confirmations) -> Ok(list.first(confirmations))
-    Error(_) -> {
-      Error("Problem getting confirmation by user id")
+  let email =
+    case db.execute_read(sql, [sqlight.text(email)], decoder) {
+      Ok(email) -> Ok(list.first(email))
+      Error(_) -> {
+        Error("Problem getting confirmation by email")
+      }
     }
-  }
+    |> io.debug
 
-  use user_result <- result.try(confirmation)
-  case user_result {
-    Ok(user) -> Ok(user)
-    Error(_) -> Error("No confirmation found when getting by user id")
+  use email_result <- result.try(email)
+  case email_result {
+    Ok(email) -> Ok(email)
+    Error(_) -> Error("No confirmation found when getting by email")
   }
 }
 
