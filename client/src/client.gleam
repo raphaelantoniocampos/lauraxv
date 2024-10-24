@@ -59,7 +59,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
         user_result,
         handle.default,
         model.update_user,
-        [effect.none()],
+        [modem.push("/admin", None, None)],
       )
 
     msg.GiftsRecieved(gifts_result) ->

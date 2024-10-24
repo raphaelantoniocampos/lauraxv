@@ -132,12 +132,6 @@ pub fn get_confirmation_data() -> effect.Effect(Msg) {
 }
 
 pub fn confirm_presence(model: model.Model) -> effect.Effect(Msg) {
-  let user_id = {
-    let assert Ok(user) =
-      option.to_result(model.auth_user, "Usuário não está logado")
-    user.user_id
-  }
-
   let people_names = {
     model.confirm_form.people_names
     |> dict.insert(0, model.confirm_form.name)
@@ -147,7 +141,7 @@ pub fn confirm_presence(model: model.Model) -> effect.Effect(Msg) {
     get_api_url() <> "/api/confirm",
     json.object([
       #("id", json.int(0)),
-      #("user_id", json.int(user_id)),
+      #("user_id", json.int(0)),
       #("email", json.string(model.confirm_form.email)),
       #("name", json.string(model.confirm_form.name)),
       #("invite_name", json.string(model.confirm_form.invite_name)),

@@ -1,6 +1,6 @@
-import lustre/attribute.{alt, attribute, class, src}
+import lustre/attribute.{alt, attribute, class, href, src}
 import lustre/element.{type Element, text}
-import lustre/element/html.{div, h1, h2, img, main, p, strong}
+import lustre/element/html.{a, div, h1, h2, img, main, p, strong}
 
 pub fn event_view() -> Element(a) {
   main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
@@ -21,7 +21,8 @@ pub fn event_view() -> Element(a) {
       ]),
       div([class("flex-1 bg-white text-gray-800 rounded-lg shadow-lg p-6")], [
         h2([class("text-3xl font-bold text-pink-600 mb-4")], [
-          text("Aniversário de 15 Anos da Laura"),
+          text("Aniversário de 15 Anos da "),
+          a([href("/login")], [text("Laura")]),
         ]),
         p([class("text-lg text-gray-700 mb-4")], [
           text("Pompéu, MG - 14 de Dezembro de 2024"),

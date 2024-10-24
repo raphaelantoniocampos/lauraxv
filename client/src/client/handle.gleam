@@ -222,8 +222,11 @@ pub fn confirm_presence(
     msg.MessageErrorResponse(Some(_response), None) -> {
       let effects = [
         modem.push("/confirm", None, None),
-        api.get_auth_user(),
         api.get_comments(),
+        {
+          use dispatch <- effect.from()
+          dispatch(msg.ConfirmUpdateIsConfirmed(Some(True)))
+        },
       ]
       Ok(#(model, effects))
     }

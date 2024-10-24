@@ -55,7 +55,7 @@ pub fn create_confirmation(body: dynamic.Dynamic) -> Response {
 
     use <- bool.guard(
       when: confirmation.email_is_confirmed(confirmation.email)
-        |> result.is_error,
+        |> result.is_ok,
       return: Error("Usuário já está confirmou presença"),
     )
 
