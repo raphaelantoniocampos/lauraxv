@@ -79,7 +79,7 @@ pub type AdminSettings {
 pub fn init() -> Model {
   Model(
     route: router.get_route(),
-    server_status: Maintenance,
+    server_status: Normal,
     auth_user: None,
     is_confirmed: None,
     gift_status: GiftStatus([], [], None),
