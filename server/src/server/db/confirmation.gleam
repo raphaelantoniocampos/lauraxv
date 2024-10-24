@@ -9,9 +9,9 @@ import common.{type Comment, type Confirmation, Comment, Confirmation}
 import sqlight
 
 const get_join_confirmation_query = "
-SELECT confirmation.id, confirmation.user_id, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments, person.name
-FROM 'confirmation'
-LEFT JOIN 'person' ON confirmation.user_id = person.user_id"
+SELECT confirmation.id, confirmation.user_id, confirmation.email, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments, person.name FROM 'confirmation'
+LEFT JOIN 'person' ON confirmation.id = person.confirmation_id
+"
 
 pub type ListConfirmationDBRow {
   ListConfirmationDBRow(
@@ -38,11 +38,11 @@ pub type CreateConfirmation {
 }
 
 pub type CreatePeople {
-  CreatePeople(user_id: Int, names: List(String))
+  CreatePeople(confirmation_id: Int, names: List(String))
 }
 
 pub type CreatePerson {
-  CreatePerson(user_id: Int, name: String)
+  CreatePerson(confirmation_id: Int, name: String)
 }
 
 pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
@@ -52,7 +52,7 @@ pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
       let total = list.length(rows)
       let confirmations =
         rows
-        |> list.group(fn(row) { row.user_id })
+        |> list.group(fn(row) { row.id })
         |> dict.values
         |> list.map(fn(group) {
           let people_names =
@@ -91,7 +91,7 @@ pub fn get_confirmations() -> Result(#(Int, List(Confirmation)), String) {
 
       Ok(#(total, confirmations))
     }
-    Error(_) -> Error("Problem getting confirmations")
+    Error(_err) -> Error("Problem getting confirmations")
   }
 }
 
@@ -112,7 +112,7 @@ pub fn list_confirmation_db_decoder() {
 pub fn insert_confirmation_to_db(create_confirmation: CreateConfirmation) {
   let sql =
     "
-INSERT INTO confirmation (user_id, email,name, invite_name, phone, comments)
+INSERT INTO confirmation (user_id, email, name, invite_name, phone, comments)
 VALUES( ?, ?, ?, ?, ?, ? ); "
 
   db.execute_write(
@@ -193,13 +193,13 @@ pub fn decode_create_person(
   let decoder =
     dynamic.decode2(
       CreatePeople,
-      dynamic.field("user_id", dynamic.int),
+      dynamic.field("confirmation_id", dynamic.int),
       dynamic.field("people_names", dynamic.list(dynamic.string)),
     )
   case decoder(json) {
     Ok(create_person) ->
       Ok(CreatePeople(
-        user_id: create_person.user_id,
+        confirmation_id: create_person.confirmation_id,
         names: create_person.names,
       ))
     Error(error) -> Error(error)
@@ -209,13 +209,13 @@ pub fn decode_create_person(
 pub fn insert_people_to_db(create_people: CreatePeople) {
   let sql =
     "
-INSERT INTO person (user_id, name)
+INSERT INTO person (confirmation_id, name)
 VALUES( ?, ? ); "
   create_people.names
   |> list.try_each(fn(name) {
     db.execute_write(
       sql,
-      [sqlight.int(create_people.user_id), sqlight.text(name)],
+      [sqlight.int(create_people.confirmation_id), sqlight.text(name)],
       create_person_db_decoder(),
     )
   })

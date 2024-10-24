@@ -4,14 +4,15 @@ import client/model
 import client/msg.{type Msg}
 import client/router
 import client/update
-import client/views/admin_view.{admin_view}
 import client/views/comments_view.{comments_view}
 import client/views/components/footer.{footer_view}
 import client/views/components/nav_bar.{nav_bar_view}
 import client/views/confirm_presence_view.{confirm_presence_view}
+import client/views/confirmations_view.{confirmations_view}
 import client/views/event_view.{event_view}
 import client/views/gallery_view.{gallery_view}
 import client/views/gifts_view.{gifts_view}
+import client/views/guest_area_view.{guest_area_view}
 import client/views/home_view.{home_view}
 import client/views/login_view.{login_view}
 import client/views/maintenance_view.{maintenance_view}
@@ -51,7 +52,8 @@ fn on_url_change(_uri: Uri) -> Msg {
 
 fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
   case msg {
-    msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
+    msg.OnRouteChange(route) ->
+      model |> model.update_route(route) |> update.none
 
     msg.AuthUserRecieved(user_result) ->
       handle.api_response(
@@ -59,7 +61,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
         user_result,
         handle.default,
         model.update_user,
-        [modem.push("/admin", None, None)],
+        [modem.push("/", None, None)],
       )
 
     msg.GiftsRecieved(gifts_result) ->
@@ -93,8 +95,8 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       handle.api_response(
         model,
         confirmations_result,
-        handle.admin_settings,
-        model.update_admin_settings,
+        handle.confirmation_data,
+        model.update_confirmation_data,
         [effect.none()],
       )
 
@@ -179,19 +181,19 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
         _ -> model |> update.none
       }
 
-    msg.AdminOpenedAdminView ->
-      case model.admin_settings.total {
+    msg.UserOpenedConfirmationsView ->
+      case model.confirmation_data.total {
         0 -> model |> update.effect(api.get_confirmation_data())
         _ -> model |> update.none
       }
 
-    msg.AdminClickedShowAll ->
+    msg.UserClickedShowAll ->
       model
       |> model.turn_on_off_show_all
       |> update.none
 
-    msg.AdminClickedShowConfirmationDetails(id) ->
-      model.update_admin_settings(
+    msg.UserClickedShowConfirmationDetails(id) ->
+      model.update_confirmation_data(
         model,
         turn_on_off_confirmation_details(model, id),
       )
@@ -330,12 +332,13 @@ pub fn view(model: model.Model) -> Element(Msg) {
             router.Home -> home_view(model)
             router.Event -> event_view()
             router.Gallery -> gallery_view(model)
-            router.Gifts -> gifts_view(model)
             router.Login -> login_view(model)
-            router.Comments -> comments_view(model)
-            router.Admin -> admin_view(model)
             router.ConfirmPresence -> confirm_presence_view(model)
-            router.NotFound -> not_found_view()
+            router.GuestArea -> guest_area_view(model.route, [element.none()])
+            router.Comments -> comments_view(model)
+            router.Confirmations -> confirmations_view(model)
+            router.Gifts -> gifts_view(model)
+            _ -> not_found_view()
           },
           footer_view(),
         ]
@@ -359,11 +362,11 @@ pub fn update_countdown() -> Effect(Msg) {
 fn turn_on_off_confirmation_details(
   model: model.Model,
   id: Int,
-) -> model.AdminSettings {
-  model.AdminSettings(
-    ..model.admin_settings,
+) -> model.ConfirmationData {
+  model.ConfirmationData(
+    ..model.confirmation_data,
     show_details: {
-      model.admin_settings.show_details
+      model.confirmation_data.show_details
       |> dict.upsert(id, fn(key) {
         case key {
           Some(key) -> !key

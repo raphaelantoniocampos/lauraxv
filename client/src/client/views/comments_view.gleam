@@ -1,4 +1,6 @@
 import client/model
+import client/msg
+import client/views/guest_area_view.{guest_area_view}
 import common.{type Comment, Comment}
 import gleam/list
 import gleam/option.{Some}
@@ -6,8 +8,8 @@ import lustre/attribute.{attribute, class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, h2, li, main, p, ul}
 
-pub fn comments_view(model: model.Model) -> Element(a) {
-  main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
+pub fn comments_view(model: model.Model) -> Element(msg.Msg) {
+  guest_area_view(model.route, [
     div([class("text-center")], [
       h1(
         [

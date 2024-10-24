@@ -28,6 +28,7 @@ pub type Msg {
   LoginResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
+
   UserClickedSignUp
   SignUpResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
@@ -39,9 +40,9 @@ pub type Msg {
 
   UserOpenedGiftsView
   UserOpenedGalleryView
-  AdminOpenedAdminView
-  AdminClickedShowConfirmationDetails(id: Int)
-  AdminClickedShowAll
+  UserOpenedConfirmationsView
+  UserClickedShowConfirmationDetails(id: Int)
+  UserClickedShowAll
 
   UserRequestedSelectGift(gift: Gift, to: Bool)
   SelectGiftResponded(

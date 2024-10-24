@@ -20,7 +20,7 @@ pub type Model {
     login_form: LoginForm,
     confirm_form: ConfirmForm,
     event_countdown: Int,
-    admin_settings: AdminSettings,
+    confirmation_data: ConfirmationData,
     comments: List(Comment),
     show_profile_menu: Bool,
     show_mobile_menu: Bool,
@@ -67,8 +67,8 @@ pub type GiftStatus {
   GiftStatus(sugestion: List(Gift), unique: List(Gift), error: Option(String))
 }
 
-pub type AdminSettings {
-  AdminSettings(
+pub type ConfirmationData {
+  ConfirmationData(
     total: Int,
     confirmations: List(Confirmation),
     show_details: dict.Dict(Int, Bool),
@@ -98,7 +98,7 @@ pub fn init() -> Model {
       None,
     ),
     event_countdown: 0,
-    admin_settings: AdminSettings(0, [], dict.new(), False),
+    confirmation_data: ConfirmationData(0, [], dict.new(), False),
     comments: [],
     show_profile_menu: False,
     show_mobile_menu: False,
@@ -141,11 +141,11 @@ pub fn update_comments(model: Model, comments: List(Comment)) -> Model {
   Model(..model, comments: comments)
 }
 
-pub fn update_admin_settings(
+pub fn update_confirmation_data(
   model: Model,
-  admin_settings: AdminSettings,
+  confirmation_data: ConfirmationData,
 ) -> Model {
-  Model(..model, admin_settings: admin_settings)
+  Model(..model, confirmation_data: confirmation_data)
 }
 
 pub fn update_event_countdown(model: Model, event_countdown: Int) -> Model {
@@ -198,9 +198,9 @@ pub fn turn_on_off_signup(model: Model) -> Model {
 pub fn turn_on_off_show_all(model: Model) -> Model {
   Model(
     ..model,
-    admin_settings: AdminSettings(
-      ..model.admin_settings,
-      show_all: !model.admin_settings.show_all,
+    confirmation_data: ConfirmationData(
+      ..model.confirmation_data,
+      show_all: !model.confirmation_data.show_all,
     ),
   )
 }

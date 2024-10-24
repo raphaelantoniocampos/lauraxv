@@ -66,7 +66,7 @@ pub fn home_view(model: model.Model) -> Element(Msg) {
                       "bg-pink-600 hover:bg-pink-700 w-full sm:w-auto text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
                     ),
                   ],
-                  [a([href("/gifts")], [text("Lista de Presentes")])],
+                  [a([href("/guest/gifts")], [text("Lista de Presentes")])],
                 ),
               ]),
             ]),

@@ -1,4 +1,3 @@
-import gleam/io
 import gleeunit
 import gleeunit/should
 import server/routes/images
@@ -15,10 +14,8 @@ pub fn hello_world_test() {
 
 pub fn list_test() {
   images.list_images()
-  |> io.debug
 }
 
 pub fn dir_test() {
   images.gallery_directory()
-  |> io.debug
 }

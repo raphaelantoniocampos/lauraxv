@@ -1,5 +1,6 @@
 import client/model
 import client/msg.{type Msg}
+import client/views/guest_area_view.{guest_area_view}
 import common.{type Gift, Gift}
 import gleam/int
 import gleam/list
@@ -10,7 +11,7 @@ import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p}
 import lustre/event
 
 pub fn gifts_view(model: model.Model) -> Element(Msg) {
-  main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
+  guest_area_view(model.route, [
     h1(
       [
         attribute("style", "font-family: 'Pacifico', cursive;"),

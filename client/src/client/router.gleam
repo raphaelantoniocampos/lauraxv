@@ -3,11 +3,12 @@ import gleam/uri
 pub type Route {
   Home
   Login
-  Gifts
   Event
   Gallery
+  GuestArea
+  Gifts
+  Confirmations
   Comments
-  Admin
   ConfirmPresence
   NotFound
 }
@@ -24,25 +25,27 @@ pub fn get_route() -> Route {
   case uri.path |> uri.path_segments {
     [] -> Home
     ["login"] -> Login
-    ["gifts"] -> Gifts
     ["event"] -> Event
     ["gallery"] -> Gallery
-    ["comments"] -> Comments
-    ["admin"] -> Admin
     ["confirm"] -> ConfirmPresence
+    ["guest"] -> GuestArea
+    ["guest", "confirmations"] -> Confirmations
+    ["guest", "comments"] -> Comments
+    ["guest", "gifts"] -> Gifts
     _ -> NotFound
   }
 }
 
 pub fn route_to_path(route: Route) -> String {
   case route {
-    Admin -> "/admin"
     Login -> "/login"
-    Gifts -> "/gifts"
     Event -> "/event"
     Gallery -> "/gallery"
-    Comments -> "/comments"
     ConfirmPresence -> "/confirm"
+    GuestArea -> "/guest"
+    Comments -> "/guest/comments"
+    Confirmations -> "/guest/confirmations"
+    Gifts -> "/guest/gifts"
     _ -> "/"
   }
 }
@@ -50,13 +53,14 @@ pub fn route_to_path(route: Route) -> String {
 pub fn route_to_string(route: Route) -> String {
   case route {
     Home -> "Home"
-    Admin -> "Admin"
     Login -> "Login"
-    Gifts -> "Presentes"
     Event -> "Evento"
     Gallery -> "Galeria"
-    Comments -> "Comentários"
     ConfirmPresence -> "Confirmar Presença"
+    GuestArea -> "Área do Convidado"
+    Confirmations -> "Confirmações"
+    Comments -> "Comentários"
+    Gifts -> "Presentes"
     _ -> "/"
   }
 }

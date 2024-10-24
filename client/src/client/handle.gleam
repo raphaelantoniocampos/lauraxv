@@ -6,7 +6,7 @@ import gleam/list
 import client/update
 import common
 import gleam/dict
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import lustre/effect.{type Effect}
 import lustre_http
 import modem
@@ -44,13 +44,13 @@ pub fn default(_model: Model, api_data: data) -> Result(#(data, List(a)), error)
   |> Ok
 }
 
-pub fn admin_settings(
+pub fn confirmation_data(
   model: Model,
   confirmation_data: #(Int, List(common.Confirmation)),
-) -> Result(#(model.AdminSettings, List(a)), error) {
+) -> Result(#(model.ConfirmationData, List(a)), error) {
   #(
-    model.AdminSettings(
-      ..model.admin_settings,
+    model.ConfirmationData(
+      ..model.confirmation_data,
       confirmations: confirmation_data.1,
       show_details: {
         confirmation_data.1

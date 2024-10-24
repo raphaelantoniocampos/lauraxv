@@ -1,30 +1,18 @@
 import client/model
 import client/msg.{type Msg}
-import client/views/home_view.{home_view}
+import client/views/guest_area_view.{guest_area_view}
 import common.{type Confirmation}
 import gleam/dict
 import gleam/int
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{Some}
 import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
 import lustre/event
 
-pub fn admin_view(model: model.Model) -> Element(Msg) {
-  case model.auth_user {
-    None -> home_view(model)
-    Some(user) -> {
-      case user.is_admin {
-        True -> auth_admin_view(model)
-        False -> home_view(model)
-      }
-    }
-  }
-}
-
-fn auth_admin_view(model: model.Model) -> Element(Msg) {
-  main([class("w-full max-w-6xl p-8 mt-12 flex flex-col items-center")], [
+pub fn confirmations_view(model: model.Model) -> Element(Msg) {
+  guest_area_view(model.route, [
     h1(
       [
         attribute("style", "font-family: 'Pacifico', cursive;"),
@@ -36,12 +24,12 @@ fn auth_admin_view(model: model.Model) -> Element(Msg) {
       span([class("text-white")], [text("Total de confirmados: ")]),
       span([class("text-emerald-300")], [
         text(
-          model.admin_settings.total
+          model.confirmation_data.total
           |> int.to_string,
         ),
       ]),
     ]),
-    case model.admin_settings.show_all {
+    case model.confirmation_data.show_all {
       True -> {
         button(
           [
@@ -49,7 +37,7 @@ fn auth_admin_view(model: model.Model) -> Element(Msg) {
               "bg-white hover:bg-emerald-300 text-emerald font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
             ),
             id("show_all"),
-            event.on_click(msg.AdminClickedShowAll),
+            event.on_click(msg.UserClickedShowAll),
           ],
           [text("Esconder dados")],
         )
@@ -61,14 +49,14 @@ fn auth_admin_view(model: model.Model) -> Element(Msg) {
               "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 mb-6",
             ),
             id("show_all"),
-            event.on_click(msg.AdminClickedShowAll),
+            event.on_click(msg.UserClickedShowAll),
           ],
           [text("Mostrar todos os dados")],
         )
       }
     },
     div([class("grid grid-cols-1 gap-6 w-full"), id("lista_confirmados")], {
-      let confirmations = model.admin_settings.confirmations
+      let confirmations = model.confirmation_data.confirmations
       confirmations
       |> list.map(fn(confirmation) { confirmation_box(model, confirmation) })
     }),
@@ -94,9 +82,18 @@ fn confirmation_box(
           [
             attribute("data-id", confirmation.id |> int.to_string),
             class(
-              "bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
+              case model.auth_user {
+                Some(user) -> {
+                  case user.is_admin {
+                    True -> ""
+                    _ -> "hidden"
+                  }
+                }
+                _ -> "hidden"
+              }
+              <> " bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300",
             ),
-            event.on_click(msg.AdminClickedShowConfirmationDetails(
+            event.on_click(msg.UserClickedShowConfirmationDetails(
               confirmation.id,
             )),
           ],
@@ -105,13 +102,13 @@ fn confirmation_box(
       ]),
       case
         {
-          model.admin_settings.show_details
+          model.confirmation_data.show_details
           |> dict.get(confirmation.id)
         }
       {
         Ok(show) ->
-          case show || model.admin_settings.show_all {
-            True -> details(confirmation)
+          case show || model.confirmation_data.show_all {
+            True -> details(model, confirmation)
             False -> element.none()
           }
         Error(_) -> element.none()
@@ -120,19 +117,36 @@ fn confirmation_box(
   )
 }
 
-fn details(confirmation: Confirmation) -> Element(a) {
+fn details(model: model.Model, confirmation: Confirmation) -> Element(a) {
   div([id(confirmation.id |> int.to_string), class("detalhes mt-4")], [
-    p([], [
-      strong([], [text("Nome no convite: ")]),
-      text(confirmation.invite_name),
-    ]),
-    p([], [strong([], [text("Telefone: ")]), text(confirmation.phone)]),
-    case confirmation.comments {
-      Some(comment) -> {
-        p([], [strong([], [text("Comentário: ")]), text(comment)])
-      }
-      None -> element.none()
-    },
+    p(
+      [
+        class(case model.auth_user {
+          Some(user) -> {
+            case user.is_admin {
+              True -> ""
+              _ -> "hidden"
+            }
+          }
+          _ -> "hidden"
+        }),
+      ],
+      [strong([], [text("Nome no convite: ")]), text(confirmation.invite_name)],
+    ),
+    p(
+      [
+        class(case model.auth_user {
+          Some(user) -> {
+            case user.is_admin {
+              True -> ""
+              _ -> "hidden"
+            }
+          }
+          _ -> "hidden"
+        }),
+      ],
+      [strong([], [text("Telefone: ")]), text(confirmation.phone)],
+    ),
     case
       confirmation.people_names
       |> list.length

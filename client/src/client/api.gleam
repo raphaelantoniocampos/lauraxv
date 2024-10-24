@@ -104,7 +104,7 @@ pub fn get_comments() -> effect.Effect(Msg) {
 }
 
 pub fn get_confirmation_data() -> effect.Effect(Msg) {
-  let url = get_api_url() <> "/api/confirm"
+  let url = get_api_url() <> "/api/confirmations"
   let confirmation_decoder =
     dynamic.list(dynamic.decode8(
       Confirmation,

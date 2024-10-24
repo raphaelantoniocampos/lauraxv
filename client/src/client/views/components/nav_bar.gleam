@@ -9,7 +9,7 @@ import lustre/event
 import lustre/ui/icon
 
 const routes = [
-  router.Home, router.Event, router.Gifts, router.Gallery, router.Comments,
+  router.Home, router.Event, router.Gallery, router.GuestArea,
   router.ConfirmPresence,
 ]
 

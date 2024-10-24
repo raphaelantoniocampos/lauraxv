@@ -36,7 +36,7 @@ pub fn handle_get(req: Request) {
   case wisp.path_segments(req) {
     ["api", "gifts"] -> gifts.list_gifts()
     ["api", "images"] -> images.list_images()
-    ["api", "confirm"] -> confirmations.list_confirmations()
+    ["api", "confirmations"] -> confirmations.list_confirmations()
     ["api", "comments"] -> comments.list_comments()
     ["api", "auth", "validate"] -> validate.validate_session(req)
     ["api", "auth", "logout"] -> logout.logout(req)

@@ -26,7 +26,7 @@ pub fn list_confirmations() -> Response {
   let result = {
     use confirmation_data <- result.try(
       confirmation.get_confirmations()
-      |> result.replace_error("Problem listing confirmations "),
+      |> result.replace_error("Problem listing confirmations"),
     )
 
     json.object([
