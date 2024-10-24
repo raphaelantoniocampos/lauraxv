@@ -53,6 +53,7 @@ pub type Msg {
   ValidateEmailResponded(
     resp_result: Result(MessageErrorResponse, lustre_http.HttpError),
   )
+  ConfirmUpdateIsConfirmed(value: Option(Bool))
   ConfirmUpdateName(value: String)
   ConfirmUpdateInviteName(value: String)
   ConfirmUpdateEmail(value: String)

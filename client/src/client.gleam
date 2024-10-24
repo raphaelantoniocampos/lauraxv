@@ -1,4 +1,5 @@
 import client/api
+import client/handle
 import client/model
 import client/msg.{type Msg}
 import client/router
@@ -7,9 +8,7 @@ import client/views/admin_view.{admin_view}
 import client/views/comments_view.{comments_view}
 import client/views/components/footer.{footer_view}
 import client/views/components/nav_bar.{nav_bar_view}
-import client/views/confirm_presence_view.{
-  confirm_presence_view, confirmed_user_view,
-}
+import client/views/confirm_presence_view.{confirm_presence_view}
 import client/views/event_view.{event_view}
 import client/views/gallery_view.{gallery_view}
 import client/views/gifts_view.{gifts_view}
@@ -26,7 +25,6 @@ import lustre/attribute.{class, id}
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div}
-import lustre_http
 import modem
 import rada/date
 
@@ -56,46 +54,46 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
     msg.OnRouteChange(route) -> model.update_route(model, route) |> update.none
 
     msg.AuthUserRecieved(user_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         user_result,
-        api.handle_default,
+        handle.default,
         model.update_user,
         [effect.none()],
       )
 
     msg.GiftsRecieved(gifts_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         gifts_result,
-        api.handle_gift_status,
+        handle.gift_status,
         model.update_gifts,
         [effect.none()],
       )
 
     msg.ImagesRecieved(images_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         images_result,
-        api.handle_default,
+        handle.default,
         model.update_images,
         [effect.none()],
       )
 
     msg.CommentsRecieved(comments_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         comments_result,
-        api.handle_default,
+        handle.default,
         model.update_comments,
         [effect.none()],
       )
 
     msg.ConfirmationsRecieved(confirmations_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         confirmations_result,
-        api.handle_admin_settings,
+        handle.admin_settings,
         model.update_admin_settings,
         [effect.none()],
       )
@@ -123,7 +121,7 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       model.update_login_error(model, value) |> update.none
 
     msg.UserRequestedLoginSignUp -> {
-      model |> update.effect(handle_login_signup(model))
+      model |> update.effect(handle.login_signup(model))
     }
 
     msg.UserClickedSignUp ->
@@ -132,40 +130,28 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       |> update.none
 
     msg.LoginResponded(resp_result) ->
-      handle_api_response(
-        model,
-        resp_result,
-        api.handle_login,
-        model.update_all,
-        [
-          {
-            use dispatch <- effect.from()
-            dispatch(
-              msg.LoginUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          },
-        ],
-      )
+      handle.api_response(model, resp_result, handle.login, model.update_all, [
+        {
+          use dispatch <- effect.from()
+          dispatch(
+            msg.LoginUpdateError(Some(
+              "Problemas no servidor, por favor tente mais tarde.",
+            )),
+          )
+        },
+      ])
 
     msg.SignUpResponded(resp_result) ->
-      handle_api_response(
-        model,
-        resp_result,
-        api.handle_login,
-        model.update_all,
-        [
-          {
-            use dispatch <- effect.from()
-            dispatch(
-              msg.LoginUpdateError(Some(
-                "Problemas no servidor, por favor tente mais tarde.",
-              )),
-            )
-          },
-        ],
-      )
+      handle.api_response(model, resp_result, handle.login, model.update_all, [
+        {
+          use dispatch <- effect.from()
+          dispatch(
+            msg.LoginUpdateError(Some(
+              "Problemas no servidor, por favor tente mais tarde.",
+            )),
+          )
+        },
+      ])
 
     msg.UserRequestedLogout -> model |> update.effect(api.logout(model))
 
@@ -216,10 +202,10 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       |> update.effect(api.select_gift(model, gift, to))
 
     msg.SelectGiftResponded(resp_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         resp_result,
-        api.handle_select_gift,
+        handle.select_gift,
         model.update_all,
         [effect.none()],
       )
@@ -232,13 +218,24 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       |> update.effect(value |> api.validate_email)
 
     msg.ValidateEmailResponded(resp_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         resp_result,
-        api.handle_validate_email,
+        handle.validate_email,
         model.update_all,
-        [effect.none()],
+        [
+          {
+            use dispatch <- effect.from()
+            dispatch(
+              msg.ConfirmUpdateValidateError(Some(
+                "Problemas no servidor, por favor tente mais tarde.",
+              )),
+            )
+          },
+        ],
       )
+    msg.ConfirmUpdateIsConfirmed(value) ->
+      model.update_is_confirmed(model, value) |> update.none
 
     msg.ConfirmUpdateName(value) ->
       model.update_confirm_name(model, value) |> update.none
@@ -293,16 +290,16 @@ fn update(model: model.Model, msg: Msg) -> #(model.Model, Effect(Msg)) {
       |> update.effect(api.confirm_presence(model))
 
     msg.ConfirmPresenceResponded(resp_result) ->
-      handle_api_response(
+      handle.api_response(
         model,
         resp_result,
-        api.handle_confirm_presence,
+        handle.confirm_presence,
         model.update_all,
         [
           {
             use dispatch <- effect.from()
             dispatch(
-              msg.LoginUpdateError(Some(
+              msg.ConfirmUpdateError(Some(
                 "Problemas no servidor, por favor tente mais tarde.",
               )),
             )
@@ -357,34 +354,6 @@ pub fn update_countdown() -> Effect(Msg) {
     )
 
   effect.from(fn(dispatch) { dispatch(msg.CountdownUpdated(countdown)) })
-}
-
-fn handle_api_response(
-  model: model.Model,
-  response: Result(data, lustre_http.HttpError),
-  handle_data: fn(model.Model, data) ->
-    Result(#(model_data, List(effect.Effect(Msg))), List(effect.Effect(Msg))),
-  apply_update: fn(model.Model, model_data) -> model.Model,
-  error_effects: List(Effect(Msg)),
-) -> #(model.Model, effect.Effect(Msg)) {
-  case response {
-    Ok(api_data) -> {
-      case model |> handle_data(api_data) {
-        Ok(return) -> {
-          apply_update(model, return.0) |> update.effects(return.1)
-        }
-        Error(returned_effects) -> model |> update.effects(returned_effects)
-      }
-    }
-    Error(_) -> model |> update.effects(error_effects)
-  }
-}
-
-fn handle_login_signup(model: model.Model) -> effect.Effect(Msg) {
-  case model.login_form.sign_up {
-    True -> api.signup(model)
-    False -> api.login(model)
-  }
 }
 
 fn turn_on_off_confirmation_details(

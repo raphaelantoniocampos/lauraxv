@@ -1,6 +1,5 @@
 import gleam/dict
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
@@ -13,10 +12,6 @@ const get_join_confirmation_query = "
 SELECT confirmation.id, confirmation.user_id, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments, person.name
 FROM 'confirmation'
 LEFT JOIN 'person' ON confirmation.user_id = person.user_id"
-
-const get_confirmation_base_query = "
-SELECT confirmation.user_id, confirmation.name, confirmation.invite_name, confirmation.phone, confirmation.comments, confirmation.email
-FROM 'confirmation'"
 
 pub type ListConfirmationDBRow {
   ListConfirmationDBRow(
@@ -178,14 +173,12 @@ pub fn email_is_confirmed(email: String) -> Result(String, String) {
   let sql = base_query <> "WHERE confirmation.email = ?"
   let decoder = dynamic.element(0, dynamic.string)
 
-  let email =
-    case db.execute_read(sql, [sqlight.text(email)], decoder) {
-      Ok(email) -> Ok(list.first(email))
-      Error(_) -> {
-        Error("Problem getting confirmation by email")
-      }
+  let email = case db.execute_read(sql, [sqlight.text(email)], decoder) {
+    Ok(email) -> Ok(list.first(email))
+    Error(_) -> {
+      Error("Problem getting confirmation by email")
     }
-    |> io.debug
+  }
 
   use email_result <- result.try(email)
   case email_result {

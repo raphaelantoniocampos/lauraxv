@@ -14,7 +14,7 @@ pub type Model {
     route: router.Route,
     server_status: ServerStatus,
     auth_user: Option(AuthUser),
-    is_confirmed: Bool,
+    is_confirmed: Option(Bool),
     gift_status: GiftStatus,
     gallery_images: List(String),
     login_form: LoginForm,
@@ -51,7 +51,6 @@ pub type LoginForm {
 pub type ConfirmForm {
   ConfirmForm(
     name: String,
-    validated: Bool,
     validate_error: Option(String),
     invite_name: String,
     email: String,
@@ -82,13 +81,12 @@ pub fn init() -> Model {
     route: router.get_route(),
     server_status: Maintenance,
     auth_user: None,
-    is_confirmed: False,
+    is_confirmed: None,
     gift_status: GiftStatus([], [], None),
     gallery_images: gallery_images,
     login_form: LoginForm("", "", "", "", False, None),
     confirm_form: ConfirmForm(
       "",
-      False,
       None,
       "",
       "",
@@ -123,7 +121,7 @@ pub fn update_user(model: Model, auth_user: AuthUser) -> Model {
   Model(..model, auth_user: Some(auth_user))
 }
 
-pub fn update_is_confirmed(model: Model, is_confirmed: Bool) -> Model {
+pub fn update_is_confirmed(model: Model, is_confirmed: Option(Bool)) -> Model {
   Model(..model, is_confirmed: is_confirmed)
 }
 
@@ -207,6 +205,24 @@ pub fn turn_on_off_show_all(model: Model) -> Model {
   )
 }
 
+pub fn reset_confirm_form(model: Model) -> Model {
+  Model(
+    ..model,
+    confirm_form: ConfirmForm(
+      "",
+      None,
+      "",
+      "",
+      "",
+      1,
+      "",
+      dict.new(),
+      None,
+      None,
+    ),
+  )
+}
+
 pub fn update_confirm_name(model: Model, name: String) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, name: name))
 }
@@ -220,13 +236,6 @@ pub fn update_confirm_invite_name(model: Model, invite_name: String) -> Model {
 
 pub fn update_confirm_email(model: Model, email: String) -> Model {
   Model(..model, confirm_form: ConfirmForm(..model.confirm_form, email: email))
-}
-
-pub fn update_confirm_validated(model: Model, validated: Bool) -> Model {
-  Model(
-    ..model,
-    confirm_form: ConfirmForm(..model.confirm_form, validated: validated),
-  )
 }
 
 pub fn update_confirm_phone(model: Model, phone: String) -> Model {

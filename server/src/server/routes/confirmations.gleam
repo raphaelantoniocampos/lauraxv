@@ -1,7 +1,5 @@
 import gleam/bool
 import gleam/dynamic
-import gleam/int
-import gleam/io
 import gleam/json
 import gleam/regex
 import gleam/result
@@ -121,16 +119,13 @@ pub fn validate_email(body: dynamic.Dynamic) -> Response {
 
     use confirmed <- result.try(case confirmation.email_is_confirmed(email) {
       Ok(_) -> Ok(True)
-      Error(err) -> Error(err)
+      Error(_) -> Ok(False)
     })
-
-    // use confirmed <- result.try(confirmation.email_is_confirmed(email))
 
     Ok(
       json.object([#("message", json.string(confirmed |> bool.to_string))])
       |> json.to_string_builder,
     )
-    |> io.debug
   }
 
   web.generate_wisp_response(result)
