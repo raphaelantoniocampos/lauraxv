@@ -6,6 +6,7 @@ echo "pub fn get_api_url() { \"http://localhost:8080\" }" > ./client/src/env.gle
 cd ./client \
   && gleam run -m lustre/dev build app --outdir=../server/priv/static --minify 
 
+cp priv/static/mansory.css ../server/priv/static/
 
 cd ..
 rm -r ./server/build/dev/erlang/server/priv

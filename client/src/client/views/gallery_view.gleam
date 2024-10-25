@@ -6,7 +6,7 @@ import lustre/element/html.{div, h1, img, main}
 
 fn image_widget(image: String) -> Element(a) {
   img([
-    class("flex justify-center rounded-lg shadow-lg"),
+    class("mansory-item w-full h-auto rounded-lg shadow-lg"),
     alt("Foto"),
     src(image),
   ])
@@ -19,10 +19,10 @@ pub fn gallery_view(model: model.Model) -> Element(a) {
         attribute("style", "font-family: 'Pacifico', cursive;"),
         class("text-4xl text-white font-bold mb-12"),
       ],
-      [text("Fotos do Evento")],
+      [text("Fotos")],
     ),
     div(
-      [class("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3")],
+      [class("masonry-grid gap-3")],
       list.map(model.gallery_images, image_widget),
     ),
   ])
