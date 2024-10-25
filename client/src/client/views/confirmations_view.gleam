@@ -147,6 +147,20 @@ fn details(model: model.Model, confirmation: Confirmation) -> Element(a) {
       ],
       [strong([], [text("Telefone: ")]), text(confirmation.phone)],
     ),
+    p(
+      [
+        class(case model.auth_user {
+          Some(user) -> {
+            case user.is_admin {
+              True -> ""
+              _ -> "hidden"
+            }
+          }
+          _ -> "hidden"
+        }),
+      ],
+      [strong([], [text("Email: ")]), text(confirmation.email)],
+    ),
     case
       confirmation.people_names
       |> list.length
