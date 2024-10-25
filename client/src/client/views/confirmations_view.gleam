@@ -8,7 +8,7 @@ import gleam/list
 import gleam/option.{Some}
 import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
-import lustre/element/html.{button, div, h1, h2, li, main, p, span, strong, ul}
+import lustre/element/html.{button, div, h1, h2, li, p, span, strong, ul}
 import lustre/event
 
 pub fn confirmations_view(model: model.Model) -> Element(Msg) {
