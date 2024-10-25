@@ -5,7 +5,7 @@ import gleam/list
 import gleam/option.{None, Some}
 import lustre/attribute.{
   attribute, class, disabled, for, href, id, max, min, name, pattern,
-  placeholder, required, type_, value,
+  placeholder, required, title, type_, value,
 }
 import lustre/element.{type Element, text}
 import lustre/element/html.{
@@ -121,6 +121,8 @@ fn unconfirmed_user_view(model: model.Model) -> Element(Msg) {
             name("first_name"),
             id("first_name"),
             type_("name"),
+            pattern(".{3,}"),
+            title("O nome deve ter pelo menos 3 caracteres."),
             value(model.confirm_form.name),
             event.on_input(msg.ConfirmUpdateName),
           ]),
@@ -276,6 +278,8 @@ fn name_box_element(model: model.Model, n: Int) -> Element(Msg) {
             name("people_names_" <> string_n),
             id("people_names_" <> string_n),
             type_("name"),
+            pattern(".{3,}"),
+            title("O nome deve ter pelo menos 3 caracteres."),
             value(model.confirm_form.name),
             event.on_input(fn(value) { msg.ConfirmUpdatePersonName(n, value) }),
           ]),
@@ -298,6 +302,8 @@ fn name_box_element(model: model.Model, n: Int) -> Element(Msg) {
             name("people_names_" <> string_n),
             id("people_names_" <> string_n),
             type_("name"),
+            pattern(".{3,}"),
+            title("O nome deve ter pelo menos 3 caracteres."),
             event.on_input(fn(value) { msg.ConfirmUpdatePersonName(n, value) }),
           ]),
         ])

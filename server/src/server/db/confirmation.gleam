@@ -183,9 +183,7 @@ pub fn get_confirmation_id_by_email(
 
   let confirmation = case db.execute_read(sql, [sqlight.text(email)], decoder) {
     Ok(confirmation) -> Ok(list.first(confirmation))
-    Error(err) -> {
-      Error("Problem getting confirmation by email")
-    }
+    Error(_err) -> Error("Problem getting confirmation by email")
   }
 
   use confirmation_result <- result.try(confirmation)
