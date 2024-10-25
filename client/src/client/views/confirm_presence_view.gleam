@@ -44,7 +44,7 @@ fn confirmed_user_view() -> Element(a) {
         class(
           "bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105",
         ),
-        href("/gifts"),
+        href("/guest/gifts"),
       ],
       [text("Ver Lista de Presentes")],
     ),

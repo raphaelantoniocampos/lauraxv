@@ -168,38 +168,47 @@ pub fn decode_create_confirmation(
   }
 }
 
-pub fn email_is_confirmed(email: String) -> Result(String, String) {
-  let base_query = "SELECT confirmation.email FROM 'confirmation'"
+pub fn get_confirmation_id_by_email(
+  email: String,
+) -> Result(#(Int, String), String) {
+  let base_query =
+    "SELECT confirmation.id, confirmation.email FROM 'confirmation'"
   let sql = base_query <> "WHERE confirmation.email = ?"
-  let decoder = dynamic.element(0, dynamic.string)
+  let decoder =
+    dynamic.decode2(
+      fn(id, email) { #(id, email) },
+      dynamic.element(0, dynamic.int),
+      dynamic.element(1, dynamic.string),
+    )
 
-  let email = case db.execute_read(sql, [sqlight.text(email)], decoder) {
-    Ok(email) -> Ok(list.first(email))
-    Error(_) -> {
+  let confirmation = case db.execute_read(sql, [sqlight.text(email)], decoder) {
+    Ok(confirmation) -> Ok(list.first(confirmation))
+    Error(err) -> {
       Error("Problem getting confirmation by email")
     }
   }
 
-  use email_result <- result.try(email)
-  case email_result {
-    Ok(email) -> Ok(email)
+  use confirmation_result <- result.try(confirmation)
+  case confirmation_result {
+    Ok(confirmation) -> Ok(confirmation)
     Error(_) -> Error("No confirmation found when getting by email")
   }
 }
 
 pub fn decode_create_person(
   json: dynamic.Dynamic,
+  confirmation_id: Int,
 ) -> Result(CreatePeople, dynamic.DecodeErrors) {
   let decoder =
     dynamic.decode2(
       CreatePeople,
-      dynamic.field("confirmation_id", dynamic.int),
+      dynamic.field("user_id", dynamic.int),
       dynamic.field("people_names", dynamic.list(dynamic.string)),
     )
   case decoder(json) {
     Ok(create_person) ->
       Ok(CreatePeople(
-        confirmation_id: create_person.confirmation_id,
+        confirmation_id: confirmation_id,
         names: create_person.names,
       ))
     Error(error) -> Error(error)
@@ -244,4 +253,13 @@ fn comment_db_decoder() {
     dynamic.element(0, dynamic.string),
     dynamic.element(1, dynamic.optional(dynamic.string)),
   )
+}
+
+pub fn delete_confirmation_by_id(id: Int) -> Result(Bool, String) {
+  let sql = "DELETE FROM confirmation WHERE id = ?;"
+
+  case db.execute_write(sql, [sqlight.int(id)], fn(_) { Ok(True) }) {
+    Ok(_) -> Ok(True)
+    Error(_) -> Error("Failed to delete confirmation")
+  }
 }

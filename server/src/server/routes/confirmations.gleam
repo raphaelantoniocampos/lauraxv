@@ -48,13 +48,8 @@ pub fn create_confirmation(body: dynamic.Dynamic) -> Response {
       Error(_) -> Error("Invalid body recieved - Confirmation")
     })
 
-    use people <- result.try(case confirmation.decode_create_person(body) {
-      Ok(val) -> Ok(val)
-      Error(_) -> Error("Invalid body recieved - People")
-    })
-
     use <- bool.guard(
-      when: confirmation.email_is_confirmed(confirmation.email)
+      when: confirmation.get_confirmation_id_by_email(confirmation.email)
         |> result.is_ok,
       return: Error("Usuário já está confirmou presença"),
     )
@@ -66,22 +61,33 @@ pub fn create_confirmation(body: dynamic.Dynamic) -> Response {
       Error(_) -> Error("Problema confirmando presença")
     })
 
-    use _ <- result.try(case confirmation.insert_people_to_db(people) {
-      Ok(_) -> Ok(Nil)
+    use inserted_confirmation <- result.try(
+      confirmation.get_confirmation_id_by_email(confirmation.email),
+    )
+
+    use people <- result.try(case
+      confirmation.decode_create_person(body, inserted_confirmation.0)
+    {
+      Ok(val) -> Ok(val)
       Error(_) -> {
-        Error("Problema salvando pessoas no banco de dados")
+        let _ = confirmation.delete_confirmation_by_id(inserted_confirmation.0)
+        Error("Invalid body recieved - People")
       }
     })
 
-    use inserted_confirmation <- result.try(confirmation.email_is_confirmed(
-      confirmation.email,
-    ))
+    use _ <- result.try(case confirmation.insert_people_to_db(people) {
+      Ok(_) -> Ok(Nil)
+      Error(_) -> {
+        let _ = confirmation.delete_confirmation_by_id(inserted_confirmation.0)
+        Error("Problema salvando pessoas no banco de dados")
+      }
+    })
 
     Ok(
       json.object([
         #(
           "message",
-          json.string("Presence confirmed. email:" <> inserted_confirmation),
+          json.string("Presence confirmed. email:" <> inserted_confirmation.1),
         ),
       ])
       |> json.to_string_builder,
@@ -117,7 +123,9 @@ pub fn validate_email(body: dynamic.Dynamic) -> Response {
       return: Error("Endereço de email inválido"),
     )
 
-    use confirmed <- result.try(case confirmation.email_is_confirmed(email) {
+    use confirmed <- result.try(case
+      confirmation.get_confirmation_id_by_email(email)
+    {
       Ok(_) -> Ok(True)
       Error(_) -> Ok(False)
     })

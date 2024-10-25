@@ -1,8 +1,8 @@
 import client/msg.{type Msg}
 import client/router
-import lustre/attribute.{class}
+import lustre/attribute.{class, href}
 import lustre/element.{type Element, text}
-import lustre/element/html.{button, div, main}
+import lustre/element/html.{a, button, div, main}
 import lustre/event
 
 pub fn guest_area_view(
@@ -24,18 +24,20 @@ fn section_button(
   route: router.Route,
   current_route: router.Route,
 ) -> Element(Msg) {
-  button(
-    [
-      class(
-        "px-6 py-3 rounded-full font-semibold transition duration-300 shadow-lg "
-        <> "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 "
-        <> case current_route == route {
-          True -> "bg-emerald-600 text-white shadow-xl scale-105"
-          False -> "bg-white text-gray-700 hover:bg-emerald-100 hover:scale-105"
-        },
-      ),
-      event.on_click(msg.OnRouteChange(route)),
-    ],
-    [text(label)],
-  )
+  a([href(route |> router.route_to_path)], [
+    button(
+      [
+        class(
+          "px-6 py-3 rounded-full font-semibold transition duration-300 shadow-lg "
+          <> "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 "
+          <> case current_route == route {
+            True -> "bg-emerald-600 text-white shadow-xl scale-105"
+            False ->
+              "bg-white text-gray-700 hover:bg-emerald-100 hover:scale-105"
+          },
+        ),
+      ],
+      [text(label)],
+    ),
+  ])
 }
