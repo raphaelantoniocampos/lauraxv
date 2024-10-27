@@ -6,7 +6,9 @@ import lustre/element/html.{div, h1, img, main}
 
 fn image_widget(image: String) -> Element(a) {
   img([
-    class("mansory-item w-full h-auto rounded-lg shadow-lg"),
+    class(
+      "mansory-item w-full h-auto rounded-lg shadow-lg transform hover:scale-105 hover:shadow-2xl transition duration-500 ease-in-out relative hover:opacity-90",
+    ),
     alt("Foto"),
     src(image),
   ])

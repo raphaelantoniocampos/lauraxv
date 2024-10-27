@@ -31,6 +31,7 @@ RUN cd /build/server \
 EXPOSE 8080
 
 COPY ./client/priv/static/images /app/server/priv/static/images
+COPY ./client/src/stylesheets/ /app/server/priv/static/
 COPY ./client/priv/static/favicon.ico /app/server/priv/static/favicon.ico
 
 WORKDIR /app

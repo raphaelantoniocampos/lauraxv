@@ -35,7 +35,11 @@ pub fn page_scaffold() -> Element(a) {
         type_("text/css"),
         rel("stylesheet"),
       ]),
-      link([href("/static/mansory.css"), type_("text/css"), rel("stylesheet")]),
+      link([
+        href("./static/stylesheets/mansory.css"),
+        type_("text/css"),
+        rel("stylesheet"),
+      ]),
       script([src("/static/client.min.mjs"), type_("module")], ""),
       link([
         rel("stylesheet"),

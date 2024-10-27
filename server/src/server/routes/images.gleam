@@ -1,5 +1,7 @@
 import gleam/json
+import gleam/list
 import gleam/result
+import gleam/string
 import server/web
 import simplifile
 import wisp
@@ -12,7 +14,8 @@ pub fn list_images() {
       simplifile.read_directory(gallery_directory())
       |> result.replace_error("Problem listing images"),
     )
-    images_to_json(images)
+    list.sort(images, string.compare)
+    |> images_to_json
     |> Ok
   }
 
