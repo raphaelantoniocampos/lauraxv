@@ -1,6 +1,3 @@
-# mv ./db/db.sqlite3 ./db/db.sqlite3.temp
-# fly sftp get /mnt/sqlite3/db.sqlite3 ./db/db.sqlite3
-
 echo "pub fn get_api_url() { \"http://localhost:8080\" }" > ./client/src/env.gleam 
 
 cd ./client \
