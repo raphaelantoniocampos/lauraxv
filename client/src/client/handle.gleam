@@ -149,7 +149,10 @@ pub fn login(
   case data {
     msg.MessageErrorResponse(Some(_response), None) -> {
       let updated_model = model.reset_login_form(model)
-      let effects = [modem.push("/", None, None), api.get_auth_user()]
+      let effects = [
+        modem.push("/guest/gifts", None, None),
+        api.get_auth_user(),
+      ]
       Ok(#(updated_model, effects))
     }
 
