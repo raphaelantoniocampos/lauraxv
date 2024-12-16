@@ -16,13 +16,32 @@ pub fn home_view(model: model.Model) -> Element(Msg) {
     ),
     h3([class("text-xl text-white mt-4")], [text("14 de Dezembro de 2024")]),
     div([class("text-center mt-6")], [
-      p([class("text-3xl text-white font-bold")], [
-        text("Faltam "),
-        span([class("text-emerald-300"), id("countdown")], [
-          text(model.event_countdown |> int.to_string),
-        ]),
-        text(" dias para a festa!"),
-      ]),
+      p([class("text-3xl text-white font-bold")], case model.event_countdown {
+        x if x > 0 -> {
+          [
+            text("Faltam "),
+            span([class("text-emerald-300"), id("countdown")], [
+              text(x |> int.to_string),
+            ]),
+            text(" dias para a festa!"),
+          ]
+        }
+        x if x == 0 -> {
+          [text("É Hoje ")]
+        }
+        x if x < 0 -> {
+          [
+            text("A festa foi há "),
+            span([class("text-emerald-300"), id("countdown")], [
+              text(x |> int.negate |> int.to_string),
+            ]),
+            text(" dias!"),
+          ]
+        }
+        _ -> {
+          []
+        }
+      }),
     ]),
     div(
       [
