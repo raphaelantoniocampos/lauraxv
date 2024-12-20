@@ -5,7 +5,7 @@ import gleam/dynamic
 import gleam/option.{type Option}
 import lustre_http
 
-import common.{type Comment, type Confirmation, type Gift}
+import shared.{type Comment, type Confirmation, type Gift}
 
 pub type Msg {
   OnRouteChange(router.Route)

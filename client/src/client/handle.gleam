@@ -4,12 +4,12 @@ import client/msg.{type Msg}
 import gleam/list
 
 import client/update
-import common
 import gleam/dict
 import gleam/option.{type Option, None, Some}
 import lustre/effect.{type Effect}
 import lustre_http
 import modem
+import shared
 
 pub fn api_response(
   model: Model,
@@ -46,7 +46,7 @@ pub fn default(_model: Model, api_data: data) -> Result(#(data, List(a)), error)
 
 pub fn confirmation_data(
   model: Model,
-  confirmation_data: #(Int, List(common.Confirmation)),
+  confirmation_data: #(Int, List(shared.Confirmation)),
 ) -> Result(#(model.ConfirmationData, List(a)), error) {
   #(
     model.ConfirmationData(
@@ -66,7 +66,7 @@ pub fn confirmation_data(
 
 pub fn gift_status(
   model: Model,
-  gifts: #(List(common.Gift), List(common.Gift)),
+  gifts: #(List(shared.Gift), List(shared.Gift)),
 ) -> Result(#(model.GiftStatus, List(a)), error) {
   #(
     model.GiftStatus(..model.gift_status, sugestion: gifts.0, unique: gifts.1),

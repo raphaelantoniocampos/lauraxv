@@ -1,7 +1,6 @@
 import client/model
 import client/msg.{type Msg}
 import client/views/guest_area_view.{guest_area_view}
-import common.{type Gift, Gift}
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
@@ -9,6 +8,7 @@ import lustre/attribute.{alt, attribute, class, disabled, href, rel, src, target
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, h1, h2, h3, img, main, p}
 import lustre/event
+import shared.{type Gift, Gift}
 
 pub fn gifts_view(model: model.Model) -> Element(Msg) {
   guest_area_view(model.route, [
@@ -36,7 +36,7 @@ pub fn gifts_view(model: model.Model) -> Element(Msg) {
     div([], [
       case model.gift_status.error {
         Some(err) ->
-          p([class("text-red-500 text-center")], [text("Erro: " <> err)])
+          p([class("mt-10 text-white text-center")], [text("Erro: " <> err)])
         None -> element.none()
       },
     ]),

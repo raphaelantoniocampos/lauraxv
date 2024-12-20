@@ -1,7 +1,6 @@
 import client/model
 import client/msg.{type Msg}
 import client/views/guest_area_view.{guest_area_view}
-import common.{type Confirmation}
 import gleam/dict
 import gleam/int
 import gleam/list
@@ -10,6 +9,7 @@ import lustre/attribute.{attribute, class, id}
 import lustre/element.{type Element, text}
 import lustre/element/html.{button, div, h1, h2, li, p, span, strong, ul}
 import lustre/event
+import shared.{type Confirmation}
 
 pub fn confirmations_view(model: model.Model) -> Element(Msg) {
   guest_area_view(model.route, [

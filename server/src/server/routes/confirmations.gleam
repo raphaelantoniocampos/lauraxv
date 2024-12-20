@@ -5,8 +5,8 @@ import gleam/regex
 import gleam/result
 import server/db/confirmation
 
-import common.{type Confirmation, Confirmation}
 import server/web
+import shared.{type Confirmation, Confirmation}
 import wisp.{type Response}
 
 fn confirmation_to_json(confirmation: Confirmation) {
@@ -121,6 +121,13 @@ pub fn validate_email(body: dynamic.Dynamic) -> Response {
         !regex.check(with: re, content: email)
       },
       return: Error("Endereço de email inválido"),
+    )
+
+    use <- bool.guard(
+      when: { shared.get_countdown_to_event() < 0 },
+      return: Error(
+        "Não é mais possível confirmar presença porque a festa já aconteceu",
+      ),
     )
 
     use confirmed <- result.try(case

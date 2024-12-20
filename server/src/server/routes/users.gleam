@@ -5,6 +5,7 @@ import gleam/regex
 import gleam/result
 import gleam/string
 import server/db/user
+import shared
 
 import server/db/user_session.{create_user_session}
 import wisp.{type Request, type Response}
@@ -15,6 +16,13 @@ pub fn create_user(req: Request, body: dynamic.Dynamic) -> Response {
       Ok(val) -> Ok(val)
       Error(_) -> Error("Invalid body recieved")
     })
+
+    use <- bool.guard(
+      when: { shared.get_countdown_to_event() < 0 },
+      return: Error(
+        "Não é mais possível criar uma conta porque a festa já aconteceu",
+      ),
+    )
 
     use user_with_same_email_exists <- result.try(
       user.does_user_with_same_email_exist(user),

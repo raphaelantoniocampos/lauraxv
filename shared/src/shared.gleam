@@ -1,4 +1,5 @@
 import gleam/option.{type Option}
+import rada/date
 
 pub type Gift {
   Gift(
@@ -44,4 +45,12 @@ pub type Confirmation {
 
 pub type Comment {
   Comment(name: String, comment: Option(String))
+}
+
+pub fn get_countdown_to_event() -> Int {
+  date.diff(
+    date.Days,
+    date.today(),
+    date.from_calendar_date(2024, date.Dec, 14),
+  )
 }

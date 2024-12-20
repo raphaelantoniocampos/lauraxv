@@ -27,7 +27,7 @@ import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html.{body, div}
 import modem
-import rada/date
+import shared
 
 pub fn main() {
   lustre.application(init, update, view)
@@ -349,14 +349,12 @@ pub fn view(model: model.Model) -> Element(Msg) {
 }
 
 pub fn update_countdown() -> Effect(Msg) {
-  let countdown =
-    date.diff(
-      date.Days,
-      date.today(),
-      date.from_calendar_date(2024, date.Dec, 14),
+  effect.from(fn(dispatch) {
+    dispatch(
+      shared.get_countdown_to_event()
+      |> msg.CountdownUpdated,
     )
-
-  effect.from(fn(dispatch) { dispatch(msg.CountdownUpdated(countdown)) })
+  })
 }
 
 fn turn_on_off_confirmation_details(

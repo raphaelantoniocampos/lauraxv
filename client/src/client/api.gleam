@@ -1,6 +1,6 @@
 import client/model
 import client/msg.{type Msg}
-import common.{
+import shared.{
   type Comment, type Confirmation, type Gift, Comment, Confirmation, Gift,
 }
 

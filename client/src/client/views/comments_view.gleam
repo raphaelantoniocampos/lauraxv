@@ -1,12 +1,12 @@
 import client/model
 import client/msg
 import client/views/guest_area_view.{guest_area_view}
-import common.{type Comment, Comment}
 import gleam/list
 import gleam/option.{Some}
 import lustre/attribute.{attribute, class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, h2, li, main, p, ul}
+import shared.{type Comment, Comment}
 
 pub fn comments_view(model: model.Model) -> Element(msg.Msg) {
   guest_area_view(model.route, [

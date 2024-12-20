@@ -1,8 +1,8 @@
-import common.{type Comment}
 import gleam/json
 import gleam/result
 import server/db/confirmation
 import server/web
+import shared.{type Comment}
 import wisp.{type Response}
 
 pub fn list_comments() -> Response {

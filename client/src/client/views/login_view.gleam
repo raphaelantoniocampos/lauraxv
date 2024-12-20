@@ -131,7 +131,7 @@ pub fn login_view(model: model.Model) -> Element(Msg) {
       ]),
       case model.login_form.sign_up {
         False -> {
-          div([class("flex items-center justify-center")], [
+          div([class("mt-5 flex items-center justify-center")], [
             text("Não tem conta?"),
             button(
               [
@@ -145,7 +145,7 @@ pub fn login_view(model: model.Model) -> Element(Msg) {
           ])
         }
         True -> {
-          div([class("flex items-center justify-center")], [
+          div([class("mt-5 flex items-center justify-center")], [
             text("Fazer"),
             button(
               [
@@ -161,7 +161,7 @@ pub fn login_view(model: model.Model) -> Element(Msg) {
       },
       case model.login_form.error {
         Some(err) ->
-          p([class("text-red-500 text-center")], [text("Erro: " <> err)])
+          p([class("mt-5 text-red-500 text-center")], [text("Erro: " <> err)])
         None -> element.none()
       },
     ]),

@@ -5,7 +5,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import server/db
 
-import common.{type Comment, type Confirmation, Comment, Confirmation}
+import shared.{type Comment, type Confirmation, Comment, Confirmation}
 import sqlight
 
 const get_join_confirmation_query = "

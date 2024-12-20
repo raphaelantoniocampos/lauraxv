@@ -1,10 +1,10 @@
-import common.{UserSession}
 import gleam/dynamic
 import gleam/list
 import gleam/result
 import rada/date
 import server/db
 import server/generate_token.{generate_token}
+import shared.{UserSession}
 import sqlight
 import wisp.{type Request}
 

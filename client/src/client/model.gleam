@@ -1,7 +1,7 @@
 import client/router
-import common.{type Comment, type Confirmation, type Gift}
 import gleam/dict
 import gleam/option.{type Option, None, Some}
+import shared.{type Comment, type Confirmation, type Gift}
 
 pub type Model {
   Model(

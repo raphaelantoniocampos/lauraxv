@@ -3,3 +3,7 @@
 /build
 erl_crash.dump
 .env
+/priv/static/client.min.css
+/priv/static/client.min.mjs
+/priv/static/client.mjs
+/priv/static/client.css

@@ -1,11 +1,11 @@
 import beecrypt
-import common.{type User, User}
 import gleam/bool
 import gleam/dynamic
 import gleam/list
 import gleam/result
 import gleam/string
 import server/db
+import shared.{type User, User}
 import sqlight
 
 const get_user_base_query = "SELECT * FROM 'user' "

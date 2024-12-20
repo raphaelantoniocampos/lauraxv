@@ -4,7 +4,7 @@
 packages = [
   { name = "argv", version = "1.0.2", build_tools = ["gleam"], requirements = [], otp_app = "argv", source = "hex", outer_checksum = "BA1FF0929525DEBA1CE67256E5ADF77A7CDDFE729E3E3F57A5BDCAA031DED09D" },
   { name = "birl", version = "1.7.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "ranger"], otp_app = "birl", source = "hex", outer_checksum = "5C66647D62BCB11FE327E7A6024907C4A17954EF22865FE0940B54A852446D01" },
-  { name = "common", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], source = "local", path = "../common" },
+  { name = "shared", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "rada"], source = "local", path = "../shared" },
   { name = "decode", version = "0.2.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "decode", source = "hex", outer_checksum = "4727FC627B803E4F4FF0075B5F93BC022F9293A19B03BF44B5A4C64BF9E8EAE1" },
   { name = "directories", version = "1.1.0", build_tools = ["gleam"], requirements = ["envoy", "gleam_stdlib", "platform", "simplifile"], otp_app = "directories", source = "hex", outer_checksum = "BDA521A4EB9EE3A7894F0DC863797878E91FF5C7826F7084B2E731E208BDB076" },
   { name = "envoy", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "CFAACCCFC47654F7E8B75E614746ED924C65BD08B1DE21101548AC314A8B6A41" },
@@ -53,7 +53,7 @@ packages = [
 ]
 
 [requirements]
-common = { path = "../common" }
+shared = { path = "../shared" }
 decode = { version = ">= 0.2.1 and < 1.0.0" }
 gleam_json = { version = ">= 1.0.1 and < 2.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 0.40.0" }
@@ -63,4 +63,3 @@ lustre_dev_tools = { version = ">= 1.5.4 and < 2.0.0" }
 lustre_http = { version = ">= 0.5.2 and < 1.0.0" }
 lustre_ui = { version = ">= 0.6.0 and < 1.0.0" }
 modem = { version = ">= 2.0.1 and < 3.0.0" }
-rada = { version = ">= 0.4.0 and < 1.0.0" }

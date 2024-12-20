@@ -6,7 +6,7 @@ WORKDIR /build
 
 COPY ./client /build/client
 COPY ./server /build/server
-COPY ./common /build/common
+COPY ./shared /build/shared
 
 RUN apk update
 

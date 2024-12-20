@@ -1,4 +1,3 @@
-import common.{type Gift, type SelectGift, Gift, SelectGift}
 import gleam/bool
 import gleam/dynamic
 import gleam/int
@@ -8,6 +7,7 @@ import gleam/option
 import gleam/result
 import server/db/gift
 import server/web
+import shared.{type Gift, type SelectGift, Gift, SelectGift}
 import wisp.{type Response}
 
 fn gift_to_json(gift: Gift) {
@@ -66,6 +66,13 @@ pub fn select_gift(body: dynamic.Dynamic) -> Response {
       Ok(val) -> Ok(val)
       Error(_) -> Error("Invalid body recieved")
     })
+
+    use <- bool.guard(
+      when: { shared.get_countdown_to_event() < 0 },
+      return: Error(
+        "Não é mais possível escolher presentes porque a festa já aconteceu",
+      ),
+    )
 
     use gift <- result.try(
       request_select_gift.gift_id

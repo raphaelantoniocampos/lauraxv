@@ -1,8 +1,8 @@
-import common.{type Gift, type SelectGift, Gift, SelectGift}
 import gleam/dynamic
 import gleam/list
 import gleam/result
 import server/db
+import shared.{type Gift, type SelectGift, Gift, SelectGift}
 import sqlight
 
 const get_gifts_base_query = "
